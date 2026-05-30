@@ -1,0 +1,97 @@
+<div class="content-header pt-4">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <h1 class="m-0 font-weight-bold" style="color: var(--fox-dark);">Gestión de Proveedores</h1>
+        <button class="btn btn-fox font-weight-bold shadow-sm" onclick="abrirModalNuevo()">
+            <i class="fas fa-plus mr-2"></i> Registrar Proveedor
+        </button>
+    </div>
+</div>
+
+<section class="content mt-3">
+    <div class="container-fluid">
+        <div class="card shadow-sm border-0" style="background-color: var(--fox-card);">
+            <div class="card-header border-bottom-0 pt-3 pb-3">
+                <input type="text" id="buscarProveedor" class="form-control"
+                    placeholder="Buscar por RUC, Razón Social o Contacto...">
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover text-center align-middle mb-0" style="font-size: 0.9rem;">
+                    <thead class="text-white font-weight-bold"
+                        style="background-color: var(--fox-surface); white-space: nowrap;">
+                        <tr>
+                            <th>ID</th>
+                            <th class="text-left">Nombre / Razón Social</th>
+                            <th>RUC</th>
+                            <th>Representante</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th class="text-left">Dirección</th>
+                            <th>Estado</th>
+                            <th>Fecha Registro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaProveedores">
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="modalProveedor" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-card);">
+            <div class="modal-header text-white"
+                style="background-color: var(--fox-surface); border-bottom: 1px solid var(--fox-cyan);">
+                <h5 class="modal-title font-weight-bold" id="tituloModalProveedor">Nuevo Proveedor</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <form id="formProveedor">
+                <input type="hidden" id="provId">
+                <div class="modal-body px-4 pt-4" style="background-color: var(--fox-bg-dark);">
+
+                    <div class="col-md-5 form-group">
+                        <label class="small text-muted font-weight-bold">RUC *</label>
+                        <input type="text" id="provRUC" class="form-control login-input" maxlength="11"
+                            onkeypress="return event.charCode >= 48 && event.charCode <= 57" required>
+                    </div>
+                    <div class="col-md-7 form-group">
+                        <label class="small text-muted font-weight-bold">Razón Social *</label>
+                        <input type="text" id="provRazonSocial" class="form-control login-input" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="small text-muted font-weight-bold">Dirección Principal</label>
+                    <input type="text" id="provDireccion" class="form-control login-input">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="small text-muted font-weight-bold">Nombre del Contacto</label>
+                        <input type="text" id="provContacto" class="form-control login-input"
+                            placeholder="Ej. Juan Pérez">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="small text-muted font-weight-bold">Teléfono / WhatsApp</label>
+                        <input type="text" id="provTelefono" class="form-control login-input" maxlength="9"
+                            onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                    </div>
+                </div>
+
+                <div class="form-group mb-0">
+                    <label class="small text-muted font-weight-bold">Correo Electrónico</label>
+                    <input type="email" id="provCorreo" class="form-control login-input">
+                </div>F
+
+        </div>
+        <div class="modal-footer border-top-0 pt-3 pb-4 px-4" style="background-color: var(--fox-bg-dark);">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-fox font-weight-bold">Guardar Cambios</button>
+        </div>
+        </form>
+    </div>
+</div>
+</div>

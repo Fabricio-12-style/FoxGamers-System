@@ -1,0 +1,219 @@
+:root {
+    /* Fondos y Estructura */
+    --fox-bg-dark: #0f172a;
+    /* Azul oscuro/Navy para el fondo que no cansa la vista */
+    --fox-surface: #1e293b;
+    /* Azul ligeramente más claro para menús o barras */
+    --fox-card: #ffffff;
+    /* Blanco para cajas de contenido */
+
+    /* Textos */
+    --fox-text-dark: #334155;
+    /* Texto gris oscuro para leer sobre las cajas blancas */
+    --fox-text-light: #f8fafc;
+    /* Texto blanco para leer sobre el azul oscuro */
+
+    /* Colores de Acción */
+    --fox-orange: #ff6a00;
+    /* Naranja principal para acciones clave (Añadir, Registrar) */
+    --fox-orange-hover: #e65f00;
+
+    /* Colores de Soporte y Acentos */
+    --fox-cyan: #00d2ff;
+    /* Celeste para soporte, hovers secundarios y detalles */
+    --fox-cyan-hover: #00b8e6;
+
+    /* Alertas y Ofertas */
+    --fox-red-alert: #ef4444;
+    /* Rojo reservado SOLO para ofertas o borrar */
+}
+
+body {
+    font-family: 'Quicksand', sans-serif !important;
+    background-color: var(--fox-bg-dark) !important;
+}
+
+
+.btn-fox {
+    background-color: var(--fox-orange) !important;
+    color: white !important;
+    border: none;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+}
+
+.btn-fox:hover {
+    background-color: var(--fox-orange-hover) !important;
+    transform: scale(1.02);
+    box-shadow: 0 4px 10px rgba(255, 106, 0, 0.3);
+}
+
+.btn-fox-support {
+    background-color: var(--fox-cyan) !important;
+    color: var(--fox-bg-dark) !important;
+    border: none;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.btn-fox-support:hover {
+    background-color: var(--fox-cyan-hover) !important;
+    transform: scale(1.02);
+}
+
+
+.bg-fox-dark {
+    background-color: var(--fox-bg-dark) !important;
+}
+
+.login-input {
+    background-color: var(--fox-surface) !important;
+    border: 1px solid #334155 !important;
+    color: var(--fox-text-light) !important;
+    border-radius: 6px;
+}
+
+.login-input:focus {
+    border-color: var(--fox-cyan) !important;
+    box-shadow: 0 0 8px rgba(0, 210, 255, 0.4) !important;
+    outline: none;
+}
+
+.main-sidebar {
+    background-color: var(--fox-bg-dark) !important;
+}
+
+.brand-link {
+    background-color: var(--fox-surface) !important;
+    border-bottom: 1px solid #334155 !important;
+    color: var(--fox-text-light) !important;
+}
+
+.nav-pills .nav-link.active,
+.nav-item.menu-open>.nav-link {
+    background-color: var(--fox-orange) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(255, 106, 0, 0.4);
+}
+
+
+.main-header {
+    background-color: var(--fox-surface) !important;
+    border-bottom: 1px solid #334155 !important;
+}
+
+.main-header .nav-link {
+    color: var(--fox-text-light) !important;
+}
+
+.main-footer {
+    background-color: var(--fox-bg-dark) !important;
+    color: #64748b !important;
+    border-top: 1px solid #334155 !important;
+}
+
+
+.user-panel {
+    border-bottom: 1px solid #334155 !important;
+}
+
+.user-panel .info {
+    width: 100%;
+}
+
+.user-panel .info a {
+    color: var(--fox-text-light) !important;
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-decoration: none;
+}
+
+.role-badge {
+    color: var(--fox-cyan) !important;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 5px;
+}
+
+.btn-logout {
+    color: #94a3b8 !important;
+    border: 1px solid #334155 !important;
+    background-color: transparent !important;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    padding: 6px 16px;
+}
+
+.btn-logout:hover {
+    border-color: var(--fox-orange) !important;
+    color: var(--fox-orange) !important;
+    background-color: rgba(255, 106, 0, 0.1) !important;
+}
+
+/*Estilos específicos para la Landing Page pública (frontend/web/index.html)*/
+
+.web-body {
+    background-color: var(--fox-bg-dark) !important;
+    color: var(--fox-text-light) !important;
+}
+
+.web-hero {
+    background: radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.1) 0%, transparent 70%) !important;
+}
+
+
+.web-hero h1 {
+    color: #ffffff !important;
+}
+
+.web-card {
+    background-color: var(--fox-surface) !important;
+    border: 1px solid #334155 !important;
+    border-radius: 8px;
+}
+
+.web-card .card-title {
+    color: var(--fox-text-light) !important;
+}
+
+.web-body .text-muted {
+    color: #94a3b8 !important;
+}
+
+
+
+/* Estilos para el ticket de impresión en ventas (frontend/modules/ventas/pos.html) */
+/* Ocultamos el ticket en la pantalla normal */
+#zonaTicket {
+    display: none;
+}
+
+/* ESTILOS EXCLUSIVOS PARA LA IMPRESORA */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #zonaTicket,
+    #zonaTicket * {
+        visibility: visible;
+    }
+
+    #zonaTicket {
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        padding: 5mm;
+        font-family: 'Montserrat', sans-serif;
+        color: #000;
+        background: #fff;
+    }
+    @page {
+        margin: 0;
+    }
+}

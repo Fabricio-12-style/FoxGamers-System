@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FOX GAMERS | Tienda de Hardware & Periféricos Premium</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Archivo+Black&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../shared/css/fox-style.css">
+</head>
+
+<body class="web-body">
+
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top px-4"
+        style="background-color: var(--fox-surface); border-bottom: 1px solid #334155; min-height: 110px; py-2;">
+        <div class="container-fluid p-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <button class="navbar-toggler border-0 mr-3" type="button" data-toggle="collapse"
+                    data-target="#navbarNav" style="padding: 0.25rem 0.5rem;">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="navbar-brand d-flex align-items-center m-0 p-0" href="#">
+                    <img id="webLogoNav" src="../shared/img/logo-placeholder.png" alt="FOX GAMERS"
+                        class="rounded-circle border"
+                        style="width: 90px; height: 90px; object-fit: cover; border-color: var(--fox-cyan) !important; box-shadow: 0 0 20px rgba(0, 210, 255, 0.5); border-width: 2px !important;">
+                </a>
+            </div>
+            <div class="flex-grow-1 mx-4 mx-md-5 d-none d-sm-block" style="max-width: 550px;">
+                <div class="position-relative">
+                    <input type="text" class="form-control pl-4 text-white" placeholder="¿Qué estás buscando hoy?"
+                        style="border-radius: 25px; background-color: var(--fox-bg-dark); border: 1px solid #334155; height: 46px; font-family: 'Montserrat', sans-serif; font-size: 1rem;">
+                    <i class="fas fa-search position-absolute text-muted" style="right: 20px; top: 15px;"></i>
+                </div>
+            </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto font-weight-bold" style="font-size: 1.1rem;">
+                    <li class="nav-item active"><a class="nav-link" href="#inicio">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#catalogo">Catálogo</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#promociones">Promociones</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header id="inicio" class="py-5 d-flex align-items-center web-hero" style="min-height: 60vh;">
+        <div class="container text-center py-5">
+            <h1 class="display-3 font-weight-bold mb-3"
+                style="font-family: 'Archivo Black', sans-serif; text-transform: uppercase; line-height: 1.1;">
+                Eleva tu <span style="color: var(--fox-cyan);">Nivel</span>
+            </h1>
+            <p class="lead text-muted mx-auto mb-4" style="max-width: 600px; font-size: 1.2rem;">
+                Tu vitrina de hardware exclusivo y periféricos de alta gama para competencia y rendimiento extremo.
+            </p>
+            <a href="#catalogo" class="btn btn-fox btn-lg px-5 font-weight-bold shadow-sm" style="letter-spacing: 1px;">
+                VER CATÁLOGO <i class="fas fa-chevron-right ml-2"></i>
+            </a>
+        </div>
+    </header>
+
+    <section id="promociones" class="py-4" style="background-color: var(--fox-bg-dark) !important;">
+        <div class="container">
+            <h2 class="text-center font-weight-bold mb-4"
+                style="font-family: 'Archivo Black', sans-serif; color: var(--fox-text-light);">PROMO <span
+                    style="color: var(--fox-orange);">FLASH</span></h2>
+
+            <div id="sliderPromociones" class="carousel slide shadow-lg" data-ride="carousel" data-interval="3000"
+                style="border-radius: 12px; overflow: hidden; border: 1px solid #1e293b;">
+                <ol class="carousel-indicators" id="indicadoresBanners"></ol>
+
+                <div class="carousel-inner" id="contenedorBannersWeb">
+                    <div class="carousel-item active text-center py-5" style="background-color: var(--fox-surface);">
+                        <div class="spinner-border text-warning" role="status"></div>
+                        <p class="mt-2 text-muted small mb-0">Cargando catálogo visual...</p>
+                    </div>
+                </div>
+
+                <a class="carousel-control-prev" href="#sliderPromociones" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Anterior</span>
+                </a>
+                <a class="carousel-control-next" href="#sliderPromociones" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Siguiente</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section id="catalogo" class="py-5">
+        <div class="container py-4">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <h2 class="font-weight-bold m-0"
+                    style="font-family: 'Archivo Black', sans-serif; color: var(--fox-text-light);">PRODUCTOS <span
+                        style="color: var(--fox-cyan);">DESTACADOS</span></h2>
+                <span class="badge badge-outline border border-secondary text-muted px-3 py-2 font-weight-bold"
+                    style="border-radius: 20px;">
+                    <i class="fas fa-sync-alt fa-spin mr-2" style="color: var(--fox-cyan);"></i> STOCK EN TIEMPO REAL
+                </span>
+            </div>
+            <div id="contenedorGridWeb" class="row">
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border" style="color: var(--fox-cyan);" role="status"></div>
+                    <p class="mt-3 text-muted">Sincronizando con el almacén central...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contacto" class="py-4" style="background-color: var(--fox-surface); border-top: 1px solid #334155;">
+        <div class="container text-center">
+            <p class="mb-2 font-weight-bold text-white">© 2026 FOX GAMERS - Todos los derechos reservados.</p>
+            <p class="small text-muted mb-0"></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./web.js"></script>
+</body>
+
+</html>
