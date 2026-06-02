@@ -18,10 +18,12 @@
                 <table class="table table-hover text-center align-middle mb-0">
                     <thead class="text-white font-weight-bold" style="background-color: var(--fox-surface);">
                         <tr>
-                            <th>N° Ticket</th>
+                            <th>N° Doc</th>
                             <th class="text-left">Cliente</th>
                             <th>Fecha</th>
-                            <th>Método Pago</th>
+                            <th>F. Pago</th>
+                            <th>Subtotal</th>
+                            <th>Descuento</th>
                             <th>Total</th>
                             <th>Estado</th>
                             <th>Acciones</th>
@@ -29,7 +31,7 @@
                     </thead>
                     <tbody id="tablaHistorialVentas">
                         <tr>
-                            <td colspan="7" class="text-muted py-4">Cargando ventas...</td>
+                            <td colspan="9" class="text-muted py-4">Cargando ventas...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -41,26 +43,31 @@
 <div class="modal fade" id="modalPOS" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-bg-dark);">
+
             <div class="modal-header text-white"
                 style="background-color: var(--fox-surface); border-bottom: 2px solid var(--fox-cyan);">
                 <h4 class="modal-title font-weight-bold"><i class="fas fa-shopping-cart mr-2"></i> Caja Rápida - Fox
                     Gamers</h4>
                 <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
             </div>
+
             <div class="modal-body p-3">
                 <div class="row">
-                    <div class="col-lg-8">
+                    <div class="col-lg-8 mb-3 mb-lg-0">
+
                         <div class="card border-0 mb-3" style="background-color: var(--fox-card);">
                             <div class="card-body p-3">
                                 <label class="small text-muted font-weight-bold text-uppercase mb-2"><i
                                         class="fas fa-user mr-1"></i> Cliente</label>
                                 <div class="d-flex align-items-center">
                                     <div class="input-group mr-2">
-                                        <div class="input-group-prepend"><span
-                                                class="input-group-text bg-dark border-secondary text-info"><i
-                                                    class="fas fa-search"></i></span></div>
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-dark border-secondary text-info"><i
+                                                    class="fas fa-search"></i></span>
+                                        </div>
                                         <input type="text" id="posBuscarCliente" class="form-control login-input"
-                                            placeholder="Buscar por DNI, RUC o Nombre..." autocomplete="off">
+                                            placeholder="Presiona Enter para buscar DNI/RUC/Nombre..."
+                                            autocomplete="off">
                                     </div>
                                     <button class="btn btn-outline-info font-weight-bold text-nowrap"
                                         id="btnClienteGeneral"><i class="fas fa-users"></i> Cliente General</button>
@@ -74,36 +81,48 @@
                         <div class="card border-0 mb-3" style="background-color: var(--fox-card);">
                             <div class="card-body p-3">
                                 <div class="row">
-                                    <div class="col-md-6"><label
-                                            class="small text-muted font-weight-bold text-uppercase">Comprobante</label><input
-                                            type="text" class="form-control login-input text-center font-weight-bold"
-                                            value="NOTA DE VENTA (TICKET)" disabled readonly></div>
-                                    <div class="col-md-6"><label
-                                            class="small text-muted font-weight-bold text-uppercase">Método de
-                                            Pago</label><select id="posMetodoPago"
-                                            class="form-control login-input font-weight-bold">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <label
+                                            class="small text-muted font-weight-bold text-uppercase">Comprobante</label>
+                                        <input type="text" class="form-control login-input text-center font-weight-bold"
+                                            value="NOTA DE VENTA (TICKET)" disabled readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small text-muted font-weight-bold text-uppercase">Método de
+                                            Pago</label>
+                                        <select id="posMetodoPago" class="form-control login-input font-weight-bold">
                                             <option value="EFECTIVO">💵 Efectivo</option>
                                             <option value="YAPE/PLIN">📱 Yape / Plin</option>
                                             <option value="TARJETA">💳 Tarjeta (POS)</option>
                                             <option value="TRANSFERENCIA">🏦 Transferencia Bancaria</option>
-                                        </select></div>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="card border-0" style="background-color: var(--fox-card); min-height: 350px;">
                             <div class="card-body p-3 d-flex flex-column">
+
+                                <button id="btnAbrirCatalogo"
+                                    class="btn btn-success btn-block mb-3 font-weight-bold shadow-sm"
+                                    style="background-color: #10b981; border: none;">
+                                    <i class="fas fa-th-large mr-2"></i> Ver Catálogo
+                                </button>
+
                                 <div class="input-group mb-3">
-                                    <div class="input-group-prepend"><span
-                                            class="input-group-text bg-dark border-secondary text-info"><i
-                                                class="fas fa-barcode"></i></span></div>
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-dark border-secondary text-info"><i
+                                                class="fas fa-barcode"></i></span>
+                                    </div>
                                     <input type="text" id="posBuscarProducto"
                                         class="form-control login-input form-control-lg"
                                         placeholder="Buscar familia, modelo o código..." autocomplete="off">
                                 </div>
                                 <div class="table-responsive flex-grow-1" style="max-height: 250px; overflow-y: auto;">
                                     <table class="table table-sm text-center align-middle text-white mb-0">
-                                        <thead style="background-color: var(--fox-surface); position: sticky; top: 0;">
+                                        <thead
+                                            style="background-color: var(--fox-surface); position: sticky; top: 0; z-index: 1;">
                                             <tr>
                                                 <th class="text-left w-50">Producto</th>
                                                 <th width="15%">Precio</th>
@@ -123,6 +142,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="col-lg-4 d-flex flex-column">
                         <div class="card border-0 flex-grow-1" style="background-color: var(--fox-card);">
                             <div class="card-header bg-dark text-white border-bottom-0 pt-3">
@@ -131,13 +151,16 @@
                             <div class="card-body p-4 d-flex flex-column justify-content-between">
                                 <div>
                                     <div class="d-flex justify-content-between mb-2 text-muted font-weight-bold">
-                                        <span>Subtotal:</span><span id="posSubtotal">S/ 0.00</span></div>
+                                        <span>Subtotal:</span><span id="posSubtotal">S/ 0.00</span>
+                                    </div>
                                     <div
                                         class="d-flex justify-content-between mb-2 text-muted font-weight-bold border-bottom border-secondary pb-3">
-                                        <span>IGV (18%):</span><span id="posIGV">S/ 0.00</span></div>
-                                    <div class="d-flex justify-content-between mt-3 mb-4"><span
-                                            class="h3 font-weight-bold text-white">TOTAL:</span><span id="posTotal"
-                                            class="h3 font-weight-bold" style="color: var(--fox-cyan);">S/ 0.00</span>
+                                        <span>IGV (18%):</span><span id="posIGV">S/ 0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-3 mb-4">
+                                        <span class="h3 font-weight-bold text-white">TOTAL:</span>
+                                        <span id="posTotal" class="h3 font-weight-bold"
+                                            style="color: var(--fox-cyan);">S/ 0.00</span>
                                     </div>
                                 </div>
                                 <div id="panelEfectivo" class="p-3 rounded mb-4"
@@ -146,14 +169,16 @@
                                     <input type="number" id="posEfectivoRecibido"
                                         class="form-control login-input form-control-lg text-right font-weight-bold text-white"
                                         placeholder="0.00" min="0" step="0.10">
-                                    <div class="d-flex justify-content-between mt-3 align-items-center"><span
-                                            class="text-muted font-weight-bold">Vuelto:</span><span id="posVuelto"
-                                            class="h4 m-0 font-weight-bold text-success">S/ 0.00</span></div>
+                                    <div class="d-flex justify-content-between mt-3 align-items-center">
+                                        <span class="text-muted font-weight-bold">Vuelto:</span>
+                                        <span id="posVuelto" class="h4 m-0 font-weight-bold text-success">S/ 0.00</span>
+                                    </div>
                                 </div>
                                 <button id="btnProcesarVenta"
                                     class="btn btn-fox btn-block btn-lg font-weight-bold shadow-lg"
-                                    style="height: 60px; font-size: 1.2rem;" disabled><i
-                                        class="fas fa-check-circle mr-2"></i> COBRAR</button>
+                                    style="height: 60px; font-size: 1.2rem;" disabled>
+                                    <i class="fas fa-check-circle mr-2"></i> COBRAR
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -163,36 +188,172 @@
     </div>
 </div>
 
-<div id="zonaTicket">
-    <div style="text-align: center; margin-bottom: 15px;">
-        <h2 style="margin: 0; font-family: 'Arial Black', sans-serif; font-size: 22px;">FOX GAMERS</h2>
-        <p style="margin: 2px 0; font-size: 12px; font-weight: bold;">RUC: 20123456789</p>
-        <p style="margin: 2px 0; font-size: 12px;">Chiclayo, Lambayeque</p>
-        <p style="margin: 2px 0; font-size: 12px;">Ticket: <span id="tkNumero" style="font-weight: bold;"></span></p>
-        <p style="margin: 2px 0; font-size: 12px;">Fecha: <span id="tkFecha"></span></p>
+<div class="modal fade" id="modalBuscarCliente" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-card);">
+            <div class="modal-header border-bottom-0">
+                <h5 class="text-white font-weight-bold m-0"><i class="fas fa-search mr-2"></i> Seleccionar Cliente</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive" style="max-height: 350px;">
+                    <table class="table table-dark table-hover m-0">
+                        <thead style="background-color: var(--fox-surface); position: sticky; top: 0;">
+                            <tr>
+                                <th>Documento</th>
+                                <th>Nombre / Razón Social</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaResultadosClientes"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    <div style="margin-bottom: 10px; font-size: 12px; border-bottom: 1px dashed #000; padding-bottom: 5px;">
-        <strong>Cliente:</strong> <span id="tkCliente"></span><br>
-        <strong>Pago:</strong> <span id="tkMetodo"></span>
+</div>
+
+<div class="modal fade" id="modalDetalleVenta" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-card);">
+            <div class="modal-header border-bottom-0" style="background-color: var(--fox-surface);">
+                <h5 class="text-white font-weight-bold m-0">
+                    <i class="fas fa-receipt text-info mr-2"></i> Detalle de Venta: <span id="detNumDoc"
+                        class="text-info"></span>
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row mb-4 text-white">
+                    <div class="col-sm-6">
+                        <p class="mb-1"><strong class="text-muted text-uppercase small">Cliente:</strong> <br> <span
+                                id="detCliente"></span></p>
+                        <p class="mb-0"><strong class="text-muted text-uppercase small">Vendedor:</strong> <br> <span
+                                id="detVendedor"></span></p>
+                    </div>
+                    <div class="col-sm-6 text-sm-right">
+                        <p class="mb-1"><strong class="text-muted text-uppercase small">Fecha:</strong> <br> <span
+                                id="detFecha"></span></p>
+                        <p class="mb-0"><strong class="text-muted text-uppercase small">Método de Pago:</strong> <br>
+                            <span id="detMetodo" class="badge badge-info"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm text-center align-middle mb-0">
+                        <thead style="background-color: var(--fox-bg-dark);">
+                            <tr>
+                                <th class="text-left">Producto</th>
+                                <th>Precio Unit.</th>
+                                <th>Cant.</th>
+                                <th class="text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detTablaItems">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <div style="width: 250px;">
+                        <div class="d-flex justify-content-between mb-2 text-muted">
+                            <span>Subtotal:</span> <span id="detSubtotal"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-muted border-bottom border-secondary pb-2">
+                            <span>IGV (18%):</span> <span id="detIGV"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="h4 font-weight-bold text-white">TOTAL:</span>
+                            <span class="h4 font-weight-bold" style="color: var(--fox-cyan);" id="detTotal"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0" style="background-color: var(--fox-surface);">
+                <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-fox font-weight-bold" id="btnReimprimirDesdeDetalle">
+                    <i class="fas fa-print mr-2"></i> Reimprimir Ticket
+                </button>
+            </div>
+        </div>
     </div>
-    <div
-        style="display: flex; border-bottom: 1px solid #000; font-weight: bold; font-size: 12px; padding-bottom: 5px; margin-bottom: 5px;">
-        <div style="width: 15%;">Cant</div>
-        <div style="width: 60%;">Descripción</div>
-        <div style="width: 25%; text-align: right;">Total</div>
+</div>
+
+<div class="modal fade" id="modalCatalogo" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-bg-dark);">
+            <div class="modal-header text-white"
+                style="background-color: var(--fox-surface); border-bottom: 2px solid #10b981;">
+                <h4 class="modal-title font-weight-bold"><i class="fas fa-th mr-2 text-success"></i> Catálogo de
+                    Productos</h4>
+                <div class="d-flex align-items-center">
+                    <div class="badge badge-info mr-3 px-3 py-2"
+                        style="font-size: 1rem; background-color: var(--fox-cyan);">
+                        <i class="fas fa-shopping-cart mr-1"></i> <span id="catTotalItems">0</span> items
+                    </div>
+                    <button type="button" class="btn btn-outline-light font-weight-bold" data-dismiss="modal">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver a Venta
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body p-4" style="background-color: #0f172a;">
+                <div class="row" id="gridCatalogoProductos">
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="tkItems" style="min-height: 50px; margin-bottom: 10px;"></div>
-    <div style="border-top: 1px dashed #000; padding-top: 10px; font-size: 12px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span>Subtotal:</span><span>S/
-                <span id="tkSubtotal"></span></span></div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span>IGV (18%):</span><span>S/
-                <span id="tkIGV"></span></span></div>
-        <div
-            style="display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; margin-top: 5px;">
-            <span>TOTAL:</span><span>S/ <span id="tkTotal"></span></span></div>
+</div>
+
+<div id="zonaTicket"
+    style="font-family: 'Courier New', Courier, monospace; width: 100%; max-width: 300px; padding: 10px; color: black; background: white; margin: 0 auto; display: none;">
+    <div style="text-align: center; margin-bottom: 10px;">
+        <img id="tkLogo" src="../../assets/img/logo-default.png" alt="Logo"
+            style="max-width: 120px; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+        <h3 style="margin: 0; font-weight: bold; font-size: 18px; letter-spacing: 1px;">FOX GAMERS</h3>
+        <p style="margin: 0; font-size: 12px;">Chiclayo, Perú</p>
+        <p style="margin: 0; font-size: 12px;">Tel: +51 999 999 999</p>
     </div>
-    <div style="text-align: center; margin-top: 20px; font-size: 11px;">
-        <p style="margin: 0; font-weight: bold;">¡Gracias por tu compra gamer!</p>
-        <p style="margin: 0;">Los equipos tienen garantía de tienda.</p>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="font-size: 12px; line-height: 1.5;">
+        <div><strong>NOTA DE VENTA:</strong> <span id="tkNumero"></span></div>
+        <div><strong>Fecha:</strong> <span id="tkFecha"></span></div>
+        <div><strong>Vendedor:</strong> <span id="tkVendedor"></span></div>
+        <div><strong>Cliente:</strong> <span id="tkCliente"></span></div>
+        <div><strong>F. Pago:</strong> <span id="tkMetodo"></span></div>
+    </div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="display: flex; font-weight: bold; font-size: 12px; margin-bottom: 5px;">
+        <div style="width: 15%;">Cnt</div>
+        <div style="width: 55%;">Descripción</div>
+        <div style="width: 30%; text-align: right;">Precio</div>
+    </div>
+    <div id="tkItems" style="font-size: 12px; min-height: 40px;"></div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="font-size: 12px; line-height: 1.5;">
+        <div style="display: flex; justify-content: space-between;">
+            <span>Subtotal:</span>
+            <span>S/ <span id="tkSubtotal"></span></span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <span>IGV (18%):</span>
+            <span>S/ <span id="tkIGV"></span></span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+            <span>Descuento:</span>
+            <span>-S/ 0.00</span>
+        </div>
+    </div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+        <span style="font-weight: bold; font-size: 16px;">TOTAL:</span>
+        <span style="font-weight: bold; font-size: 16px;">S/ <span id="tkTotal"></span></span>
+    </div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="text-align: center; font-size: 12px; margin-top: 10px;">
+        <p style="margin: 0;">¡Gracias por su compra!</p>
+        <p style="margin: 0;">Vuelva pronto a</p>
+        <p style="margin: 0; font-weight: bold;">FOX GAMERS</p>
+        <p style="margin: 10px 0 0 0; font-size: 10px;" id="tkFechaPie"></p>
     </div>
 </div>

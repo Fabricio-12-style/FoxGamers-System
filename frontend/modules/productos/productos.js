@@ -2,7 +2,8 @@
   let productoEditandoId = null;
   let listaProductosGlobal = [];
   let mapaCategorias = {};
-  let imagenBase64 = null;
+  let imagenBase64 = null; // Lo conservamos para cuando editamos un producto que ya tiene imagen
+  let archivoImagen = null; // NUEVO: Aquí guardaremos el archivo físico
 
   const placeholderImg =
     "https://placehold.co/400x400/1e293b/00f2ff?text=Subir+Imagen";
@@ -57,7 +58,7 @@
     return nombreFinal;
   }
 
-  // 3. PREVISUALIZACIÓN DE IMAGEN Y CONVERSIÓN A BASE64
+  // 3. SELECCIÓN DE IMAGEN FÍSICA (PREVIEW Y GUARDADO)
   const inputImagen = document.getElementById("prodImagen");
   if (inputImagen) {
     inputImagen.addEventListener("change", function (e) {
@@ -70,20 +71,24 @@
             "warning",
           );
           this.value = "";
+          archivoImagen = null;
           return;
         }
 
+        archivoImagen = file;
+
         const reader = new FileReader();
         reader.onload = (event) => {
-          imagenBase64 = event.target.result;
-          document.getElementById("imgPreview").src = imagenBase64;
+          document.getElementById("imgPreview").src = event.target.result;
         };
         reader.readAsDataURL(file);
+      } else {
+        archivoImagen = null;
       }
     });
   }
 
-  // 4. RENDERIZAR TABLA DE PRODUCTOS
+  // 4. RENDERIZAR TABLA DE PRODUCTOS (Se mantiene intacto)
   function renderizarTabla(datos) {
     const tabla = document.getElementById("tablaProductos");
     if (!tabla) return;
@@ -105,11 +110,15 @@
         ? ""
         : "opacity: 0.6; filter: grayscale(1); background-color: #f8f9fa;";
 
+      const urlImagen = p.ImagenURL
+        ? `http://localhost:3000${p.ImagenURL}`
+        : placeholderImg;
+
       tabla.innerHTML += `
                 <tr style="${rowStyle}">
                     <td class="text-muted small">${p.ProductoID}</td>
                     <td>
-                        <img src="${p.ImagenURL || placeholderImg}" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #334155;">
+                        <img src="${urlImagen}" onerror="this.src='${placeholderImg}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #334155;">
                     </td>
                     <td class="text-left font-weight-bold" style="color: var(--fox-dark); border-radius: 4px; padding: 10px;">
                         ${p.Nombre}
@@ -142,7 +151,7 @@
     }
   }
 
-  // 5. GUARDAR / ACTUALIZAR BLINDADO
+  // 5. GUARDAR / ACTUALIZAR CON MULTER Y FORMDATA
   const formProd = document.getElementById("formProducto");
   if (formProd) {
     formProd.addEventListener("submit", async (e) => {
@@ -152,7 +161,6 @@
       const precioVal = parseFloat(document.getElementById("prodPrecio").value);
       const minimoVal = parseInt(document.getElementById("prodMinimo").value);
 
-      // VALIDACIÓN FRONTAL ESTRICTA
       if (costoVal < 0 || precioVal < 0 || minimoVal < 0) {
         Swal.fire(
           "Valores Inválidos",
@@ -178,17 +186,33 @@
         estadoActual = original ? original.Activo : 1;
       }
 
-      const data = {
-        CategoriaID: document.getElementById("prodCategoria").value,
-        Codigo: document.getElementById("prodCodigo").value.trim(),
-        ModeloBase: document.getElementById("prodModelo").value.trim(),
-        Atributo: document.getElementById("prodAtributo").value.trim(),
-        PrecioCompra: costoVal,
-        PrecioVenta: precioVal,
-        StockMinimo: minimoVal,
-        ImagenURL: imagenBase64,
-        Activo: estadoActual,
-      };
+      const formData = new FormData();
+      formData.append(
+        "CategoriaID",
+        document.getElementById("prodCategoria").value,
+      );
+      formData.append(
+        "Codigo",
+        document.getElementById("prodCodigo").value.trim(),
+      );
+      formData.append(
+        "ModeloBase",
+        document.getElementById("prodModelo").value.trim(),
+      );
+      formData.append(
+        "Atributo",
+        document.getElementById("prodAtributo").value.trim(),
+      );
+      formData.append("PrecioCompra", costoVal);
+      formData.append("PrecioVenta", precioVal);
+      formData.append("StockMinimo", minimoVal);
+      formData.append("Activo", estadoActual);
+
+      if (archivoImagen) {
+        formData.append("imagen", archivoImagen);
+      } else if (imagenBase64) {
+        formData.append("ImagenURL", imagenBase64);
+      }
 
       const url = productoEditandoId
         ? `http://localhost:3000/api/productos/${productoEditandoId}`
@@ -198,8 +222,7 @@
       try {
         const res = await fetch(url, {
           method: metodo,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data),
+          body: formData,
         });
 
         const resData = await res.json();
@@ -207,6 +230,7 @@
         if (resData.success) {
           $("#modalProducto").modal("hide");
           listarProductos();
+          archivoImagen = null; // Limpiamos la foto seleccionada
           Swal.fire({
             icon: "success",
             title: "¡Operación Exitosa!",
@@ -223,6 +247,7 @@
     });
   }
 
+  // PREPARAR EDICIÓN
   window.prepararEdicionProd = (id) => {
     const p = listaProductosGlobal.find((item) => item.ProductoID === id);
     if (p) {
@@ -235,8 +260,14 @@
       document.getElementById("prodPrecio").value = p.PrecioVenta;
       document.getElementById("prodMinimo").value = p.StockMinimo;
 
-      imagenBase64 = p.ImagenURL;
-      document.getElementById("imgPreview").src = p.ImagenURL || placeholderImg;
+      archivoImagen = null; // Limpiamos cualquier foto que se haya quedado en memoria
+      imagenBase64 = p.ImagenURL; // Guardamos la ruta que viene de SQL
+
+      const urlPreview = p.ImagenURL
+        ? `http://localhost:3000${p.ImagenURL}`
+        : placeholderImg;
+      document.getElementById("imgPreview").src = urlPreview;
+
       document.getElementById("tituloModalProd").textContent =
         "Editar Ficha de Producto";
       construirNombre();
@@ -245,6 +276,7 @@
     }
   };
 
+  // ESTADO Y ELIMINAR (Intactos)
   window.toggleEstadoProducto = async (id, nuevoEstado) => {
     try {
       const res = await fetch(
@@ -292,7 +324,7 @@
           Swal.fire("¡Eliminado!", resData.mensaje, "success");
           listarProductos();
         } else {
-          Swal.fire("Operación Bloqueada", resData.mensaje, "error"); // Atrapa el error de FK del backend
+          Swal.fire("Operación Bloqueada", resData.mensaje, "error");
         }
       } catch (e) {
         Swal.fire("Error", "No se pudo eliminar", "error");
@@ -300,7 +332,7 @@
     }
   };
 
-  // 6. Buscador en tiempo real
+  // BUSCADOR EN TIEMPO REAL
   const inputBusqueda = document.getElementById("buscarProducto");
   if (inputBusqueda) {
     inputBusqueda.addEventListener("input", (e) => {
@@ -314,12 +346,13 @@
     });
   }
 
-  // 7. Abrir Modal Nuevo
+  // NUEVO PRODUCTO
   const btnNuevo = document.getElementById("btnNuevoProducto");
   if (btnNuevo) {
     btnNuevo.addEventListener("click", () => {
       productoEditandoId = null;
       imagenBase64 = null;
+      archivoImagen = null;
       document.getElementById("formProducto").reset();
       document.getElementById("tituloModalProd").textContent =
         "Registrar Nuevo Producto";

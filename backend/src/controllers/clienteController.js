@@ -11,20 +11,16 @@ const consultarDocumento = async (req, res) => {
 
   // Evitar llamadas inútiles a la API externa
   if (tipo === "dni" && !regexDNI.test(documento)) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "El DNI debe tener exactamente 8 dígitos numéricos.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "El DNI debe tener exactamente 8 dígitos numéricos.",
+    });
   }
   if (tipo === "ruc" && !regexRUC.test(documento)) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "El RUC debe tener exactamente 11 dígitos numéricos.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "El RUC debe tener exactamente 11 dígitos numéricos.",
+    });
   }
 
   const token = process.env.DECOLECTA_TOKEN;
@@ -41,12 +37,10 @@ const consultarDocumento = async (req, res) => {
 
     const dataApi = await response.json();
     if (!response.ok) {
-      return res
-        .status(response.status)
-        .json({
-          success: false,
-          mensaje: dataApi.message || "Documento no válido en RENIEC/SUNAT.",
-        });
+      return res.status(response.status).json({
+        success: false,
+        mensaje: dataApi.message || "Documento no válido en RENIEC/SUNAT.",
+      });
     }
 
     const payload = dataApi.data ? dataApi.data : dataApi;
@@ -65,12 +59,10 @@ const consultarDocumento = async (req, res) => {
 
     res.json({ success: true, data: resultado });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        mensaje: "Error de conexión con el proveedor de identidad.",
-      });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error de conexión con el proveedor de identidad.",
+    });
   }
 };
 
@@ -97,12 +89,10 @@ const createCliente = async (req, res) => {
       .json({ success: false, mensaje: "RUC inválido. Deben ser 11 números." });
   }
   if (Correo && Correo.trim() !== "" && !regexCorreo.test(Correo)) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Formato de correo electrónico no válido.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Formato de correo electrónico no válido.",
+    });
   }
 
   try {
@@ -115,12 +105,10 @@ const createCliente = async (req, res) => {
       .query("SELECT ClienteID FROM Cliente WHERE Documento = @Doc");
 
     if (existe.recordset.length > 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          mensaje: "Este número de documento ya está registrado.",
-        });
+      return res.status(400).json({
+        success: false,
+        mensaje: "Este número de documento ya está registrado.",
+      });
     }
 
     await pool
@@ -186,12 +174,10 @@ const updateCliente = async (req, res) => {
       .json({ success: false, mensaje: "RUC inválido. Deben ser 11 números." });
   }
   if (Correo && Correo.trim() !== "" && !regexCorreo.test(Correo)) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Formato de correo electrónico no válido.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Formato de correo electrónico no válido.",
+    });
   }
 
   try {
@@ -207,13 +193,10 @@ const updateCliente = async (req, res) => {
       );
 
     if (existe.recordset.length > 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          mensaje:
-            "El documento ingresado pertenece a otro cliente registrado.",
-        });
+      return res.status(400).json({
+        success: false,
+        mensaje: "El documento ingresado pertenece a otro cliente registrado.",
+      });
     }
 
     await pool
@@ -239,12 +222,10 @@ const updateCliente = async (req, res) => {
       mensaje: "Ficha del cliente actualizada correctamente.",
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        mensaje: "Error al actualizar los datos del cliente.",
-      });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al actualizar los datos del cliente.",
+    });
   }
 };
 
@@ -295,6 +276,25 @@ const cambiarEstadoCliente = async (req, res) => {
   }
 };
 
+const buscarCliente = async (req, res) => {
+  const { q } = req.query;
+  try {
+    const pool = await getConnection();
+    const result = await pool
+      .request()
+      .input("busqueda", sql.VarChar, `%${q}%`)
+      .query(
+        "SELECT ClienteID, Documento, NombreRazonSocial FROM Cliente WHERE Documento LIKE @busqueda OR NombreRazonSocial LIKE @busqueda",
+      );
+
+    res.json(result.recordset);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error al buscar cliente." });
+  }
+};
+
 module.exports = {
   consultarDocumento,
   createCliente,
@@ -302,4 +302,5 @@ module.exports = {
   updateCliente,
   deleteCliente,
   cambiarEstadoCliente,
+  buscarCliente,
 };
