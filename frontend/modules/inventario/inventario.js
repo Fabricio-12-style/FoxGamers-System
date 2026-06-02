@@ -25,9 +25,15 @@
         ? ""
         : "opacity: 0.6; filter: grayscale(1); background-color: #f8f9fa;";
 
+      const urlImagen = p.ImagenURL
+        ? `http://localhost:3000${p.ImagenURL}`
+        : placeholderImg;
+
       tabla.innerHTML += `
                 <tr style="${rowStyle}">
-                    <td><img src="${p.ImagenURL || placeholderImg}" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; background: #fff; padding: 2px; border: 1px solid #dee2e6;"></td>
+                    <td>
+                        <img src="${urlImagen}" onerror="this.src='${placeholderImg}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; background: #fff; padding: 2px; border: 1px solid #dee2e6;">
+                    </td>
                     <td class="text-left font-weight-bold" style="color: var(--fox-dark);">${p.ModeloBase || "Sin especificar"}</td>
                     <td class="text-left">
                         <div style="color: #000; padding: 6px 12px; border-radius: 4px; border-left: 4px solid var(--fox-dark); display: inline-block; min-width: 160px;">
@@ -53,7 +59,6 @@
                 </tr>`;
     });
   }
-
   // ABRIR MODAL DE AJUSTE
   window.abrirAjuste = (id) => {
     const p = listaInventarioGlobal.find((item) => item.ProductoID === id);
@@ -86,7 +91,6 @@
       const tipoAjuste = document.getElementById("ajusteTipo").value;
       const motivoBase = document.getElementById("ajusteMotivoSelect").value;
 
-      // VALIDACIÓN FRONTAL: Cantidad Cero y Datos Obligatorios
       if (!cantidadVal || cantidadVal <= 0) {
         Swal.fire(
           "Cantidad Inválida",
@@ -174,7 +178,7 @@
     });
   }
 
-  // KARDEX Y DEPENDENCIAS (Sin cambios)
+  // KARDEX Y DEPENDENCIAS
   window.verKardex = async (id) => {
     const p = listaInventarioGlobal.find((item) => item.ProductoID === id);
     const lbl = document.getElementById("lblKardexProducto");
