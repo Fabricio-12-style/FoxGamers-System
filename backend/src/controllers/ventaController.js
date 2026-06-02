@@ -142,4 +142,118 @@ const getVentas = async (req, res) => {
   }
 };
 
-module.exports = { finalizarVenta, getVentas };
+// 6. OBTENER TICKET DE VENTA (DETALLE)
+const getVentaById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pool = await getConnection();
+
+    const cabecera = await pool.request().input("VentaID", sql.Int, id).query(`
+                SELECT 
+                    v.*, 
+                    c.NombreRazonSocial AS ClienteNombre, 
+                    'Cajero' AS UsuarioNombre
+                FROM Venta v
+                LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID
+                WHERE v.VentaID = @VentaID
+            `);
+
+    if (cabecera.recordset.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, mensaje: "Ticket no encontrado." });
+    }
+
+    const detalles = await pool.request().input("VentaID", sql.Int, id)
+      .query(`SELECT dv.*, p.Nombre AS ProductoNombre
+                    FROM DetalleVenta dv
+                    INNER JOIN Inventario p ON dv.ProductoID = p.ProductoID
+                    WHERE dv.VentaID = @VentaID`);
+
+    res.json({
+      success: true,
+      cabecera: cabecera.recordset[0],
+      detalles: detalles.recordset,
+    });
+  } catch (error) {
+    console.error("Error en getVentaById:", error);
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error al obtener el ticket." });
+  }
+};
+
+// 7. ANULAR VENTA Y DEVOLVER AL KARDEX
+
+const anularVenta = async (req, res) => {
+  const { id } = req.params;
+  const { UsuarioID } = req.body;
+  let transaction;
+
+  try {
+    const pool = await getConnection();
+
+    const checkVenta = await pool
+      .request()
+      .input("VentaID", sql.Int, id)
+      .query("SELECT Estado, NumeroDoc FROM Venta WHERE VentaID = @VentaID");
+
+    if (checkVenta.recordset.length === 0)
+      return res
+        .status(404)
+        .json({ success: false, mensaje: "Venta no encontrada" });
+    if (checkVenta.recordset[0].Estado === "ANULADA")
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "La venta ya se encuentra anulada" });
+
+    const numDoc = checkVenta.recordset[0].NumeroDoc;
+
+    transaction = new sql.Transaction(pool);
+    await transaction.begin();
+
+    await transaction
+      .request()
+      .input("VentaID", sql.Int, id)
+      .query("UPDATE Venta SET Estado = 'ANULADA' WHERE VentaID = @VentaID");
+
+    const detalles = await transaction
+      .request()
+      .input("VentaID", sql.Int, id)
+      .query(
+        "SELECT ProductoID, Cantidad FROM DetalleVenta WHERE VentaID = @VentaID",
+      );
+
+    for (const item of detalles.recordset) {
+      await transaction
+        .request()
+        .input("pId", sql.Int, item.ProductoID)
+        .input("cant", sql.Int, item.Cantidad)
+        .query(
+          "UPDATE Inventario SET StockActual = StockActual + @cant WHERE ProductoID = @pId",
+        );
+
+      await transaction
+        .request()
+        .input("pId", sql.Int, item.ProductoID)
+        .input("uId", sql.Int, UsuarioID)
+        .input("cant", sql.Int, item.Cantidad)
+        .input("motivo", sql.VarChar, `Anulación de Venta #${numDoc}`)
+        .query(`INSERT INTO HistorialInventario (ProductoID, UsuarioID, TipoMovimiento, Cantidad, Motivo, FechaMovimiento)
+                        VALUES (@pId, @uId, 'ENTRADA', @cant, @motivo, GETDATE())`);
+    }
+
+    await transaction.commit();
+    res.json({
+      success: true,
+      mensaje: "Venta anulada con éxito. El stock regresó al inventario.",
+    });
+  } catch (error) {
+    if (transaction) await transaction.rollback();
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error crítico al anular la venta." });
+  }
+};
+
+module.exports = { finalizarVenta, getVentas, getVentaById, anularVenta };

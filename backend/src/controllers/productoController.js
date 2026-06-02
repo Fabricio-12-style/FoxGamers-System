@@ -23,7 +23,7 @@ const getProductos = async (req, res) => {
   }
 };
 
-// 2. Crear producto
+// 2. Crear producto (MODIFICADO PARA MULTER)
 const createProducto = async (req, res) => {
   const {
     CategoriaID,
@@ -34,33 +34,30 @@ const createProducto = async (req, res) => {
     PrecioVenta,
     StockMinimo,
     Descripcion,
-    ImagenURL,
   } = req.body;
+
+  const rutaImagen = req.file
+    ? `/uploads/productos/${req.file.filename}`
+    : null;
 
   // 3. Validaciones financieras y de negocio
   if (!Codigo || !ModeloBase || !CategoriaID) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Código, Modelo y Categoría son obligatorios.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Código, Modelo y Categoría son obligatorios.",
+    });
   }
   if (parseFloat(PrecioCompra) < 0 || parseFloat(PrecioVenta) < 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Los precios no pueden ser negativos.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Los precios no pueden ser negativos.",
+    });
   }
   if (parseInt(StockMinimo) < 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "El stock mínimo no puede ser negativo.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "El stock mínimo no puede ser negativo.",
+    });
   }
 
   try {
@@ -86,7 +83,8 @@ const createProducto = async (req, res) => {
       .input("SMin", sql.Int, StockMinimo)
       .input("Mod", sql.VarChar, ModeloBase.trim())
       .input("Atr", sql.VarChar, Atributo ? Atributo.trim() : "")
-      .input("Img", sql.VarChar(sql.MAX), ImagenURL || null).query(`
+      .input("Img", sql.VarChar(sql.MAX), rutaImagen) // <--- Guardamos la ruta de texto
+      .query(`
                 INSERT INTO Inventario 
                 (CategoriaID, Codigo, Nombre, Descripcion, StockActual, StockMinimo, PrecioCompra, PrecioVenta, Activo, FechaCreacion, ModeloBase, Atributo, ImagenURL)
                 VALUES 
@@ -96,16 +94,14 @@ const createProducto = async (req, res) => {
     res.json({ success: true, mensaje: "Producto creado y catalogado." });
   } catch (error) {
     console.error("Error al crear:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        mensaje: "Error al registrar producto. Verifique duplicidad de código.",
-      });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al registrar producto. Verifique duplicidad de código.",
+    });
   }
 };
 
-// 4. Actualizar producto
+// 4. Actualizar producto (MODIFICADO PARA MULTER)
 const updateProducto = async (req, res) => {
   const { id } = req.params;
   const {
@@ -117,34 +113,32 @@ const updateProducto = async (req, res) => {
     PrecioVenta,
     StockMinimo,
     Descripcion,
-    ImagenURL,
     Activo,
+    ImagenURL,
   } = req.body;
+
+  const rutaImagenFinal = req.file
+    ? `/uploads/productos/${req.file.filename}`
+    : ImagenURL || null;
 
   // 5. Validaciones financieras en edición
   if (!Codigo || !ModeloBase || !CategoriaID) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Código, Modelo y Categoría son obligatorios.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Código, Modelo y Categoría son obligatorios.",
+    });
   }
   if (parseFloat(PrecioCompra) < 0 || parseFloat(PrecioVenta) < 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Los precios no pueden ser negativos.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Los precios no pueden ser negativos.",
+    });
   }
   if (parseInt(StockMinimo) < 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "El stock mínimo no puede ser negativo.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "El stock mínimo no puede ser negativo.",
+    });
   }
 
   try {
@@ -171,7 +165,7 @@ const updateProducto = async (req, res) => {
       .input("SMin", sql.Int, StockMinimo)
       .input("Mod", sql.VarChar, ModeloBase.trim())
       .input("Atr", sql.VarChar, Atributo ? Atributo.trim() : "")
-      .input("Img", sql.VarChar(sql.MAX), ImagenURL || null)
+      .input("Img", sql.VarChar(sql.MAX), rutaImagenFinal) // <--- Guardamos la ruta final
       .input("Activo", sql.Bit, Activo).query(`
                 UPDATE Inventario SET 
                 CategoriaID=@CatID, Codigo=@Cod, Nombre=@Nom, Descripcion=@Desc, 
@@ -182,6 +176,7 @@ const updateProducto = async (req, res) => {
 
     res.json({ success: true, mensaje: "Cambios guardados correctamente." });
   } catch (error) {
+    console.error("Error al actualizar:", error);
     res.status(500).json({ success: false, mensaje: "Error al actualizar." });
   }
 };
@@ -209,16 +204,13 @@ const cambiarEstadoProducto = async (req, res) => {
 const ajustarStock = async (req, res) => {
   const { idProducto, tipoAjuste, cantidad, motivo, proveedorID, idUsuario } =
     req.body;
-
-  // 8. Validación de cantidad lógica
   const cantAjuste = parseInt(cantidad);
+
   if (cantAjuste <= 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "La cantidad a ajustar debe ser mayor a 0.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "La cantidad a ajustar debe ser mayor a 0.",
+    });
   }
 
   try {
@@ -228,7 +220,6 @@ const ajustarStock = async (req, res) => {
     await transaction.begin();
 
     try {
-      // 9. Bloqueo de sobregiro de stock
       if (tipoAjuste === "SALIDA") {
         const checkStock = await transaction
           .request()
@@ -258,9 +249,9 @@ const ajustarStock = async (req, res) => {
         .input("cant", sql.Int, cantAjuste)
         .input("mot", sql.VarChar, motivo.trim())
         .input("provId", sql.Int, proveedorID || null).query(`
-                    INSERT INTO HistorialInventario (ProductoID, UsuarioID, TipoMovimiento, Cantidad, Motivo, ProveedorID, FechaMovimiento)
-                    VALUES (@pId, @uId, @tipo, @cant, @mot, @provId, GETDATE())
-                `);
+            INSERT INTO HistorialInventario (ProductoID, UsuarioID, TipoMovimiento, Cantidad, Motivo, ProveedorID, FechaMovimiento)
+            VALUES (@pId, @uId, @tipo, @cant, @mot, @provId, GETDATE())
+        `);
 
       await transaction.commit();
       res.json({
@@ -270,23 +261,19 @@ const ajustarStock = async (req, res) => {
     } catch (errTransaccion) {
       await transaction.rollback();
       if (errTransaccion.message === "INSUFFICIENT_STOCK") {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            mensaje: "Stock insuficiente para realizar esta salida.",
-          });
+        return res.status(400).json({
+          success: false,
+          mensaje: "Stock insuficiente para realizar esta salida.",
+        });
       }
       throw errTransaccion;
     }
   } catch (error) {
     console.error("Error crítico en transacción:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        mensaje: "Error al procesar el ajuste de almacén.",
-      });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al procesar el ajuste de almacén.",
+    });
   }
 };
 
@@ -296,21 +283,21 @@ const getKardex = async (req, res) => {
   try {
     const pool = await getConnection();
     const result = await pool.request().input("id", sql.Int, id).query(`
-                SELECT 
-                    FORMAT(h.FechaMovimiento, 'dd/MM/yyyy HH:mm') AS fecha, 
-                    u.NombreUsuario AS usuario, 
-                    h.TipoMovimiento AS tipo, 
-                    h.Cantidad AS cant, 
-                    CASE 
-                        WHEN pr.RazonSocial IS NOT NULL THEN h.Motivo + ' | Prov: ' + pr.RazonSocial
-                        ELSE h.Motivo
-                    END AS motivo
-                FROM HistorialInventario h
-                INNER JOIN Usuario u ON h.UsuarioID = u.UsuarioID
-                LEFT JOIN Proveedor pr ON h.ProveedorID = pr.ProveedorID
-                WHERE h.ProductoID = @id
-                ORDER BY h.FechaMovimiento DESC
-            `);
+        SELECT 
+            FORMAT(h.FechaMovimiento, 'dd/MM/yyyy HH:mm') AS fecha, 
+            u.NombreUsuario AS usuario, 
+            h.TipoMovimiento AS tipo, 
+            h.Cantidad AS cant, 
+            CASE 
+                WHEN pr.RazonSocial IS NOT NULL THEN h.Motivo + ' | Prov: ' + pr.RazonSocial
+                ELSE h.Motivo
+            END AS motivo
+        FROM HistorialInventario h
+        INNER JOIN Usuario u ON h.UsuarioID = u.UsuarioID
+        LEFT JOIN Proveedor pr ON h.ProveedorID = pr.ProveedorID
+        WHERE h.ProductoID = @id
+        ORDER BY h.FechaMovimiento DESC
+    `);
     res.json(result.recordset);
   } catch (error) {
     console.error(error);
@@ -331,22 +318,17 @@ const deleteProducto = async (req, res) => {
       .query("DELETE FROM Inventario WHERE ProductoID = @id");
     res.json({ success: true, mensaje: "Producto eliminado definitivamente." });
   } catch (error) {
-    // 12. Captura de integridad (FK)
     if (error.number === 547) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          mensaje:
-            "No se puede eliminar porque existen movimientos en el Kardex. Desactívelo en su lugar.",
-        });
-    }
-    res
-      .status(500)
-      .json({
+      return res.status(400).json({
         success: false,
-        mensaje: "Error interno al eliminar el producto.",
+        mensaje:
+          "No se puede eliminar porque existen movimientos en el Kardex. Desactívelo en su lugar.",
       });
+    }
+    res.status(500).json({
+      success: false,
+      mensaje: "Error interno al eliminar el producto.",
+    });
   }
 };
 
@@ -358,4 +340,4 @@ module.exports = {
   ajustarStock,
   getKardex,
   deleteProducto,
-};  
+};

@@ -217,3 +217,28 @@ body {
         margin: 0;
     }
 }
+
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    
+    .modal, .modal-backdrop {
+        display: none !important;
+    }
+
+    #zonaTicket, #zonaTicket * {
+        visibility: visible;
+    }
+
+    #zonaTicket {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block !important; 
+        width: 100%; 
+        margin: 0;
+        padding: 0;
+    }
+}
