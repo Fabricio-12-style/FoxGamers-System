@@ -1,4 +1,3 @@
-// 1. DEFINICIÓN MAESTRA DE MÓDULOS
 const menuDefinicion = [
   {
     id: "dashboard",
@@ -63,7 +62,6 @@ const menuDefinicion = [
     vista: "../modules/perfiles/perfiles_vista.html",
     js: "../modules/perfiles/perfiles.js",
   },
-
   {
     id: "configuracion",
     nombre: "Configuración Web",

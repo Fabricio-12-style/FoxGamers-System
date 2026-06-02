@@ -3,10 +3,14 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+
+// 1. CORRECCIÓN: Importamos TODAS las funciones del controlador
 const {
   getConfigPublica,
   actualizarLogo,
   actualizarBanner,
+  establecerLogoPrincipal,
+  eliminarLogo,
 } = require("../controllers/webConfigController");
 
 const dir = "./uploads/web";
@@ -20,7 +24,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + path.extname(file.originalname);
-    cb(null, "logo-" + uniqueSuffix);
+    cb(null, file.fieldname + "-" + uniqueSuffix);
   },
 });
 
@@ -37,5 +41,7 @@ const upload = multer({ storage, fileFilter });
 router.get("/publica", getConfigPublica);
 router.post("/logo", upload.single("logo"), actualizarLogo);
 router.post("/banner/:idBanner", upload.single("banner"), actualizarBanner);
+router.put("/logo/activo/:id", establecerLogoPrincipal);
+router.delete("/logo/:id", eliminarLogo);
 
 module.exports = router;

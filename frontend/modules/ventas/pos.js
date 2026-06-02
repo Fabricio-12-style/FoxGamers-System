@@ -4,6 +4,12 @@
   let clienteSeleccionado = null;
 
   const IGV_RATE = 0.18; // 18%
+  const BASE_URL = "http://localhost:3000";
+
+  const getUrl = (path) => {
+    if (!path) return null;
+    return path.startsWith("http") ? path : `${BASE_URL}${path}`;
+  };
 
   // =======================================================
   // 1. INICIALIZACIÓN
@@ -13,8 +19,25 @@
       return (window.location.href = "../../login/login.html");
     }
     await cargarProductosPOS();
-    await cargarHistorialVentas(); // Llenamos la tabla principal al entrar
+    await cargarHistorialVentas();
+    actualizarLogoTicket();
   })();
+
+  async function actualizarLogoTicket() {
+    try {
+      const res = await fetch(`${BASE_URL}/api/config-web/publica`);
+      const data = await res.json();
+      const logoActivo = data.logos
+        ? data.logos.find((l) => l.Activo == 1)
+        : null;
+      const imgTk = document.getElementById("tkLogo");
+      if (imgTk && logoActivo) {
+        imgTk.src = getUrl(logoActivo.ImagenURL);
+      }
+    } catch (e) {
+      console.error("Error cargando logo en ticket", e);
+    }
+  }
 
   // =======================================================
   // 2. BUSCADOR DE PRODUCTOS
@@ -639,34 +662,30 @@
           '<span class="badge badge-success px-2 py-1 mb-2" style="background-color: #10b981;">Disponible</span>';
         btnAgregar = `<button class="btn btn-success btn-block font-weight-bold" onclick="agregarDesdeCatalogo(${p.ProductoID})" style="background-color: #10b981;"><i class="fas fa-cart-plus"></i> Agregar</button>`;
       }
-      let imgUrl = "";
 
-      if (p.Imagen && p.Imagen.trim() !== "") {
-        imgUrl = `http://localhost:3000/uploads/productos/${p.Imagen}`;
-
-        imgUrl = p.Imagen;
-      } else {
-        const inicial = p.Nombre.charAt(0).toUpperCase();
-        imgUrl = `https://ui-avatars.com/api/?name=${inicial}&background=334155&color=64ffda&size=150&font-size=0.6`;
-      }
+      const imgUrl =
+        p.ImagenURL && p.ImagenURL.trim() !== ""
+          ? getUrl(p.ImagenURL)
+          : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.Nombre.charAt(0))}&background=334155&color=64ffda&size=150&font-size=0.6`;
 
       grid.innerHTML += `
-            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                <div class="card h-100 border-0 shadow-sm" style="background-color: var(--fox-card); border-radius: 12px; overflow: hidden; ${colorCard}">
-                    <img src="${imgUrl}" class="card-img-top" style="height: 140px; object-fit: contain; background-color: #1e293b; padding: 10px;" onerror="this.src='https://ui-avatars.com/api/?name=${p.Nombre.charAt(0).toUpperCase()}&background=334155&color=64ffda&size=150&font-size=0.6'">
-                    <div class="card-body p-3 d-flex flex-column text-white">
-                        <div>${stockBadge}</div>
-                        <h6 class="font-weight-bold mt-1 mb-2" style="font-size: 0.95rem; line-height: 1.2;">${p.Nombre}</h6>
-                        <small class="text-muted d-block mb-3 border-bottom border-secondary pb-2">Cod: ${p.Codigo}</small>
-                        <div class="mt-auto">
-                            <h4 class="font-weight-bold mb-1" style="color: var(--fox-cyan);">S/ ${parseFloat(p.PrecioVenta).toFixed(2)}</h4>
-                            <div class="text-muted small mb-3">Stock: ${p.StockActual}</div>
-                            ${btnAgregar}
-                        </div>
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm" style="background-color: var(--fox-card); border-radius: 12px; overflow: hidden; ${colorCard}">
+                <img src="${imgUrl}" class="card-img-top" style="height: 140px; object-fit: contain; background-color: #1e293b; padding: 10px;" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.Nombre.charAt(0))}&background=334155&color=64ffda&size=150&font-size=0.6'">
+                <div class="card-body p-3 d-flex flex-column text-white">
+                    <div>${stockBadge}</div>
+                    <h6 class="font-weight-bold mt-1 mb-2" style="font-size: 0.95rem; line-height: 1.2;">${p.Nombre}</h6>
+                    <small class="text-muted d-block mb-3 border-bottom border-secondary pb-2">Cod: ${p.Codigo}</small>
+                    <div class="mt-auto">
+                        <h4 class="font-weight-bold mb-1" style="color: var(--fox-cyan);">S/ ${parseFloat(p.PrecioVenta).toFixed(2)}</h4>
+                        <div class="text-muted small mb-3">Stock: ${p.StockActual}</div>
+                        ${btnAgregar}
                     </div>
                 </div>
             </div>
-        `;
+        </div>
+    `;
     });
   }
 
