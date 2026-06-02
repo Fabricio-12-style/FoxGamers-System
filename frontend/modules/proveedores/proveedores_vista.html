@@ -40,58 +40,71 @@
     </div>
 </section>
 
-<div class="modal fade" id="modalProveedor" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-card);">
+<div class="modal fade" id="modalProveedor" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-bg-dark);">
+
             <div class="modal-header text-white"
-                style="background-color: var(--fox-surface); border-bottom: 1px solid var(--fox-cyan);">
-                <h5 class="modal-title font-weight-bold" id="tituloModalProveedor">Nuevo Proveedor</h5>
+                style="background-color: var(--fox-surface); border-bottom: 2px solid var(--fox-cyan);">
+                <h5 class="modal-title font-weight-bold" id="tituloModalProveedor">
+                    <i class="fas fa-truck text-info mr-2"></i> Nuevo Proveedor
+                </h5>
                 <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
             </div>
+
             <form id="formProveedor">
                 <input type="hidden" id="provId">
-                <div class="modal-body px-4 pt-4" style="background-color: var(--fox-bg-dark);">
+                <div class="modal-body p-4 text-white">
 
-                    <div class="col-md-5 form-group">
-                        <label class="small text-muted font-weight-bold">RUC *</label>
-                        <input type="text" id="provRUC" class="form-control login-input" maxlength="11"
-                            onkeypress="return event.charCode >= 48 && event.charCode <= 57" required>
+                    <div class="row">
+                        <div class="col-md-5 form-group mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase">RUC *</label>
+                            <input type="text" id="provRUC" class="form-control login-input font-weight-bold text-white"
+                                maxlength="11" onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                required>
+                        </div>
+                        <div class="col-md-7 form-group mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase">Razón Social *</label>
+                            <input type="text" id="provRazonSocial" class="form-control login-input text-white"
+                                required>
+                        </div>
                     </div>
-                    <div class="col-md-7 form-group">
-                        <label class="small text-muted font-weight-bold">Razón Social *</label>
-                        <input type="text" id="provRazonSocial" class="form-control login-input" required>
+
+                    <div class="form-group mb-3">
+                        <label class="small text-muted font-weight-bold text-uppercase">Dirección Principal</label>
+                        <input type="text" id="provDireccion" class="form-control login-input text-white">
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase">Nombre del Contacto</label>
+                            <input type="text" id="provContacto" class="form-control login-input text-white"
+                                placeholder="Ej. Juan Pérez">
+                        </div>
+                        <div class="col-md-6 form-group mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase">Teléfono / WhatsApp</label>
+                            <input type="text" id="provTelefono" class="form-control login-input text-white"
+                                maxlength="9" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-0">
+                        <label class="small text-muted font-weight-bold text-uppercase">Correo Electrónico</label>
+                        <input type="email" id="provCorreo" class="form-control login-input text-white">
+                    </div>
+
                 </div>
 
-                <div class="form-group">
-                    <label class="small text-muted font-weight-bold">Dirección Principal</label>
-                    <input type="text" id="provDireccion" class="form-control login-input">
+                <div class="modal-footer border-top-0 d-flex justify-content-end"
+                    style="background-color: var(--fox-surface);">
+                    <button type="button" class="btn btn-secondary font-weight-bold px-4"
+                        data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-fox font-weight-bold px-4">
+                        <i class="fas fa-save mr-2"></i> Guardar Cambios
+                    </button>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-6 form-group">
-                        <label class="small text-muted font-weight-bold">Nombre del Contacto</label>
-                        <input type="text" id="provContacto" class="form-control login-input"
-                            placeholder="Ej. Juan Pérez">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label class="small text-muted font-weight-bold">Teléfono / WhatsApp</label>
-                        <input type="text" id="provTelefono" class="form-control login-input" maxlength="9"
-                            onkeypress="return event.charCode >= 48 && event.charCode <= 57">
-                    </div>
-                </div>
-
-                <div class="form-group mb-0">
-                    <label class="small text-muted font-weight-bold">Correo Electrónico</label>
-                    <input type="email" id="provCorreo" class="form-control login-input">
-                </div>F
+            </form>
 
         </div>
-        <div class="modal-footer border-top-0 pt-3 pb-4 px-4" style="background-color: var(--fox-bg-dark);">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-fox font-weight-bold">Guardar Cambios</button>
-        </div>
-        </form>
     </div>
-</div>
 </div>

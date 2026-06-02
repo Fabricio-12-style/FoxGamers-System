@@ -33,76 +33,92 @@
     </div>
 </section>
 
-<div class="modal fade" id="modalAjusteStock" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-card);">
-            <div class="modal-header text-white"
-                style="background-color: var(--fox-surface); border-bottom: 1px solid #334155;">
-                <h5 class="modal-title font-weight-bold w-100 text-center">Movimiento de Stock</h5>
+<div class="modal fade" id="modalAjusteStock" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-bg-dark);">
+
+            <div class="modal-header border-bottom-0" style="background-color: var(--fox-surface);">
+                <h5 class="text-white font-weight-bold m-0">
+                    <i class="fas fa-boxes text-info mr-2"></i> Movimiento de Stock
+                </h5>
                 <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
             </div>
-            <form id="formAjusteStock">
-                <div class="modal-body px-4 pt-4" style="background-color: var(--fox-bg-dark);">
 
-                    <div class="text-center mb-4">
-                        <small class="text-muted d-block text-uppercase font-weight-bold">Producto a modificar:</small>
-                        <span id="lblProductoAjuste" class="h6 font-weight-bold" style="color: var(--fox-cyan);"></span>
-                        <div class="mt-1 small text-white-50">Stock Actual: <span id="lblStockActualAjuste"
-                                class="font-weight-bold text-white">0</span></div>
+            <form id="formAjusteStock">
+                <div class="modal-body p-4 text-white">
+
+                    <div class="text-center mb-4 p-3 rounded shadow-sm"
+                        style="background-color: var(--fox-card); border: 1px dashed var(--fox-cyan);">
+                        <small class="text-muted text-uppercase font-weight-bold d-block mb-1">Producto a
+                            modificar:</small>
+                        <h6 id="lblProductoAjuste" class="font-weight-bold mb-2"
+                            style="color: var(--fox-cyan); line-height: 1.4;">Cargando...</h6>
+                        <div class="text-white-50 small">
+                            Stock Actual: <strong id="lblStockActualAjuste" class="text-white"
+                                style="font-size: 1.1rem;">0</strong>
+                        </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label class="small text-muted font-weight-bold">Tipo Movimiento *</label>
-                            <select id="ajusteTipo" class="form-control login-input" required>
-                                <option value="" disabled selected>-- Seleccionar --</option>
-                                <option value="ENTRADA">ENTRADA</option>
-                                <option value="SALIDA">SALIDA</option>
+                        <div class="col-sm-6 mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase mb-1">Tipo Movimiento
+                                *</label>
+                            <select id="ajusteTipo" class="form-control login-input font-weight-bold" required>
+                                <option value="" disabled selected>-- Seleccione --</option>
+                                <option value="ENTRADA" class="text-success">ENTRADA (+)</option>
+                                <option value="SALIDA" class="text-danger">SALIDA (-)</option>
                             </select>
                         </div>
-
-                        <div class="col-md-6 form-group">
-                            <label class="small text-muted font-weight-bold">Motivo *</label>
+                        <div class="col-sm-6 mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase mb-1">Motivo *</label>
                             <select id="ajusteMotivoSelect" class="form-control login-input" required disabled>
-                                <option value="" disabled selected>-- Elija un Tipo primero --</option>
+                                <option value="" disabled selected>-- Elija un Tipo --</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="form-group d-none" id="divAjusteProveedor">
-                        <label class="small text-muted font-weight-bold">Proveedor Asociado *</label>
+                    <div id="divAjusteProveedor" class="mb-3 d-none">
+                        <label class="small text-muted font-weight-bold text-uppercase mb-1">Proveedor *</label>
                         <select id="ajusteProveedorSelect" class="form-control login-input">
-                            <option value="" disabled selected>Cargando proveedores...</option>
+                            <option value="" disabled selected>-- Seleccione Proveedor --</option>
                         </select>
                     </div>
-                    <div class="col-md-4 form-group">
-                        <label class="small text-muted font-weight-bold">Cantidad *</label>
-                        <input type="number" id="ajusteCantidad" class="form-control login-input" min="1"
-                            onkeydown="return event.key !== '-' && event.key !== 'e' && event.key !== '.'" required>
+
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase mb-1">Cantidad *</label>
+                            <input type="number" id="ajusteCantidad"
+                                class="form-control login-input font-weight-bold text-white text-center" min="1"
+                                placeholder="Ej: 5" required>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase mb-1">N° Documento</label>
+                            <input type="text" id="ajusteDocumento" class="form-control login-input"
+                                placeholder="Ej: F001-00456 (Opcional)">
+                        </div>
                     </div>
 
-                    <div class="col-md-8 form-group">
-                        <label class="small text-muted font-weight-bold">N° Documento (Opcional)</label>
-                        <input type="text" id="ajusteDocumento" class="form-control login-input"
-                            placeholder="Ej: F001-00456">
+                    <div class="mb-2">
+                        <label class="small text-muted font-weight-bold text-uppercase mb-1">Observación /
+                            Detalle</label>
+                        <textarea id="ajusteObservacion" class="form-control login-input text-white" rows="2"
+                            placeholder="Detalles de la garantía, estado físico del producto, etc..."></textarea>
                     </div>
+
                 </div>
 
-                <div class="form-group mb-0">
-                    <label class="small text-muted font-weight-bold">Observación / Detalle</label>
-                    <textarea id="ajusteObservacion" class="form-control login-input" rows="2"
-                        placeholder="Detalles de la garantía, estado físico del producto, etc..."></textarea>
+                <div class="modal-footer border-top-0 d-flex justify-content-end"
+                    style="background-color: var(--fox-surface);">
+                    <button type="button" class="btn btn-secondary font-weight-bold px-4"
+                        data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-fox font-weight-bold px-4">
+                        <i class="fas fa-save mr-2"></i> Registrar Movimiento
+                    </button>
                 </div>
-        </div>
+            </form>
 
-        <div class="modal-footer border-top-0 pt-3 pb-4 px-4" style="background-color: var(--fox-bg-dark);">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-fox font-weight-bold">Registrar Movimiento</button>
         </div>
-
-        </form>
     </div>
-</div>
 </div>
 
 <div class="modal fade" id="modalKardex" tabindex="-1">
