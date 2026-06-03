@@ -103,6 +103,16 @@ const createProducto = async (req, res) => {
 
 // 4. Actualizar producto (MODIFICADO PARA MULTER)
 const updateProducto = async (req, res) => {
+  console.log("DEBUG - BODY recibido:", req.body);
+  console.log("DEBUG - ARCHIVO recibido:", req.file);
+
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+      success: false,
+      mensaje:
+        "No se recibieron datos. Asegúrate de enviar FormData y no JSON.",
+    });
+  }
   const { id } = req.params;
   const {
     CategoriaID,
