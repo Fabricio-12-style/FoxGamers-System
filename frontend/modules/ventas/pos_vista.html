@@ -1,11 +1,11 @@
 <div class="content-header pt-4">
     <div class="container-fluid d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="m-0 font-weight-bold" style="color: var(--fox-dark);">Historial de Ventas</h1>
-            <small class="text-muted">Control de tickets y transacciones</small>
+            <h1 class="m-0 dato-critico" style="font-size: 2.2rem;">Historial de Ventas</h1>
+            <small class="font-weight-bold" style="color: var(--fox-text-gray);">Control de tickets y
+                transacciones</small>
         </div>
-        <button class="btn btn-fox font-weight-bold shadow-sm px-4 py-2" id="btnAbrirPOS" data-toggle="modal"
-            data-target="#modalPOS">
+        <button class="btn btn-fox shadow-sm px-4 py-2" id="btnAbrirPOS" data-toggle="modal" data-target="#modalPOS">
             <i class="fas fa-cash-register mr-2"></i> NUEVA VENTA (POS)
         </button>
     </div>
@@ -13,10 +13,10 @@
 
 <section class="content mt-3">
     <div class="container-fluid">
-        <div class="card shadow-sm border-0" style="background-color: var(--fox-card);">
+        <div class="card shadow-sm">
             <div class="card-body p-0 table-responsive">
-                <table class="table table-hover text-center align-middle mb-0">
-                    <thead class="text-white font-weight-bold" style="background-color: var(--fox-surface);">
+                <table class="table table-hover table-striped text-center align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>N° Doc</th>
                             <th class="text-left">Cliente</th>
@@ -31,7 +31,7 @@
                     </thead>
                     <tbody id="tablaHistorialVentas">
                         <tr>
-                            <td colspan="9" class="text-muted py-4">Cargando ventas...</td>
+                            <td colspan="9" class="py-4" style="color: var(--fox-text-gray);">Cargando ventas...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -42,55 +42,53 @@
 
 <div class="modal fade" id="modalPOS" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-bg-dark);">
-
-            <div class="modal-header text-white"
-                style="background-color: var(--fox-surface); border-bottom: 2px solid var(--fox-cyan);">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
                 <h4 class="modal-title font-weight-bold"><i class="fas fa-shopping-cart mr-2"></i> Caja Rápida - Fox
                     Gamers</h4>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
 
             <div class="modal-body p-3">
                 <div class="row">
                     <div class="col-lg-8 mb-3 mb-lg-0">
-
-                        <div class="card border-0 mb-3" style="background-color: var(--fox-card);">
+                        <div class="card mb-3 border">
                             <div class="card-body p-3">
-                                <label class="small text-muted font-weight-bold text-uppercase mb-2"><i
-                                        class="fas fa-user mr-1"></i> Cliente</label>
+                                <label class="small font-weight-bold text-uppercase mb-2"
+                                    style="color: var(--fox-text-gray);"><i class="fas fa-user mr-1"></i>
+                                    Cliente</label>
                                 <div class="d-flex align-items-center">
                                     <div class="input-group mr-2">
                                         <div class="input-group-prepend">
-                                            <span class="input-group-text bg-dark border-secondary text-info"><i
+                                            <span class="input-group-text bg-light border-secondary"><i
                                                     class="fas fa-search"></i></span>
                                         </div>
                                         <input type="text" id="posBuscarCliente" class="form-control login-input"
                                             placeholder="Presiona Enter para buscar DNI/RUC/Nombre..."
                                             autocomplete="off">
                                     </div>
-                                    <button class="btn btn-outline-info font-weight-bold text-nowrap"
-                                        id="btnClienteGeneral"><i class="fas fa-users"></i> Cliente General</button>
+                                    <button class="btn btn-fox-cyan text-nowrap" id="btnClienteGeneral"><i
+                                            class="fas fa-users"></i> Cliente General</button>
                                 </div>
-                                <div id="posClienteSeleccionado" class="mt-2 small text-info font-weight-bold d-none">
-                                    Cliente Activo: <span id="lblNombreCliente" class="text-white"></span>
+                                <div id="posClienteSeleccionado" class="mt-2 small font-weight-bold d-none text-info">
+                                    Cliente Activo: <span id="lblNombreCliente" class="dato-critico"></span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="card border-0 mb-3" style="background-color: var(--fox-card);">
+                        <div class="card mb-3 border">
                             <div class="card-body p-3">
                                 <div class="row">
                                     <div class="col-md-6 mb-3 mb-md-0">
-                                        <label
-                                            class="small text-muted font-weight-bold text-uppercase">Comprobante</label>
+                                        <label class="small font-weight-bold text-uppercase"
+                                            style="color: var(--fox-text-gray);">Comprobante</label>
                                         <input type="text" class="form-control login-input text-center font-weight-bold"
                                             value="NOTA DE VENTA (TICKET)" disabled readonly>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="small text-muted font-weight-bold text-uppercase">Método de
-                                            Pago</label>
-                                        <select id="posMetodoPago" class="form-control login-input font-weight-bold">
+                                        <label class="small font-weight-bold text-uppercase"
+                                            style="color: var(--fox-text-gray);">Método de Pago</label>
+                                        <select id="posMetodoPago" class="form-control login-input">
                                             <option value="EFECTIVO">💵 Efectivo</option>
                                             <option value="YAPE/PLIN">📱 Yape / Plin</option>
                                             <option value="TARJETA">💳 Tarjeta (POS)</option>
@@ -101,18 +99,14 @@
                             </div>
                         </div>
 
-                        <div class="card border-0" style="background-color: var(--fox-card); min-height: 350px;">
+                        <div class="card border" style="min-height: 350px;">
                             <div class="card-body p-3 d-flex flex-column">
-
-                                <button id="btnAbrirCatalogo"
-                                    class="btn btn-success btn-block mb-3 font-weight-bold shadow-sm"
-                                    style="background-color: #10b981; border: none;">
+                                <button id="btnAbrirCatalogo" class="btn btn-fox-success btn-block mb-3 shadow-sm">
                                     <i class="fas fa-th-large mr-2"></i> Ver Catálogo
                                 </button>
-
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text bg-dark border-secondary text-info"><i
+                                        <span class="input-group-text bg-light border-secondary"><i
                                                 class="fas fa-barcode"></i></span>
                                     </div>
                                     <input type="text" id="posBuscarProducto"
@@ -120,9 +114,8 @@
                                         placeholder="Buscar familia, modelo o código..." autocomplete="off">
                                 </div>
                                 <div class="table-responsive flex-grow-1" style="max-height: 250px; overflow-y: auto;">
-                                    <table class="table table-sm text-center align-middle text-white mb-0">
-                                        <thead
-                                            style="background-color: var(--fox-surface); position: sticky; top: 0; z-index: 1;">
+                                    <table class="table table-sm text-center align-middle mb-0">
+                                        <thead style="position: sticky; top: 0; z-index: 1;">
                                             <tr>
                                                 <th class="text-left w-50">Producto</th>
                                                 <th width="15%">Precio</th>
@@ -133,8 +126,9 @@
                                         </thead>
                                         <tbody id="posTablaCarrito">
                                             <tr>
-                                                <td colspan="5" class="text-muted py-4 italic">No hay productos en el
-                                                    carrito.</td>
+                                                <td colspan="5" class="py-4 italic"
+                                                    style="color: var(--fox-text-gray);">No hay productos en el carrito.
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -144,38 +138,40 @@
                     </div>
 
                     <div class="col-lg-4 d-flex flex-column">
-                        <div class="card border-0 flex-grow-1" style="background-color: var(--fox-card);">
-                            <div class="card-header bg-dark text-white border-bottom-0 pt-3">
-                                <h5 class="font-weight-bold m-0"><i class="fas fa-receipt mr-2"></i> Resumen</h5>
+                        <div class="card border flex-grow-1">
+                            <div class="card-header bg-light border-bottom pt-3">
+                                <h5 class="font-weight-bold m-0 dato-critico"><i class="fas fa-receipt mr-2"></i>
+                                    Resumen</h5>
                             </div>
                             <div class="card-body p-4 d-flex flex-column justify-content-between">
                                 <div>
-                                    <div class="d-flex justify-content-between mb-2 text-muted font-weight-bold">
-                                        <span>Subtotal:</span><span id="posSubtotal">S/ 0.00</span>
+                                    <div class="d-flex justify-content-between mb-2 font-weight-bold"
+                                        style="color: var(--fox-text-gray);">
+                                        <span>Subtotal:</span><span id="posSubtotal" class="dato-critico">S/ 0.00</span>
                                     </div>
-                                    <div
-                                        class="d-flex justify-content-between mb-2 text-muted font-weight-bold border-bottom border-secondary pb-3">
-                                        <span>IGV (18%):</span><span id="posIGV">S/ 0.00</span>
+                                    <div class="d-flex justify-content-between mb-2 font-weight-bold border-bottom pb-3"
+                                        style="color: var(--fox-text-gray);">
+                                        <span>IGV (18%):</span><span id="posIGV" class="dato-critico">S/ 0.00</span>
                                     </div>
                                     <div class="d-flex justify-content-between mt-3 mb-4">
-                                        <span class="h3 font-weight-bold text-white">TOTAL:</span>
-                                        <span id="posTotal" class="h3 font-weight-bold"
-                                            style="color: var(--fox-cyan);">S/ 0.00</span>
+                                        <span class="h3 font-weight-bold dato-critico">TOTAL:</span>
+                                        <span id="posTotal" class="h3 dato-critico text-fox-orange"
+                                            style="color: var(--fox-orange) !important;">S/ 0.00</span>
                                     </div>
                                 </div>
                                 <div id="panelEfectivo" class="p-3 rounded mb-4"
-                                    style="background-color: var(--fox-surface); border: 1px dashed var(--fox-cyan);">
-                                    <label class="small text-info font-weight-bold">Efectivo Recibido (S/)</label>
+                                    style="background-color: #f8fafc; border: 1px dashed #cbd5e1;">
+                                    <label class="small font-weight-bold text-info">Efectivo Recibido (S/)</label>
                                     <input type="number" id="posEfectivoRecibido"
-                                        class="form-control login-input form-control-lg text-right font-weight-bold text-white"
+                                        class="form-control login-input form-control-lg text-right dato-critico"
                                         placeholder="0.00" min="0" step="0.10">
                                     <div class="d-flex justify-content-between mt-3 align-items-center">
-                                        <span class="text-muted font-weight-bold">Vuelto:</span>
-                                        <span id="posVuelto" class="h4 m-0 font-weight-bold text-success">S/ 0.00</span>
+                                        <span class="font-weight-bold"
+                                            style="color: var(--fox-text-gray);">Vuelto:</span>
+                                        <span id="posVuelto" class="h4 m-0 dato-critico text-success">S/ 0.00</span>
                                     </div>
                                 </div>
-                                <button id="btnProcesarVenta"
-                                    class="btn btn-fox btn-block btn-lg font-weight-bold shadow-lg"
+                                <button id="btnProcesarVenta" class="btn btn-fox btn-block btn-lg shadow-lg"
                                     style="height: 60px; font-size: 1.2rem;" disabled>
                                     <i class="fas fa-check-circle mr-2"></i> COBRAR
                                 </button>
@@ -190,15 +186,15 @@
 
 <div class="modal fade" id="modalBuscarCliente" tabindex="-1" style="z-index: 1060;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-card);">
-            <div class="modal-header border-bottom-0">
-                <h5 class="text-white font-weight-bold m-0"><i class="fas fa-search mr-2"></i> Seleccionar Cliente</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold m-0"><i class="fas fa-search mr-2"></i> Seleccionar Cliente</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body p-0">
                 <div class="table-responsive" style="max-height: 350px;">
-                    <table class="table table-dark table-hover m-0">
-                        <thead style="background-color: var(--fox-surface); position: sticky; top: 0;">
+                    <table class="table table-hover m-0">
+                        <thead style="position: sticky; top: 0;">
                             <tr>
                                 <th>Documento</th>
                                 <th>Nombre / Razón Social</th>
@@ -215,34 +211,38 @@
 
 <div class="modal fade" id="modalDetalleVenta" tabindex="-1" style="z-index: 1060;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-card);">
-            <div class="modal-header border-bottom-0" style="background-color: var(--fox-surface);">
-                <h5 class="text-white font-weight-bold m-0">
-                    <i class="fas fa-receipt text-info mr-2"></i> Detalle de Venta: <span id="detNumDoc"
-                        class="text-info"></span>
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold m-0">
+                    <i class="fas fa-receipt mr-2 text-info"></i> Detalle de Venta: <span id="detNumDoc"
+                        class="dato-critico text-info"></span>
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
             <div class="modal-body p-4">
-                <div class="row mb-4 text-white">
+                <div class="row mb-4">
                     <div class="col-sm-6">
-                        <p class="mb-1"><strong class="text-muted text-uppercase small">Cliente:</strong> <br> <span
-                                id="detCliente"></span></p>
-                        <p class="mb-0"><strong class="text-muted text-uppercase small">Vendedor:</strong> <br> <span
-                                id="detVendedor"></span></p>
+                        <p class="mb-1"><strong class="small text-uppercase"
+                                style="color: var(--fox-text-gray);">Cliente:</strong> <br> <span id="detCliente"
+                                class="dato-critico"></span></p>
+                        <p class="mb-0"><strong class="small text-uppercase"
+                                style="color: var(--fox-text-gray);">Vendedor:</strong> <br> <span id="detVendedor"
+                                class="font-weight-bold"></span></p>
                     </div>
                     <div class="col-sm-6 text-sm-right">
-                        <p class="mb-1"><strong class="text-muted text-uppercase small">Fecha:</strong> <br> <span
-                                id="detFecha"></span></p>
-                        <p class="mb-0"><strong class="text-muted text-uppercase small">Método de Pago:</strong> <br>
+                        <p class="mb-1"><strong class="small text-uppercase"
+                                style="color: var(--fox-text-gray);">Fecha:</strong> <br> <span id="detFecha"
+                                class="font-weight-bold"></span></p>
+                        <p class="mb-0"><strong class="small text-uppercase" style="color: var(--fox-text-gray);">Método
+                                de Pago:</strong> <br>
                             <span id="detMetodo" class="badge badge-info"></span>
                         </p>
                     </div>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-dark table-sm text-center align-middle mb-0">
-                        <thead style="background-color: var(--fox-bg-dark);">
+                    <table class="table table-sm table-striped text-center align-middle mb-0">
+                        <thead>
                             <tr>
                                 <th class="text-left">Producto</th>
                                 <th>Precio Unit.</th>
@@ -250,30 +250,31 @@
                                 <th class="text-right">Subtotal</th>
                             </tr>
                         </thead>
-                        <tbody id="detTablaItems">
-                        </tbody>
+                        <tbody id="detTablaItems"></tbody>
                     </table>
                 </div>
 
                 <div class="d-flex justify-content-end mt-4">
                     <div style="width: 250px;">
-                        <div class="d-flex justify-content-between mb-2 text-muted">
-                            <span>Subtotal:</span> <span id="detSubtotal"></span>
+                        <div class="d-flex justify-content-between mb-2" style="color: var(--fox-text-gray);">
+                            <span>Subtotal:</span> <span id="detSubtotal" class="font-weight-bold"></span>
                         </div>
-                        <div class="d-flex justify-content-between mb-2 text-muted border-bottom border-secondary pb-2">
-                            <span>IGV (18%):</span> <span id="detIGV"></span>
+                        <div class="d-flex justify-content-between mb-2 border-bottom pb-2"
+                            style="color: var(--fox-text-gray);">
+                            <span>IGV (18%):</span> <span id="detIGV" class="font-weight-bold"></span>
                         </div>
-                        <div class="d-flex justify-content-between mt-2">
-                            <span class="h4 font-weight-bold text-white">TOTAL:</span>
-                            <span class="h4 font-weight-bold" style="color: var(--fox-cyan);" id="detTotal"></span>
+                        <div class="d-flex justify-content-between mt-2 align-items-center">
+                            <span class="h4 font-weight-bold dato-critico">TOTAL:</span>
+                            <span class="h4 dato-critico" style="color: var(--fox-orange) !important;"
+                                id="detTotal"></span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-top-0" style="background-color: var(--fox-surface);">
+            <div class="modal-footer border-top-0 bg-light">
                 <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-fox font-weight-bold" id="btnReimprimirDesdeDetalle">
-                    <i class="fas fa-print mr-2"></i> Reimprimir Ticket
+                <button type="button" class="btn btn-fox" id="btnReimprimirDesdeDetalle">
+                    <i class="fas fa-print mr-2"></i> Reimprimir
                 </button>
             </div>
         </div>
@@ -282,24 +283,21 @@
 
 <div class="modal fade" id="modalCatalogo" tabindex="-1" style="z-index: 1060;">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-bg-dark);">
-            <div class="modal-header text-white"
-                style="background-color: var(--fox-surface); border-bottom: 2px solid #10b981;">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
                 <h4 class="modal-title font-weight-bold"><i class="fas fa-th mr-2 text-success"></i> Catálogo de
                     Productos</h4>
                 <div class="d-flex align-items-center">
-                    <div class="badge badge-info mr-3 px-3 py-2"
-                        style="font-size: 1rem; background-color: var(--fox-cyan);">
+                    <div class="badge badge-info mr-3">
                         <i class="fas fa-shopping-cart mr-1"></i> <span id="catTotalItems">0</span> items
                     </div>
-                    <button type="button" class="btn btn-outline-light font-weight-bold" data-dismiss="modal">
-                        <i class="fas fa-arrow-left mr-2"></i> Volver a Venta
+                    <button type="button" class="btn btn-dark font-weight-bold" data-dismiss="modal">
+                        <i class="fas fa-arrow-left mr-2"></i> Volver
                     </button>
                 </div>
             </div>
-            <div class="modal-body p-4" style="background-color: #0f172a;">
-                <div class="row" id="gridCatalogoProductos">
-                </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="row" id="gridCatalogoProductos"></div>
             </div>
         </div>
     </div>

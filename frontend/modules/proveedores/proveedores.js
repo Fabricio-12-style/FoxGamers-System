@@ -30,19 +30,20 @@
 
     if (datos.length === 0) {
       tabla.innerHTML =
-        '<tr><td colspan="10" class="text-muted py-4">No hay proveedores registrados</td></tr>';
+        '<tr><td colspan="10" class="text-muted py-4 font-weight-bold">No hay proveedores registrados</td></tr>';
       return;
     }
 
     datos.forEach((p) => {
       const rowStyle = p.Activo
         ? ""
-        : "opacity: 0.5; filter: grayscale(1); background-color: #f8f9fa;";
+        : "opacity: 0.5; filter: grayscale(1); background-color: #f1f5f9;";
       const badgeEstado = p.Activo
-        ? '<span class="badge badge-success px-2 py-1 shadow-sm">Activo</span>'
-        : '<span class="badge badge-secondary px-2 py-1 shadow-sm">Inactivo</span>';
+        ? '<span class="badge badge-success">Activo</span>'
+        : '<span class="badge badge-secondary">Inactivo</span>';
 
       const iconEye = p.Activo ? "fa-eye-slash" : "fa-eye";
+      const btnClassToggle = p.Activo ? "btn-secondary" : "btn-fox-cyan";
       const titleEye = p.Activo ? "Desactivar" : "Activar";
 
       let fechaFormateada = "-";
@@ -57,31 +58,31 @@
       }
 
       tabla.innerHTML += `
-                <tr style="${rowStyle}">
-                    <td class="text-muted font-weight-bold">${p.ProveedorID}</td>
-                    <td class="text-left font-weight-bold" style="color: var(--fox-dark);">${p.RazonSocial}</td>
-                    <td class="font-weight-bold text-dark">${p.RUC}</td>
-                    <td style="color: #000000; font-weight: 600;">${p.Contacto || "-"}</td>
-                    <td style="color: #000000; font-weight: 600;">${p.Telefono || "-"}</td>
-                    <td class="small" style="color: #000000; font-weight: 600;">${p.Correo || "-"}</td>
-                    <td class="text-left small text-truncate" style="color: #000000; font-weight: 600; max-width: 150px;" title="${p.Direccion || ""}">${p.Direccion || "-"}</td>
-                    <td>${badgeEstado}</td>
-                    <td class="small" style="color: #000000; font-weight: 600;">${fechaFormateada}</td>
-                    <td>
-                        <div class="btn-group">
-                            <button onclick="abrirModalEditar(${p.ProveedorID})" class="btn btn-sm btn-warning mx-1 shadow-sm text-dark" style="border-radius: 4px; width: 32px; height: 32px;" title="Editar" ${!p.Activo ? "disabled" : ""}>
-                                <i class="fas fa-pen"></i>
-                            </button>
-                            <button onclick="cambiarEstado(${p.ProveedorID}, ${p.Activo})" class="btn btn-sm btn-secondary mx-1 shadow-sm" style="border-radius: 4px; width: 32px; height: 32px;" title="${titleEye}">
-                                <i class="fas ${iconEye}"></i>
-                            </button>
-                            <button onclick="eliminarProveedor(${p.ProveedorID})" class="btn btn-sm btn-danger mx-1 shadow-sm" style="border-radius: 4px; width: 32px; height: 32px;" title="Eliminar" ${!p.Activo ? "disabled" : ""}>
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
+        <tr style="${rowStyle}">
+            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${p.ProveedorID}</td>
+            <td class="text-left dato-critico">${p.RazonSocial}</td>
+            <td class="dato-critico text-info">${p.RUC}</td>
+            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${p.Contacto || "-"}</td>
+            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${p.Telefono || "-"}</td>
+            <td class="small font-weight-bold" style="color: var(--fox-text-gray);">${p.Correo || "-"}</td>
+            <td class="text-left small font-weight-bold text-truncate" style="color: var(--fox-text-gray); max-width: 150px;" title="${p.Direccion || ""}">${p.Direccion || "-"}</td>
+            <td>${badgeEstado}</td>
+            <td class="small font-weight-bold" style="color: var(--fox-text-gray);">${fechaFormateada}</td>
+            <td>
+                <div class="btn-group">
+                    <button onclick="abrirModalEditar(${p.ProveedorID})" class="btn btn-sm btn-fox mx-1" style="border-radius: 4px; width: 32px; height: 32px;" title="Editar" ${!p.Activo ? "disabled" : ""}>
+                        <i class="fas fa-pen"></i>
+                    </button>
+                    <button onclick="cambiarEstado(${p.ProveedorID}, ${p.Activo})" class="btn btn-sm ${btnClassToggle} mx-1 shadow-sm" style="border-radius: 4px; width: 32px; height: 32px;" title="${titleEye}">
+                        <i class="fas ${iconEye}"></i>
+                    </button>
+                    <button onclick="eliminarProveedor(${p.ProveedorID})" class="btn btn-sm btn-fox-danger mx-1" style="border-radius: 4px; width: 32px; height: 32px;" title="Eliminar" ${!p.Activo ? "disabled" : ""}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+      `;
     });
   }
 
@@ -128,7 +129,7 @@
               toast: true,
               position: "top-end",
               icon: "success",
-              title: "Datos obtenidos correctamente",
+              title: "Datos obtenidos",
               showConfirmButton: false,
               timer: 2000,
             });
@@ -136,7 +137,6 @@
             throw new Error(result.mensaje || "Sin resultados");
           }
         } catch (error) {
-          console.log("Error API Interna:", error);
           fieldRazon.value = "";
           Swal.fire({
             toast: true,
@@ -160,8 +160,8 @@
     const form = document.getElementById("formProveedor");
     if (form) form.reset();
     document.getElementById("provId").value = "";
-    document.getElementById("tituloModalProveedor").textContent =
-      "Nuevo Proveedor";
+    document.getElementById("tituloModalProveedor").innerHTML =
+      '<i class="fas fa-truck mr-2" style="color: var(--fox-cyan);"></i> Nuevo Proveedor';
     $("#modalProveedor").modal("show");
   };
 
@@ -177,8 +177,8 @@
     document.getElementById("provTelefono").value = p.Telefono || "";
     document.getElementById("provCorreo").value = p.Correo || "";
 
-    document.getElementById("tituloModalProveedor").textContent =
-      "Editar Proveedor";
+    document.getElementById("tituloModalProveedor").innerHTML =
+      '<i class="fas fa-edit mr-2" style="color: var(--fox-cyan);"></i> Editar Proveedor';
     $("#modalProveedor").modal("show");
   };
 
@@ -191,7 +191,6 @@
       const ruc = document.getElementById("provRUC").value.trim();
       const correo = document.getElementById("provCorreo").value.trim();
 
-      // Escudo de validación antes de procesar
       if (!regexRUC.test(ruc)) {
         return Swal.fire(
           "RUC Inválido",
@@ -245,7 +244,6 @@
           Swal.fire("Atención", result.mensaje, "warning");
         }
       } catch (err) {
-        console.error(err);
         Swal.fire(
           "Error",
           "Problema de conexión al guardar el proveedor.",

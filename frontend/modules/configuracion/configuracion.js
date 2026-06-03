@@ -19,8 +19,8 @@
       function (e) {
         $(".nav-link").css({
           "background-color": "transparent",
-          color: "#fff",
-          "border-bottom": "1px solid #334155",
+          color: "var(--fox-text-gray)",
+          "border-bottom": "1px solid #cbd5e1",
         });
         $(e.target).css({
           "background-color": "var(--fox-surface)",
@@ -33,7 +33,7 @@
     // --- FUNCIÓN ESCUDO PARA RUTAS DE IMÁGENES A PRUEBA DE BALAS ---
     const obtenerRutaSegura = (url) => {
       if (!url)
-        return "https://placehold.co/150x150/0f172a/00f2ff?text=Sin+Imagen";
+        return "https://placehold.co/150x150/f8fafc/1e293b?text=Sin+Imagen";
       if (
         url.startsWith("http") ||
         url.startsWith("data:") ||
@@ -54,7 +54,7 @@
         } else {
           if (galeriaLogos)
             galeriaLogos.innerHTML =
-              '<div class="col-12 text-center text-muted small py-3">No hay logos guardados.</div>';
+              '<div class="col-12 text-center py-3 font-weight-bold" style="color: var(--fox-text-gray);">No hay logos guardados.</div>';
         }
 
         for (let i = 1; i <= 3; i++) {
@@ -76,25 +76,25 @@
       logos.forEach((logo) => {
         const esActivo = logo.Activo === 1 || logo.Activo === true;
         const borde = esActivo
-          ? "border: 2px solid var(--fox-cyan);"
-          : "border: 2px solid transparent; opacity: 0.6;";
+          ? "border: 3px solid var(--fox-cyan);"
+          : "border: 1px solid #cbd5e1; opacity: 0.7;";
         const urlSegura = obtenerRutaSegura(logo.ImagenURL);
 
         const btnAccion = esActivo
-          ? `<button class="btn btn-success btn-sm w-100 font-weight-bold" disabled><i class="fas fa-check mr-1"></i> Principal</button>`
-          : `<button class="btn btn-secondary btn-sm w-50" onclick="establecerLogoPrincipal(${logo.LogoID})" title="Usar"><i class="fas fa-check"></i></button>
-                   <button class="btn btn-danger btn-sm w-50" onclick="eliminarLogo(${logo.LogoID})" title="Eliminar"><i class="fas fa-trash"></i></button>`;
+          ? `<button class="btn btn-fox-success btn-sm w-100 font-weight-bold" disabled><i class="fas fa-check mr-1"></i> Principal</button>`
+          : `<button class="btn btn-secondary btn-sm w-50 font-weight-bold" onclick="establecerLogoPrincipal(${logo.LogoID})" title="Usar"><i class="fas fa-check"></i></button>
+             <button class="btn btn-fox-danger btn-sm w-50 font-weight-bold" onclick="eliminarLogo(${logo.LogoID})" title="Eliminar"><i class="fas fa-trash"></i></button>`;
 
         galeriaLogos.innerHTML += `
-                <div class="col-auto mb-3 text-center">
-                    <div class="p-2 mb-2 rounded shadow-sm" style="${borde} background-color: #fff; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; transition: 0.3s;">
-                        <img src="${urlSegura}" onerror="this.src='https://placehold.co/100x100/1e293b/00f2ff?text=Error'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                    </div>
-                    <div class="btn-group w-100 shadow-sm" style="border-radius: 6px; overflow: hidden;">
-                        ${btnAccion}
-                    </div>
+            <div class="col-auto mb-3 text-center">
+                <div class="p-2 mb-2 rounded shadow-sm bg-white" style="${borde} width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; transition: 0.3s;">
+                    <img src="${urlSegura}" onerror="this.src='https://placehold.co/100x100/f8fafc/1e293b?text=Error'" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
-            `;
+                <div class="btn-group w-100 shadow-sm" style="border-radius: 6px; overflow: hidden;">
+                    ${btnAccion}
+                </div>
+            </div>
+        `;
       });
     }
 
@@ -223,15 +223,12 @@
       }
     }
 
-    // --- 5. FUNCIONES GLOBALES PARA LA GALERÍA (CONECTADAS AL BACKEND) ---
-
+    // --- 5. FUNCIONES GLOBALES PARA LA GALERÍA ---
     window.establecerLogoPrincipal = async (id) => {
       try {
         const res = await fetch(
           `http://localhost:3000/api/config-web/logo/activo/${id}`,
-          {
-            method: "PUT",
-          },
+          { method: "PUT" },
         );
         const result = await res.json();
 
@@ -245,18 +242,16 @@
           });
           cargarConfiguracion();
           if (typeof window.cargarLogoGlobal === "function") {
-            window.cargarLogoGlobal(); 
+            window.cargarLogoGlobal();
           }
         } else {
           Swal.fire("Error", result.mensaje, "error");
         }
       } catch (error) {
-        console.error(error);
         Swal.fire("Error", "Problema al intentar activar el logo.", "error");
       }
     };
 
-    // Eliminar un logo de la galería
     window.eliminarLogo = async (id) => {
       const conf = await Swal.fire({
         title: "¿Eliminar este logo?",
@@ -273,9 +268,7 @@
         try {
           const res = await fetch(
             `http://localhost:3000/api/config-web/logo/${id}`,
-            {
-              method: "DELETE",
-            },
+            { method: "DELETE" },
           );
           const result = await res.json();
 
@@ -292,7 +285,6 @@
             Swal.fire("Operación Bloqueada", result.mensaje, "error");
           }
         } catch (error) {
-          console.error(error);
           Swal.fire("Error", "Problema al intentar eliminar el logo.", "error");
         }
       }

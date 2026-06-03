@@ -74,25 +74,24 @@
           p.Nombre.toLowerCase().includes(txt) ||
           p.Codigo.toLowerCase().includes(txt),
       );
-
       filtrados.forEach((p) => {
         const item = document.createElement("a");
         item.href = "#";
         item.className =
-          "list-group-item list-group-item-action list-group-item-dark d-flex justify-content-between align-items-center";
+          "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
 
         const stockBadge =
           p.StockActual > 0
-            ? `<span class="badge badge-success badge-pill">${p.StockActual} und</span>`
-            : `<span class="badge badge-danger badge-pill">Sin Stock</span>`;
+            ? `<span class="badge badge-success">${p.StockActual} und</span>`
+            : `<span class="badge badge-danger">Sin Stock</span>`;
 
         item.innerHTML = `
-                    <div>
-                        <strong class="text-white">${p.Nombre}</strong><br>
-                        <small class="text-info">${p.Codigo} | S/ ${p.PrecioVenta.toFixed(2)}</small>
-                    </div>
-                    ${stockBadge}
-                `;
+            <div>
+                <strong class="dato-critico">${p.Nombre}</strong><br>
+                <small class="font-weight-bold" style="color: var(--fox-text-gray);">${p.Codigo} | S/ ${p.PrecioVenta.toFixed(2)}</small>
+            </div>
+            ${stockBadge}
+        `;
 
         item.addEventListener("click", (eClick) => {
           eClick.preventDefault();
@@ -170,10 +169,8 @@
     const body = document.getElementById("posTablaCarrito");
     body.innerHTML = "";
     let total = 0;
-
     if (carrito.length === 0) {
-      body.innerHTML =
-        '<tr><td colspan="5" class="text-muted py-4 italic">No hay productos en el carrito.</td></tr>';
+      body.innerHTML = `<tr><td colspan="5" class="py-4 italic" style="color: var(--fox-text-gray);">No hay productos en el carrito.</td></tr>`;
       actualizarTotales(0);
       return;
     }
@@ -182,19 +179,19 @@
       const subtotal = item.precio * item.cantidad;
       total += subtotal;
       body.innerHTML += `
-                <tr style="border-bottom: 1px solid #334155;">
-                    <td class="text-left py-2 font-weight-bold" style="font-size: 0.9rem;">${item.nombre}</td>
-                    <td class="text-info font-weight-bold">S/ ${item.precio.toFixed(2)}</td>
-                    <td width="80">
-                        <input type="number" value="${item.cantidad}" min="1" max="${item.stockMaximo}" 
-                            class="form-control form-control-sm bg-dark text-white border-info text-center" 
-                            onchange="cambiarCantidad(${index}, this.value)">
-                    </td>
-                    <td class="font-weight-bold">S/ ${subtotal.toFixed(2)}</td>
-                    <td>
-                        <button class="btn btn-sm text-danger" onclick="eliminarItem(${index})"><i class="fas fa-times-circle"></i></button>
-                    </td>
-                </tr>`;
+        <tr>
+            <td class="text-left py-2 dato-critico">${item.nombre}</td>
+            <td class="font-weight-bold">S/ ${item.precio.toFixed(2)}</td>
+            <td width="80">
+                <input type="number" value="${item.cantidad}" min="1" max="${item.stockMaximo}" 
+                    class="form-control form-control-sm text-center font-weight-bold" 
+                    onchange="cambiarCantidad(${index}, this.value)">
+            </td>
+            <td class="dato-critico">S/ ${subtotal.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-fox-danger px-2 py-1" onclick="eliminarItem(${index})"><i class="fas fa-times"></i></button>
+            </td>
+        </tr>`;
     });
     actualizarTotales(total);
 
@@ -352,42 +349,36 @@
 
       if (ventas.length === 0) {
         tabla.innerHTML =
-          '<tr><td colspan="9" class="text-muted py-4">No hay ventas registradas hoy.</td></tr>';
+          '<tr><td colspan="9" class="py-4 italic" style="color: var(--fox-text-gray);">No hay ventas registradas hoy.</td></tr>';
         return;
       }
 
       ventas.forEach((v) => {
         const estadoBadge =
           v.Estado === "ANULADA"
-            ? '<span class="badge badge-danger px-2 py-1">ANULADA</span>'
-            : '<span class="badge badge-success px-2 py-1">COMPLETADA</span>';
+            ? '<span class="badge badge-danger">ANULADA</span>'
+            : '<span class="badge badge-success">COMPLETADA</span>';
 
         const totalFloat = parseFloat(v.Total);
         const subtotalDesc = (totalFloat / 1.18).toFixed(2);
 
         tabla.innerHTML += `
-                <tr>
-                    <td class="font-weight-bold">${v.NumeroDoc}</td>
-                    <td class="text-left small font-weight-bold">${v.ClienteNombre || "Sin Cliente"}</td>
-                    <td class="small">${v.FechaVenta}</td>
-                    <td class="small font-weight-bold text-muted">${v.MetodoPago || "N/A"}</td>
-                    <td class="small">S/ ${subtotalDesc}</td>
-                    <td class="small">S/ 0.00</td>
-                    <td class="font-weight-bold" style="color: var(--fox-cyan);">S/ ${totalFloat.toFixed(2)}</td>
-                    <td>${estadoBadge}</td>
-                    <td>
-                        <button class="btn btn-sm btn-info shadow-sm" onclick="verDetalleVenta(${v.VentaID})" title="Ver Detalle">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger shadow-sm mx-1" onclick="anularVenta(${v.VentaID})" title="Anular Venta" ${v.Estado === "ANULADA" ? "disabled" : ""}>
-                            <i class="fas fa-times-circle"></i>
-                        </button>
-                        <button class="btn btn-sm btn-secondary shadow-sm" onclick="imprimirTicketHistorial(${v.VentaID})" title="Imprimir Ticket">
-                            <i class="fas fa-print"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+            <tr>
+                <td class="font-weight-bold">${v.NumeroDoc}</td>
+                <td class="text-left dato-critico">${v.ClienteNombre || "CLIENTE GENERAL"}</td>
+                <td>${v.FechaVenta}</td>
+                <td class="font-weight-bold" style="color: var(--fox-text-gray);">${v.MetodoPago || "N/A"}</td>
+                <td>S/ ${subtotalDesc}</td>
+                <td>S/ 0.00</td>
+                <td class="dato-critico text-fox-orange">S/ ${totalFloat.toFixed(2)}</td>
+                <td>${estadoBadge}</td>
+                <td>
+                    <button class="btn btn-sm btn-fox-cyan mx-1" onclick="verDetalleVenta(${v.VentaID})" title="Ver Detalle"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-sm btn-fox-danger mx-1" onclick="anularVenta(${v.VentaID})" title="Anular Venta" ${v.Estado === "ANULADA" ? "disabled" : ""}><i class="fas fa-times-circle"></i></button>
+                    <button class="btn btn-sm btn-dark mx-1" onclick="imprimirTicketHistorial(${v.VentaID})" title="Imprimir Ticket"><i class="fas fa-print"></i></button>
+                </td>
+            </tr>
+        `;
       });
     } catch (e) {
       tabla.innerHTML =
@@ -431,23 +422,20 @@
           if (data && data.length > 0) {
             data.forEach((c) => {
               tbody.innerHTML += `
-                                <tr>
-                                    <td>${c.Documento || "N/A"}</td>
-                                    <td>${c.NombreRazonSocial}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-info" onclick="seleccionarCliente(${c.ClienteID}, '${c.NombreRazonSocial.replace(/'/g, "\\'")}')">
-                                            Seleccionar
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
+                <tr>
+                    <td class="font-weight-bold">${c.Documento || "N/A"}</td>
+                    <td class="dato-critico">${c.NombreRazonSocial}</td>
+                    <td>
+                        <button class="btn btn-sm btn-fox-cyan" onclick="seleccionarCliente(${c.ClienteID}, '${c.NombreRazonSocial.replace(/'/g, "\\'")}')">Seleccionar</button>
+                    </td>
+                </tr>
+              `;
             });
             $("#modalBuscarCliente").modal("show");
           } else {
             Swal.fire("No encontrado", "Cliente no registrado.", "warning");
           }
         } catch (err) {
-          console.error("Error buscando cliente:", err);
           Swal.fire(
             "Error",
             "Fallo al buscar cliente en el servidor.",
@@ -518,7 +506,6 @@
       Swal.fire("Error", "Problemas de conexión con el servidor.", "error");
     }
   };
-
   window.verDetalleVenta = async (idVenta) => {
     try {
       const res = await fetch(`http://localhost:3000/api/ventas/${idVenta}`);
@@ -543,13 +530,13 @@
         let htmlItems = "";
         detalles.forEach((item) => {
           htmlItems += `
-                    <tr>
-                        <td class="text-left">${item.ProductoNombre}</td>
-                        <td class="text-info">S/ ${parseFloat(item.PrecioUnitario).toFixed(2)}</td>
-                        <td>${item.Cantidad}</td>
-                        <td class="text-right font-weight-bold">S/ ${parseFloat(item.Subtotal).toFixed(2)}</td>
-                    </tr>
-                `;
+            <tr>
+                <td class="text-left dato-critico">${item.ProductoNombre}</td>
+                <td class="font-weight-bold">S/ ${parseFloat(item.PrecioUnitario).toFixed(2)}</td>
+                <td>${item.Cantidad}</td>
+                <td class="dato-critico">S/ ${parseFloat(item.Subtotal).toFixed(2)}</td>
+            </tr>
+          `;
         });
         document.getElementById("detTablaItems").innerHTML = htmlItems;
 
@@ -564,7 +551,6 @@
           $("#modalDetalleVenta").modal("hide");
           setTimeout(() => window.imprimirTicketHistorial(idVenta), 500);
         };
-
         $("#modalDetalleVenta").modal("show");
       } else {
         Swal.fire(
@@ -574,7 +560,6 @@
         );
       }
     } catch (e) {
-      console.error("Error al ver detalle de venta:", e);
       Swal.fire("Error", "Problemas de conexión con el servidor.", "error");
     }
   };
@@ -632,6 +617,7 @@
   // =======================================================
   // 8. CATÁLOGO VISUAL DE PRODUCTOS
   // =======================================================
+
   const btnCatalogo = document.getElementById("btnAbrirCatalogo");
   if (btnCatalogo) {
     btnCatalogo.addEventListener("click", () => {
@@ -639,6 +625,7 @@
       $("#modalCatalogo").modal("show");
     });
   }
+
   function renderizarCatalogo() {
     const grid = document.getElementById("gridCatalogoProductos");
     grid.innerHTML = "";
@@ -649,49 +636,46 @@
       const colorCard = p.StockActual <= 0 ? "opacity: 0.6;" : "";
 
       if (p.StockActual <= 0) {
-        stockBadge =
-          '<span class="badge badge-secondary px-2 py-1 mb-2">Agotado</span>';
+        stockBadge = '<span class="badge badge-danger mb-2">Agotado</span>';
         btnAgregar =
           '<button class="btn btn-secondary btn-block font-weight-bold" disabled>Agotado</button>';
       } else if (p.StockActual < 5) {
         stockBadge =
-          '<span class="badge badge-warning text-dark px-2 py-1 mb-2">Pocas unidades</span>';
-        btnAgregar = `<button class="btn btn-success btn-block font-weight-bold" onclick="agregarDesdeCatalogo(${p.ProductoID})" style="background-color: #10b981;"><i class="fas fa-cart-plus"></i> Agregar</button>`;
+          '<span class="badge badge-info mb-2">Pocas unidades</span>';
+        btnAgregar = `<button class="btn btn-fox-success btn-block" onclick="agregarDesdeCatalogo(${p.ProductoID})"><i class="fas fa-cart-plus"></i> Agregar</button>`;
       } else {
-        stockBadge =
-          '<span class="badge badge-success px-2 py-1 mb-2" style="background-color: #10b981;">Disponible</span>';
-        btnAgregar = `<button class="btn btn-success btn-block font-weight-bold" onclick="agregarDesdeCatalogo(${p.ProductoID})" style="background-color: #10b981;"><i class="fas fa-cart-plus"></i> Agregar</button>`;
+        stockBadge = '<span class="badge badge-success mb-2">Disponible</span>';
+        btnAgregar = `<button class="btn btn-fox-success btn-block" onclick="agregarDesdeCatalogo(${p.ProductoID})"><i class="fas fa-cart-plus"></i> Agregar</button>`;
       }
 
       const imgUrl =
         p.ImagenURL && p.ImagenURL.trim() !== ""
           ? getUrl(p.ImagenURL)
-          : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.Nombre.charAt(0))}&background=334155&color=64ffda&size=150&font-size=0.6`;
+          : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.Nombre.charAt(0))}&background=f1f5f9&color=1e293b&size=150`;
 
       grid.innerHTML += `
         <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm" style="background-color: var(--fox-card); border-radius: 12px; overflow: hidden; ${colorCard}">
-                <img src="${imgUrl}" class="card-img-top" style="height: 140px; object-fit: contain; background-color: #1e293b; padding: 10px;" 
-                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.Nombre.charAt(0))}&background=334155&color=64ffda&size=150&font-size=0.6'">
-                <div class="card-body p-3 d-flex flex-column text-white">
+            <div class="card h-100 border shadow-sm" style="border-radius: 12px; overflow: hidden; ${colorCard}">
+                <img src="${imgUrl}" class="card-img-top border-bottom" style="height: 140px; object-fit: contain; padding: 10px;" 
+                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.Nombre.charAt(0))}&background=f1f5f9&color=1e293b&size=150'">
+                <div class="card-body p-3 d-flex flex-column">
                     <div>${stockBadge}</div>
-                    <h6 class="font-weight-bold mt-1 mb-2" style="font-size: 0.95rem; line-height: 1.2;">${p.Nombre}</h6>
-                    <small class="text-muted d-block mb-3 border-bottom border-secondary pb-2">Cod: ${p.Codigo}</small>
+                    <h6 class="dato-critico mt-2 mb-1" style="line-height: 1.2;">${p.Nombre}</h6>
+                    <small class="d-block mb-3 border-bottom pb-2" style="color: var(--fox-text-gray);">Cod: ${p.Codigo}</small>
                     <div class="mt-auto">
-                        <h4 class="font-weight-bold mb-1" style="color: var(--fox-cyan);">S/ ${parseFloat(p.PrecioVenta).toFixed(2)}</h4>
-                        <div class="text-muted small mb-3">Stock: ${p.StockActual}</div>
+                        <h4 class="dato-critico mb-1">S/ ${parseFloat(p.PrecioVenta).toFixed(2)}</h4>
+                        <div class="small font-weight-bold mb-3" style="color: var(--fox-text-gray);">Stock: ${p.StockActual}</div>
                         ${btnAgregar}
                     </div>
                 </div>
             </div>
         </div>
-    `;
+      `;
     });
   }
 
   window.agregarDesdeCatalogo = (id) => {
     agregarAlCarrito(id);
-
     const lblCatalogo = document.getElementById("catTotalItems");
     lblCatalogo.classList.add("animate__animated", "animate__rubberBand");
     setTimeout(() => {

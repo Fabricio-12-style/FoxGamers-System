@@ -1,31 +1,25 @@
 :root {
-    /* Fondos y Estructura */
+    /* Fondos y Estructura Base (Se mantiene tu estilo original) */
     --fox-bg-dark: #0f172a;
-    /* Azul oscuro/Navy para el fondo que no cansa la vista */
     --fox-surface: #1e293b;
-    /* Azul ligeramente más claro para menús o barras */
     --fox-card: #ffffff;
-    /* Blanco para cajas de contenido */
 
-    /* Textos */
-    --fox-text-dark: #334155;
-    /* Texto gris oscuro para leer sobre las cajas blancas */
+    /* Textos (Ajustados para Alto Contraste) */
     --fox-text-light: #f8fafc;
-    /* Texto blanco para leer sobre el azul oscuro */
+    --fox-text-black: #000000;
+    /* Negro puro para lectura crítica */
+    --fox-text-gray: #475569;
+    /* Gris oscuro para textos secundarios */
 
-    /* Colores de Acción */
+    /* Colores de Acción Fox */
     --fox-orange: #ff6a00;
-    /* Naranja principal para acciones clave (Añadir, Registrar) */
     --fox-orange-hover: #e65f00;
-
-    /* Colores de Soporte y Acentos */
     --fox-cyan: #00d2ff;
-    /* Celeste para soporte, hovers secundarios y detalles */
     --fox-cyan-hover: #00b8e6;
-
-    /* Alertas y Ofertas */
-    --fox-red-alert: #ef4444;
-    /* Rojo reservado SOLO para ofertas o borrar */
+    --fox-red: #ef4444;
+    /* Anular / Eliminar / Salidas */
+    --fox-green: #10b981;
+    /* Completado / Stock / Entradas */
 }
 
 body {
@@ -33,53 +27,154 @@ body {
     background-color: var(--fox-bg-dark) !important;
 }
 
-
+/* =========================================
+   1. BOTONES GLOBALES (ADIÓS AZULES GENÉRICOS)
+   ========================================= */
 .btn-fox {
     background-color: var(--fox-orange) !important;
     color: white !important;
     border: none;
-    transition: all 0.3s ease;
-    border-radius: 6px;
+    font-weight: 700;
+    transition: all 0.3s;
 }
 
 .btn-fox:hover {
     background-color: var(--fox-orange-hover) !important;
     transform: scale(1.02);
-    box-shadow: 0 4px 10px rgba(255, 106, 0, 0.3);
 }
 
-.btn-fox-support {
+.btn-fox-cyan {
     background-color: var(--fox-cyan) !important;
-    color: var(--fox-bg-dark) !important;
+    color: #000 !important;
     border: none;
-    transition: all 0.3s ease;
-    border-radius: 6px;
-    font-weight: bold;
+    font-weight: 700;
+    transition: all 0.3s;
 }
 
-.btn-fox-support:hover {
+.btn-fox-cyan:hover {
     background-color: var(--fox-cyan-hover) !important;
     transform: scale(1.02);
 }
 
-
-.bg-fox-dark {
-    background-color: var(--fox-bg-dark) !important;
+.btn-fox-danger {
+    background-color: var(--fox-red) !important;
+    color: white !important;
+    border: none;
+    font-weight: 700;
 }
 
-.login-input {
+.btn-fox-success {
+    background-color: var(--fox-green) !important;
+    color: white !important;
+    border: none;
+    font-weight: 700;
+}
+
+/* =========================================
+   2. ALTO CONTRASTE: MODALES Y CAJAS (BLANCO Y NEGRO)
+   ========================================= */
+.modal-content,
+.card {
+    background-color: var(--fox-card) !important;
+    color: var(--fox-text-black) !important;
+    border: none !important;
+}
+
+/* Cabeceras de Modales */
+.modal-header {
     background-color: var(--fox-surface) !important;
-    border: 1px solid #334155 !important;
     color: var(--fox-text-light) !important;
-    border-radius: 6px;
+    border-bottom: 3px solid var(--fox-cyan) !important;
 }
 
+.modal-header .close {
+    color: var(--fox-text-light) !important;
+    opacity: 0.8;
+}
+
+/* =========================================
+   3. TABLAS DE GESTIÓN (PURA LEGIBILIDAD)
+   ========================================= */
+.table {
+    background-color: #ffffff !important;
+    color: var(--fox-text-black) !important;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table thead {
+    background-color: #f1f5f9 !important;
+    color: var(--fox-text-black) !important;
+    font-weight: 900 !important;
+    /* Negrita extra fuerte para cabeceras */
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+.table td,
+.table th {
+    vertical-align: middle !important;
+    border-top: 1px solid #e2e8f0 !important;
+}
+
+/* Filas alternadas para no perderse leyendo */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8fafc !important;
+}
+
+/* Clases utilitarias para resaltar datos críticos (Nombres, Precios, Totales) */
+.dato-critico {
+    font-weight: 900 !important;
+    color: #000000 !important;
+    font-size: 1.05rem;
+}
+
+/* =========================================
+   4. FORMULARIOS E INPUTS CLAROS
+   ========================================= */
+.form-control,
+.login-input {
+    background-color: #ffffff !important;
+    border: 2px solid #cbd5e1 !important;
+    color: var(--fox-text-black) !important;
+    font-weight: 700 !important;
+    /* Lo que escribes se ve fuerte */
+}
+
+.form-control:focus,
 .login-input:focus {
-    border-color: var(--fox-cyan) !important;
-    box-shadow: 0 0 8px rgba(0, 210, 255, 0.4) !important;
-    outline: none;
+    border-color: var(--fox-orange) !important;
+    box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.2) !important;
 }
 
+/* =========================================
+   5. ESTADOS Y ETIQUETAS (VERDE Y ROJO PUROS)
+   ========================================= */
+.badge {
+    padding: 6px 12px !important;
+    font-weight: 800 !important;
+    border-radius: 4px !important;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.badge-success {
+    background-color: var(--fox-green) !important;
+    color: white !important;
+}
+
+.badge-danger {
+    background-color: var(--fox-red) !important;
+    color: white !important;
+}
+
+.badge-info {
+    background-color: var(--fox-cyan) !important;
+    color: #000 !important;
+}
+
+/* =========================================
+   6. SIDEBAR Y LAYOUT PRINCIPAL (INTACTO)
+   ========================================= */
 .main-sidebar {
     background-color: var(--fox-bg-dark) !important;
 }
@@ -90,120 +185,56 @@ body {
     color: var(--fox-text-light) !important;
 }
 
-.nav-pills .nav-link.active,
-.nav-item.menu-open>.nav-link {
+.nav-pills .nav-link.active {
     background-color: var(--fox-orange) !important;
     color: white !important;
     box-shadow: 0 2px 8px rgba(255, 106, 0, 0.4);
 }
-
 
 .main-header {
     background-color: var(--fox-surface) !important;
     border-bottom: 1px solid #334155 !important;
 }
 
-.main-header .nav-link {
-    color: var(--fox-text-light) !important;
-}
-
-.main-footer {
-    background-color: var(--fox-bg-dark) !important;
-    color: #64748b !important;
-    border-top: 1px solid #334155 !important;
-}
-
-
 .user-panel {
     border-bottom: 1px solid #334155 !important;
-}
-
-.user-panel .info {
-    width: 100%;
 }
 
 .user-panel .info a {
     color: var(--fox-text-light) !important;
     font-weight: 700;
-    font-size: 1.1rem;
-    text-decoration: none;
 }
 
 .role-badge {
     color: var(--fox-cyan) !important;
-    font-size: 0.85rem;
     font-weight: 700;
-    letter-spacing: 0.5px;
     text-transform: uppercase;
-    display: block;
-    margin-top: 5px;
 }
 
-.btn-logout {
-    color: #94a3b8 !important;
-    border: 1px solid #334155 !important;
-    background-color: transparent !important;
-    transition: all 0.3s ease;
-    border-radius: 6px;
-    padding: 6px 16px;
-}
-
-.btn-logout:hover {
-    border-color: var(--fox-orange) !important;
-    color: var(--fox-orange) !important;
-    background-color: rgba(255, 106, 0, 0.1) !important;
-}
-
-/*Estilos específicos para la Landing Page pública (frontend/web/index.html)*/
-
-.web-body {
-    background-color: var(--fox-bg-dark) !important;
-    color: var(--fox-text-light) !important;
-}
-
-.web-hero {
-    background: radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.1) 0%, transparent 70%) !important;
-}
-
-
-.web-hero h1 {
-    color: #ffffff !important;
-}
-
-.web-card {
-    background-color: var(--fox-surface) !important;
-    border: 1px solid #334155 !important;
-    border-radius: 8px;
-}
-
-.web-card .card-title {
-    color: var(--fox-text-light) !important;
-}
-
-.web-body .text-muted {
-    color: #94a3b8 !important;
-}
-
-
-
-/* Estilos para el ticket de impresión en ventas (frontend/modules/ventas/pos.html) */
-/* Ocultamos el ticket en la pantalla normal */
+/* =========================================
+   7. IMPRESIÓN DEL TICKET
+   ========================================= */
 #zonaTicket {
     display: none;
 }
 
-/* ESTILOS EXCLUSIVOS PARA LA IMPRESORA */
 @media print {
     body * {
         visibility: hidden;
     }
+
+    .modal,
+    .modal-backdrop {
+        display: none !important;
+    }
+
     #zonaTicket,
     #zonaTicket * {
         visibility: visible;
     }
 
     #zonaTicket {
-        display: block;
+        display: block !important;
         position: absolute;
         left: 0;
         top: 0;
@@ -212,33 +243,10 @@ body {
         font-family: 'Montserrat', sans-serif;
         color: #000;
         background: #fff;
+        margin: 0;
     }
+
     @page {
         margin: 0;
-    }
-}
-
-
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    
-    .modal, .modal-backdrop {
-        display: none !important;
-    }
-
-    #zonaTicket, #zonaTicket * {
-        visibility: visible;
-    }
-
-    #zonaTicket {
-        position: absolute;
-        left: 0;
-        top: 0;
-        display: block !important; 
-        width: 100%; 
-        margin: 0;
-        padding: 0;
     }
 }

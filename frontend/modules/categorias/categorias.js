@@ -2,7 +2,7 @@
   let categoriaEditandoId = null;
   let listaCategoriasGlobal = [];
 
-  // 1. Expresiones regulares de validación (Espejo del backend)
+  // 1. Expresiones regulares de validación
   const regexBasura = /([a-zA-Z0-9])\1\1/;
   const regexNombre = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-&]+$/;
 
@@ -20,42 +20,45 @@
 
     if (datos.length === 0) {
       tabla.innerHTML =
-        '<tr><td colspan="5" class="text-center text-muted py-4">No hay familias registradas.</td></tr>';
+        '<tr><td colspan="5" class="text-center py-4 font-weight-bold" style="color: var(--fox-text-gray);">No hay familias registradas.</td></tr>';
       return;
     }
 
     datos.forEach((c) => {
       const statusBadge = c.Activo
-        ? '<span class="badge badge-success px-2 py-1 shadow-sm">Activa</span>'
-        : '<span class="badge px-2 py-1 shadow-sm" style="background-color: #64748b; color: white;">Suspendida</span>';
+        ? '<span class="badge badge-success">Activa</span>'
+        : '<span class="badge badge-secondary">Suspendida</span>';
 
+      // Uso de las nuevas clases de botones Fox
       const btnToggle = c.Activo
-        ? `<button onclick="toggleEstadoCat(${c.CategoriaID}, 0)" class="btn btn-sm btn-secondary mx-1 shadow-sm" title="Suspender"><i class="fas fa-eye-slash"></i></button>`
-        : `<button onclick="toggleEstadoCat(${c.CategoriaID}, 1)" class="btn btn-sm btn-info mx-1 shadow-sm" title="Reactivar"><i class="fas fa-eye"></i></button>`;
+        ? `<button onclick="toggleEstadoCat(${c.CategoriaID}, 0)" class="btn btn-sm btn-secondary mx-1" style="width: 34px; height: 34px;" title="Suspender"><i class="fas fa-eye-slash"></i></button>`
+        : `<button onclick="toggleEstadoCat(${c.CategoriaID}, 1)" class="btn btn-sm btn-fox-cyan mx-1" style="width: 34px; height: 34px;" title="Reactivar"><i class="fas fa-eye"></i></button>`;
 
       const rowStyle = c.Activo
         ? ""
-        : "opacity: 0.6; background-color: rgba(0,0,0,0.05);";
+        : "opacity: 0.5; filter: grayscale(1); background-color: #f1f5f9;";
 
       tabla.innerHTML += `
-                <tr style="${rowStyle}">
-                    <td class="text-muted font-weight-bold">${c.CategoriaID}</td>
-                    <td class="text-left font-weight-bold" style="color: var(--fox-dark, #343a40); border-radius: 4px; padding-left: 15px;">
-                        ${c.Nombre}
-                    </td>
-                    <td class="text-left text-muted">${c.Descripcion || "-"}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <button onclick="prepararEdicionCat(${c.CategoriaID})" class="btn btn-sm btn-warning text-white mx-1 shadow-sm">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
-                        ${btnToggle}
-                        <button onclick="eliminarCategoriaFisica(${c.CategoriaID})" class="btn btn-sm btn-danger text-white mx-1 shadow-sm">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+        <tr style="${rowStyle}">
+            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${c.CategoriaID}</td>
+            <td class="text-left dato-critico" style="padding-left: 15px;">
+                ${c.Nombre}
+            </td>
+            <td class="text-left font-weight-bold" style="color: var(--fox-text-gray);">${c.Descripcion || "-"}</td>
+            <td>${statusBadge}</td>
+            <td>
+                <div class="btn-group">
+                    <button onclick="prepararEdicionCat(${c.CategoriaID})" class="btn btn-sm btn-fox mx-1" style="width: 34px; height: 34px;" title="Editar">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    ${btnToggle}
+                    <button onclick="eliminarCategoriaFisica(${c.CategoriaID})" class="btn btn-sm btn-fox-danger mx-1" style="width: 34px; height: 34px;" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+      `;
     });
   }
 
@@ -228,7 +231,7 @@
           Swal.fire("¡Eliminado!", data.mensaje, "success");
           listarCategorias();
         } else {
-          Swal.fire("Acción Bloqueada", data.mensaje, "warning"); // Captura el error 547
+          Swal.fire("Acción Bloqueada", data.mensaje, "warning");
         }
       } catch (e) {
         Swal.fire("Error", "No se pudo conectar con el servidor.", "error");
