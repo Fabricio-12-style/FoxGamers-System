@@ -1,7 +1,7 @@
 <div class="content-header pt-4">
     <div class="container-fluid d-flex justify-content-between align-items-center">
-        <h1 class="m-0 font-weight-bold" style="color: var(--fox-dark);">Productos</h1>
-        <button class="btn btn-fox font-weight-bold shadow-sm px-4" id="btnNuevoProducto">
+        <h1 class="m-0 dato-critico" style="font-size: 2.2rem;">Productos</h1>
+        <button class="btn btn-fox shadow-sm px-4" id="btnNuevoProducto">
             <i class="fas fa-plus-circle mr-1"></i> Registrar Producto
         </button>
     </div>
@@ -9,14 +9,14 @@
 
 <section class="content mt-3">
     <div class="container-fluid">
-        <div class="card shadow-sm border-0" style="background-color: var(--fox-card);">
-            <div class="card-header border-bottom-0 pt-3 pb-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-header border-bottom-0 pt-3 pb-3 bg-light">
                 <div class="input-group" style="max-width: 400px;">
                     <input type="text" id="buscarProducto" class="form-control"
                         placeholder="Buscar por modelo, código o familia...">
                     <div class="input-group-append">
                         <span class="input-group-text"
-                            style="background-color: var(--fox-surface); border-color: #334155; color: var(--fox-cyan);">
+                            style="background-color: var(--fox-surface); border-color: #cbd5e1; color: var(--fox-cyan);">
                             <i class="fas fa-search"></i>
                         </span>
                     </div>
@@ -24,8 +24,8 @@
             </div>
 
             <div class="card-body p-0 table-responsive">
-                <table class="table table-hover text-center align-middle mb-0">
-                    <thead class="text-white font-weight-bold" style="background-color: var(--fox-surface);">
+                <table class="table table-striped text-center align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>ID</th>
                             <th>Imagen</th>
@@ -43,88 +43,105 @@
     </div>
 </section>
 
-<div class="modal fade" id="modalProducto" tabindex="-1">
+<div class="modal fade" id="modalProducto" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="background-color: var(--fox-card);">
-            <div class="modal-header text-white"
-                style="background-color: var(--fox-surface); border-bottom: 2px solid var(--fox-orange);">
-                <h5 class="modal-title font-weight-bold" id="tituloModalProd">Ficha Técnica de Producto</h5>
-                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+        <div class="modal-content shadow-lg border-0">
+
+            <div class="modal-header"
+                style="background-color: var(--fox-surface); border-bottom: 3px solid var(--fox-orange) !important;">
+                <h5 class="modal-title font-weight-bold" id="tituloModalProd" style="color: var(--fox-text-light);">
+                    Ficha Técnica de Producto</h5>
+                <button type="button" class="close" data-dismiss="modal"
+                    style="color: var(--fox-text-light); opacity: 0.8;">&times;</button>
             </div>
 
             <form id="formProducto">
-                <div class="modal-body px-4" style="background-color: var(--fox-bg-dark);">
+                <div class="modal-body px-4 bg-white">
                     <div class="row">
-                        <div class="col-md-4 text-center border-right border-secondary">
-                            <label class="small font-weight-bold text-muted mb-2">IMAGEN REFERENCIAL</label>
-                            <div class="mb-3 d-flex justify-content-center align-items-center p-2"
-                                style="height: 250px; background: var(--fox-surface); border: 2px dashed #334155; border-radius: 8px;">
-                                <img id="imgPreview" src="https://placehold.co/400x400/1e293b/00f2ff?text=Subir+Imagen"
+                        <div class="col-md-4 text-center border-right">
+                            <label class="small font-weight-bold text-uppercase mb-2"
+                                style="color: var(--fox-text-gray);">IMAGEN REFERENCIAL</label>
+                            <div class="mb-3 d-flex justify-content-center align-items-center p-2 rounded"
+                                style="height: 250px; background: #f8fafc; border: 2px dashed #cbd5e1;">
+                                <img id="imgPreview" src="https://placehold.co/400x400/f8fafc/1e293b?text=Subir+Imagen"
                                     style="max-height: 100%; max-width: 100%; object-fit: contain;">
                             </div>
                             <div class="custom-file">
                                 <input type="file" id="prodImagen" class="custom-file-input" accept="image/*">
-                                <label class="custom-file-label bg-dark text-white-50 text-left" for="prodImagen">Elegir
-                                    archivo...</label>
+                                <label class="custom-file-label text-left font-weight-bold" for="prodImagen"
+                                    style="color: var(--fox-text-gray);">Elegir archivo...</label>
                             </div>
                         </div>
 
                         <div class="col-md-8">
                             <div class="row">
                                 <div class="col-md-6 form-group">
-                                    <label class="small font-weight-bold text-muted">FAMILIA / CATEGORÍA</label>
-                                    <select id="prodCategoria" class="form-control login-input" required></select>
+                                    <label class="small font-weight-bold text-uppercase"
+                                        style="color: var(--fox-text-gray);">FAMILIA / CATEGORÍA *</label>
+                                    <select id="prodCategoria" class="form-control" required></select>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label class="small font-weight-bold text-muted">CÓDIGO SKU</label>
-                                    <input type="text" id="prodCodigo" class="form-control login-input" required>
+                                    <label class="small font-weight-bold text-uppercase"
+                                        style="color: var(--fox-text-gray);">CÓDIGO SKU *</label>
+                                    <input type="text" id="prodCodigo" class="form-control dato-critico" required>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label class="small font-weight-bold text-muted">MODELO BASE</label>
-                                    <input type="text" id="prodModelo" class="form-control login-input"
+                                    <label class="small font-weight-bold text-uppercase"
+                                        style="color: var(--fox-text-gray);">MODELO BASE *</label>
+                                    <input type="text" id="prodModelo" class="form-control dato-critico"
                                         placeholder="Ej: G502 Hero" required>
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label class="small font-weight-bold text-muted">ATRIBUTO / VARIANTE</label>
-                                    <input type="text" id="prodAtributo" class="form-control login-input"
+                                    <label class="small font-weight-bold text-uppercase"
+                                        style="color: var(--fox-text-gray);">ATRIBUTO / VARIANTE</label>
+                                    <input type="text" id="prodAtributo" class="form-control dato-critico"
                                         placeholder="Ej: Black RGB">
                                 </div>
 
                                 <div class="col-12">
                                     <div class="p-3 mb-3 rounded"
-                                        style="background-color: var(--fox-surface); border: 1px solid var(--fox-cyan);">
-                                        <small class="text-muted d-block font-weight-bold">NOMBRE DE VENTA
-                                            GENERADO:</small>
-                                        <span id="prodPreviewNombre" class="h5 font-weight-bold"
-                                            style="color: var(--fox-cyan);">Esperando datos...</span>
+                                        style="background-color: #f8fafc; border: 1px dashed var(--fox-cyan);">
+                                        <small class="text-uppercase font-weight-bold d-block mb-1"
+                                            style="color: var(--fox-text-gray);">NOMBRE DE VENTA GENERADO:</small>
+                                        <span id="prodPreviewNombre" class="dato-critico"
+                                            style="font-size: 1.2rem; color: var(--fox-cyan) !important;">Esperando
+                                            datos...</span>
                                     </div>
                                 </div>
+
                                 <div class="col-md-4 form-group">
-                                    <label class="small font-weight-bold text-muted">COSTO (S/)</label>
+                                    <label class="small font-weight-bold text-uppercase"
+                                        style="color: var(--fox-text-gray);">COSTO (S/) *</label>
                                     <input type="number" step="0.01" min="0"
                                         onkeydown="return event.key !== '-' && event.key !== 'e'" id="prodCosto"
-                                        class="form-control login-input" required>
+                                        class="form-control text-center font-weight-bold" required>
                                 </div>
                                 <div class="col-md-4 form-group">
-                                    <label class="small font-weight-bold text-muted">PRECIO VENTA (S/)</label>
+                                    <label class="small font-weight-bold text-uppercase"
+                                        style="color: var(--fox-text-gray);">PRECIO VENTA (S/) *</label>
                                     <input type="number" step="0.01" min="0"
                                         onkeydown="return event.key !== '-' && event.key !== 'e'" id="prodPrecio"
-                                        class="form-control login-input" required>
+                                        class="form-control text-center dato-critico" required>
                                 </div>
                                 <div class="col-md-4 form-group">
-                                    <label class="small font-weight-bold text-muted">STOCK MÍNIMO</label>
+                                    <label class="small font-weight-bold text-uppercase"
+                                        style="color: var(--fox-text-gray);">STOCK MÍNIMO *</label>
                                     <input type="number" min="0"
                                         onkeydown="return event.key !== '-' && event.key !== 'e' && event.key !== '.'"
-                                        id="prodMinimo" class="form-control login-input" value="5" required>
+                                        id="prodMinimo" class="form-control text-center font-weight-bold" value="5"
+                                        required>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer px-4"
-                    style="background-color: var(--fox-surface); border-top: 1px solid #334155;">
-                    <button type="button" class="btn btn-logout font-weight-bold" data-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-fox font-weight-bold px-5">Finalizar Registro</button>
+
+                <div class="modal-footer px-4 border-top-0" style="background-color: var(--fox-surface);">
+                    <button type="button" class="btn btn-secondary font-weight-bold"
+                        data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-fox px-5">
+                        <i class="fas fa-save mr-2"></i> Finalizar Registro
+                    </button>
                 </div>
             </form>
         </div>

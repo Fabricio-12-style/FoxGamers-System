@@ -2,11 +2,14 @@
   let productoEditandoId = null;
   let listaProductosGlobal = [];
   let mapaCategorias = {};
-  let imagenBase64 = null; // Lo conservamos para cuando editamos un producto que ya tiene imagen
-  let archivoImagen = null; // NUEVO: Aquí guardaremos el archivo físico
+  let imagenBase64 = null;
+  let archivoImagen = null;
 
+  // Actualizamos el placeholder para que encaje con el nuevo esquema claro del modal
   const placeholderImg =
-    "https://placehold.co/400x400/1e293b/00f2ff?text=Subir+Imagen";
+    "https://placehold.co/400x400/f8fafc/1e293b?text=Subir+Imagen";
+  // Placeholder pequeño para la tabla
+  const placeholderIcon = "https://placehold.co/50x50/f8fafc/1e293b?text=Img";
 
   (async function init() {
     if (!localStorage.getItem("usuarioFoxGamers")) {
@@ -24,7 +27,8 @@
       const select = document.getElementById("prodCategoria");
 
       if (!select) return;
-      select.innerHTML = '<option value="">Seleccione Familia...</option>';
+      select.innerHTML =
+        '<option value="" disabled selected>Seleccione Familia...</option>';
 
       data.forEach((c) => {
         if (c.Activo) {
@@ -88,7 +92,7 @@
     });
   }
 
-  // 4. RENDERIZAR TABLA DE PRODUCTOS (Se mantiene intacto)
+  // 4. RENDERIZAR TABLA DE PRODUCTOS
   function renderizarTabla(datos) {
     const tabla = document.getElementById("tablaProductos");
     if (!tabla) return;
@@ -96,7 +100,7 @@
 
     if (datos.length === 0) {
       tabla.innerHTML =
-        '<tr><td colspan="6" class="text-center text-muted py-4">No hay productos en el catálogo.</td></tr>';
+        '<tr><td colspan="6" class="text-center py-4 font-weight-bold" style="color: var(--fox-text-gray);">No hay productos en el catálogo.</td></tr>';
       return;
     }
 
@@ -104,40 +108,43 @@
       const iconVisibilidad = p.Activo
         ? '<i class="fas fa-eye-slash"></i>'
         : '<i class="fas fa-eye"></i>';
-      const btnClass = p.Activo ? "btn-secondary" : "btn-info";
+      // Cambiamos a los colores definidos en el CSS maestro
+      const btnClass = p.Activo ? "btn-secondary" : "btn-fox-cyan";
       const titleToggle = p.Activo ? "Desactivar" : "Activar";
       const rowStyle = p.Activo
         ? ""
-        : "opacity: 0.6; filter: grayscale(1); background-color: #f8f9fa;";
+        : "opacity: 0.5; filter: grayscale(1); background-color: #f1f5f9;";
 
       const urlImagen = p.ImagenURL
         ? `http://localhost:3000${p.ImagenURL}`
-        : placeholderImg;
+        : placeholderIcon;
 
       tabla.innerHTML += `
-                <tr style="${rowStyle}">
-                    <td class="text-muted small">${p.ProductoID}</td>
-                    <td>
-                        <img src="${urlImagen}" onerror="this.src='${placeholderImg}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #334155;">
-                    </td>
-                    <td class="text-left font-weight-bold" style="color: var(--fox-dark); border-radius: 4px; padding: 10px;">
-                        ${p.Nombre}
-                    </td>
-                    <td><span class="badge badge-dark text-white-50 font-weight-bold">${p.Codigo}</span></td>
-                    <td class="font-weight-bold" style="color: var(--fox-dark);">S/ ${p.PrecioVenta.toFixed(2)}</td>
-                    <td>
-                        <button onclick="prepararEdicionProd(${p.ProductoID})" class="btn btn-sm btn-warning text-white" title="Editar" ${!p.Activo ? "disabled" : ""}>
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
-                        <button onclick="toggleEstadoProducto(${p.ProductoID}, ${p.Activo ? 0 : 1})" class="btn btn-sm ${btnClass} mx-1" title="${titleToggle}">
-                            ${iconVisibilidad}
-                        </button>
-                        <button onclick="eliminarProductoFisico(${p.ProductoID})" class="btn btn-sm btn-danger text-white" title="Eliminar" ${!p.Activo ? "disabled" : ""}>
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+        <tr style="${rowStyle}">
+            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${p.ProductoID}</td>
+            <td>
+                <img src="${urlImagen}" onerror="this.src='${placeholderIcon}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; background-color: #fff;">
+            </td>
+            <td class="text-left dato-critico">
+                ${p.Nombre}
+            </td>
+            <td><span class="badge badge-dark">${p.Codigo}</span></td>
+            <td class="dato-critico">S/ ${p.PrecioVenta.toFixed(2)}</td>
+            <td>
+                <div class="btn-group">
+                    <button onclick="prepararEdicionProd(${p.ProductoID})" class="btn btn-sm btn-fox mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Editar" ${!p.Activo ? "disabled" : ""}>
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button onclick="toggleEstadoProducto(${p.ProductoID}, ${p.Activo ? 0 : 1})" class="btn btn-sm ${btnClass} mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="${titleToggle}">
+                        ${iconVisibilidad}
+                    </button>
+                    <button onclick="eliminarProductoFisico(${p.ProductoID})" class="btn btn-sm btn-fox-danger mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Eliminar" ${!p.Activo ? "disabled" : ""}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+      `;
     });
   }
 
@@ -151,7 +158,7 @@
     }
   }
 
-  // 5. GUARDAR / ACTUALIZAR CON MULTER Y FORMDATA
+  // 5. GUARDAR / ACTUALIZAR
   const formProd = document.getElementById("formProducto");
   if (formProd) {
     formProd.addEventListener("submit", async (e) => {
@@ -220,17 +227,13 @@
       const metodo = productoEditandoId ? "PUT" : "POST";
 
       try {
-        const res = await fetch(url, {
-          method: metodo,
-          body: formData,
-        });
-
+        const res = await fetch(url, { method: metodo, body: formData });
         const resData = await res.json();
 
         if (resData.success) {
           $("#modalProducto").modal("hide");
           listarProductos();
-          archivoImagen = null; // Limpiamos la foto seleccionada
+          archivoImagen = null;
           Swal.fire({
             icon: "success",
             title: "¡Operación Exitosa!",
@@ -260,8 +263,8 @@
       document.getElementById("prodPrecio").value = p.PrecioVenta;
       document.getElementById("prodMinimo").value = p.StockMinimo;
 
-      archivoImagen = null; // Limpiamos cualquier foto que se haya quedado en memoria
-      imagenBase64 = p.ImagenURL; // Guardamos la ruta que viene de SQL
+      archivoImagen = null;
+      imagenBase64 = p.ImagenURL;
 
       const urlPreview = p.ImagenURL
         ? `http://localhost:3000${p.ImagenURL}`
@@ -276,7 +279,7 @@
     }
   };
 
-  // ESTADO Y ELIMINAR (Intactos)
+  // ESTADO Y ELIMINAR
   window.toggleEstadoProducto = async (id, nuevoEstado) => {
     try {
       const res = await fetch(
@@ -357,7 +360,8 @@
       document.getElementById("tituloModalProd").textContent =
         "Registrar Nuevo Producto";
       document.getElementById("imgPreview").src = placeholderImg;
-      document.getElementById("prodPreviewNombre").textContent = "-";
+      document.getElementById("prodPreviewNombre").textContent =
+        "Esperando datos...";
       $("#modalProducto").modal("show");
     });
   }

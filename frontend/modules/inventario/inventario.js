@@ -1,6 +1,6 @@
 (() => {
   let listaInventarioGlobal = [];
-  const placeholderImg = "https://placehold.co/50x50/1e293b/00f2ff?text=Fox";
+  const placeholderImg = "https://placehold.co/50x50/f8fafc/1e293b?text=Fox"; // Actualizado a la nueva paleta
 
   listarInventario();
 
@@ -23,66 +23,68 @@
       const esBajoStock = p.StockActual <= p.StockMinimo;
       const rowStyle = p.Activo
         ? ""
-        : "opacity: 0.6; filter: grayscale(1); background-color: #f8f9fa;";
+        : "opacity: 0.5; filter: grayscale(1); background-color: #f1f5f9;";
 
       const urlImagen = p.ImagenURL
         ? `http://localhost:3000${p.ImagenURL}`
         : placeholderImg;
 
       tabla.innerHTML += `
-                <tr style="${rowStyle}">
-                    <td>
-                        <img src="${urlImagen}" onerror="this.src='${placeholderImg}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; background: #fff; padding: 2px; border: 1px solid #dee2e6;">
-                    </td>
-                    <td class="text-left font-weight-bold" style="color: var(--fox-dark);">${p.ModeloBase || "Sin especificar"}</td>
-                    <td class="text-left">
-                        <div style="color: #000; padding: 6px 12px; border-radius: 4px; border-left: 4px solid var(--fox-dark); display: inline-block; min-width: 160px;">
-                            <small class="d-block font-weight-bold" style="font-size: 0.65rem; opacity: 0.7;">${p.NombreCategoria || "GENERAL"}</small>
-                            <strong style="font-size: 0.85rem;">${p.Atributo || "ESTÁNDAR"}</strong>
-                        </div>
-                    </td>
-                    <td class="font-weight-bold ${esBajoStock && p.Activo ? "text-danger blink" : ""}" style="color: var(--fox-dark);">${p.StockActual}</td>
-                    <td class="font-weight-bold ${esBajoStock && p.Activo ? "text-danger blink" : ""}" style="color: var(--fox-dark);">${p.StockMinimo}</td>
-                    <td class="font-weight-bold" style="color: var(--fox-dark);">S/ ${parseFloat(p.PrecioCompra || 0).toFixed(2)}</td>
-                    <td class="font-weight-bold" style="color: var(--fox-dark);">S/ ${parseFloat(p.PrecioVenta || 0).toFixed(2)}</td>
-                    <td><span class="badge ${esBajoStock ? "badge-danger" : "badge-success"}">${esBajoStock ? "Reabastecer" : "En Stock"}</span></td>
-                    <td>
-                        <div class="btn-group">
-                            <button onclick="abrirAjuste(${p.ProductoID})" class="btn btn-sm btn-info mx-1 shadow-sm" style="border-radius: 4px; width: 34px; height: 34px;" title="Ajuste de Stock" ${!p.Activo ? "disabled" : ""}>
-                                <i class="fas fa-exchange-alt"></i>
-                            </button>
-                            <button onclick="verKardex(${p.ProductoID})" class="btn btn-sm btn-fox mx-1 shadow-sm" style="border-radius: 4px; width: 34px; height: 34px;" title="Ver Historial">
-                                <i class="fas fa-history"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
+        <tr style="${rowStyle}">
+            <td>
+                <img src="${urlImagen}" onerror="this.src='${placeholderImg}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; background: #fff; padding: 2px; border: 1px solid #dee2e6;">
+            </td>
+            <td class="text-left dato-critico">${p.ModeloBase || "Sin especificar"}</td>
+            <td class="text-left">
+                <div style="color: var(--fox-text-gray); padding: 4px 10px; border-left: 3px solid var(--fox-cyan); display: inline-block; min-width: 160px;">
+                    <small class="d-block font-weight-bold" style="font-size: 0.7rem;">${p.NombreCategoria || "GENERAL"}</small>
+                    <strong style="font-size: 0.85rem; color: var(--fox-text-black);">${p.Atributo || "ESTÁNDAR"}</strong>
+                </div>
+            </td>
+            <td class="dato-critico ${esBajoStock && p.Activo ? "text-danger" : ""}">${p.StockActual}</td>
+            <td class="font-weight-bold text-muted">${p.StockMinimo}</td>
+            <td class="font-weight-bold">S/ ${parseFloat(p.PrecioCompra || 0).toFixed(2)}</td>
+            <td class="dato-critico">S/ ${parseFloat(p.PrecioVenta || 0).toFixed(2)}</td>
+            <td><span class="badge ${esBajoStock ? "badge-danger" : "badge-success"}">${esBajoStock ? "Reabastecer" : "En Stock"}</span></td>
+            <td>
+                <div class="btn-group">
+                    <button onclick="abrirAjuste(${p.ProductoID})" class="btn btn-sm btn-fox-cyan mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Ajuste de Stock" ${!p.Activo ? "disabled" : ""}>
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+                    <button onclick="verKardex(${p.ProductoID})" class="btn btn-sm btn-fox mx-1 shadow-sm" style="border-radius: 4px; width: 34px; height: 34px;" title="Ver Historial">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
     });
   }
+
   // ABRIR MODAL DE AJUSTE
   window.abrirAjuste = (id) => {
     const p = listaInventarioGlobal.find((item) => item.ProductoID === id);
     const form = document.getElementById("formAjusteStock");
     const lbl = document.getElementById("lblProductoAjuste");
-    const lblStock = document.getElementById("lblStockActualAjuste"); // Referencia añadida para claridad visual
+    const lblStock = document.getElementById("lblStockActualAjuste");
 
     if (!p || !form || !lbl) return;
 
     form.dataset.id = id;
     lbl.textContent = p.Nombre;
-    if (lblStock) lblStock.textContent = p.StockActual; // Mostramos el stock actual al abrir
+    if (lblStock) lblStock.textContent = p.StockActual;
 
     form.reset();
-    document.getElementById("ajusteMotivoSelect").disabled = true; // Reiniciar estado
-    document.getElementById("divAjusteProveedor").classList.add("d-none"); // Reiniciar estado
+    document.getElementById("ajusteMotivoSelect").disabled = true;
+    document.getElementById("divAjusteProveedor").classList.add("d-none");
 
     $("#modalAjusteStock").modal("show");
   };
 
-  // GUARDAR AJUSTE DE STOCK (CON VALIDACIONES BLINDADAS)
+  // GUARDAR AJUSTE DE STOCK
   const formAjuste = document.getElementById("formAjusteStock");
   if (formAjuste) {
     formAjuste.addEventListener("submit", async (e) => {
+      /* (Lógica de guardar intacta) ... */
       e.preventDefault();
 
       const cantidadVal = parseInt(
@@ -112,6 +114,7 @@
       const usuarioString = localStorage.getItem("usuarioFoxGamers");
       const usuario = JSON.parse(usuarioString);
 
+      const divAjusteProveedor = document.getElementById("divAjusteProveedor");
       const proveedorID =
         !divAjusteProveedor.classList.contains("d-none") &&
         document.getElementById("ajusteProveedorSelect").value
@@ -134,7 +137,6 @@
         idUsuario: usuario.UsuarioID || usuario.id,
       };
 
-      // VALIDACIÓN DE SALIDA (FRONTEND)
       const pActual = listaInventarioGlobal.find(
         (p) => p.ProductoID == idProducto,
       );
@@ -166,7 +168,7 @@
             showConfirmButton: false,
           });
         } else {
-          Swal.fire("Operación Fallida", result.mensaje, "error"); // Captura rechazos del backend
+          Swal.fire("Operación Fallida", result.mensaje, "error");
         }
       } catch (err) {
         Swal.fire(
@@ -188,7 +190,7 @@
 
     lbl.textContent = p.Nombre;
     tabla.innerHTML =
-      '<tr><td colspan="5" class="text-dark">Cargando historial...</td></tr>';
+      '<tr><td colspan="5" class="py-4 font-weight-bold" style="color: var(--fox-text-gray);">Cargando historial...</td></tr>';
 
     try {
       const res = await fetch(
@@ -199,7 +201,7 @@
 
       if (movimientos.length === 0) {
         tabla.innerHTML =
-          '<tr><td colspan="5" class="text-muted italic">Sin movimientos registrados.</td></tr>';
+          '<tr><td colspan="5" class="py-4 italic" style="color: var(--fox-text-gray);">Sin movimientos registrados.</td></tr>';
       } else {
         movimientos.forEach((m) => {
           const colorTexto =
@@ -208,18 +210,20 @@
             m.tipo === "ENTRADA" ? "badge-success" : "badge-danger";
 
           tabla.innerHTML += `
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td class="small text-muted">${m.fecha}</td>
-                        <td class="font-weight-bold text-dark">${m.usuario}</td>
-                        <td><span class="badge ${badgeClase}" style="font-size: 0.65rem;">${m.tipo}</span></td>
-                        <td class="font-weight-bold ${colorTexto}">${m.tipo === "ENTRADA" ? "+" : "-"}${m.cant}</td>
-                        <td class="text-left small" style="color: #000; font-weight: 500;">${m.motivo}</td>
-                    </tr>`;
+            <tr>
+                <td class="small font-weight-bold" style="color: var(--fox-text-gray);">${m.fecha}</td>
+                <td class="dato-critico" style="font-size: 0.95rem;">${m.usuario}</td>
+                <td><span class="badge ${badgeClase}">${m.tipo}</span></td>
+                <td class="dato-critico ${colorTexto}" style="font-size: 1.1rem;">${m.tipo === "ENTRADA" ? "+" : "-"}${m.cant}</td>
+                <td class="text-left font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.85rem;">${m.motivo}</td>
+            </tr>`;
         });
       }
       $("#modalKardex").modal("show");
     } catch (e) {
       console.error(e);
+      tabla.innerHTML =
+        '<tr><td colspan="5" class="py-4 text-danger font-weight-bold">Error al cargar datos.</td></tr>';
     }
   };
 
@@ -237,6 +241,7 @@
   }
 
   // LOGICA DE SELECTS EN CASCADA
+  /* (Lógica de selects intacta) ... */
   const ajusteTipo = document.getElementById("ajusteTipo");
   const ajusteMotivoSelect = document.getElementById("ajusteMotivoSelect");
   const divAjusteProveedor = document.getElementById("divAjusteProveedor");

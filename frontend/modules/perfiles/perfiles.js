@@ -3,7 +3,7 @@
   let perfilEditandoId = null;
   let perfilSeleccionadoParaPermisos = null;
 
-  // // 1. Listado de módulos para los checkboxes
+  // 1. Listado de módulos para los checkboxes
   const modulosSistema = [
     { id: "dashboard", nombre: "Dashboard", icono: "fa-tachometer-alt" },
     { id: "pos", nombre: "Punto de Venta", icono: "fa-cash-register" },
@@ -17,16 +17,15 @@
     { id: "configuracion", nombre: "Configuración Web", icono: "fa-sliders-h" },
   ];
 
-  // // 2. Verificación de rango Administrador
+  // 2. Verificación de rango Administrador
   const usuarioString = localStorage.getItem("usuarioFoxGamers");
   const usuarioLogueado = JSON.parse(usuarioString || "{}");
   if ((usuarioLogueado.Rol || "").toUpperCase() !== "ADMINISTRADOR") {
     Swal.fire(
       "Acceso Denegado",
-      "Módulo restringido unicamente para personal authorized.",
+      "Módulo restringido únicamente para personal autorizado.",
       "error",
     );
-
     const contenedor = document.getElementById("app-content");
     if (contenedor) {
       contenedor.innerHTML = `<div class="alert alert-danger m-4 text-center font-weight-bold">Acceso no autorizado a este módulo.</div>`;
@@ -36,7 +35,7 @@
 
   listarPerfiles();
 
-  // // 3. Listar Perfiles desde la BD
+  // 3. Listar Perfiles desde la BD
   async function listarPerfiles() {
     const tabla = document.getElementById("tablaPerfiles");
     if (!tabla) return;
@@ -47,11 +46,11 @@
     } catch (error) {
       console.error(error);
       tabla.innerHTML =
-        '<tr><td colspan="6" class="text-danger text-center">Error de conexión</td></tr>';
+        '<tr><td colspan="6" class="text-danger font-weight-bold text-center py-4">Error de conexión con el servidor</td></tr>';
     }
   }
 
-  // // Función auxiliar para renderizar filas de la tabla
+  // Función auxiliar para renderizar filas de la tabla
   function renderizarTabla(lista) {
     const tabla = document.getElementById("tablaPerfiles");
     if (!tabla) return;
@@ -59,7 +58,7 @@
 
     if (lista.length === 0) {
       tabla.innerHTML =
-        '<tr><td colspan="6" class="text-muted py-3">No se encontraron perfiles coincidentes.</td></tr>';
+        '<tr><td colspan="6" class="text-muted font-weight-bold py-4">No se encontraron perfiles coincidentes.</td></tr>';
       return;
     }
 
@@ -69,35 +68,48 @@
         p.PerfilID === 1 || p.Nombre.toUpperCase() === "ADMINISTRADOR";
 
       const badgeEstado = isActivo
-        ? '<span class="badge badge-success px-3 py-1" style="border-radius: 12px;">Activo</span>'
-        : '<span class="badge badge-secondary px-3 py-1" style="border-radius: 12px;">Inactivo</span>';
+        ? '<span class="badge badge-success">Activo</span>'
+        : '<span class="badge badge-secondary">Inactivo</span>';
+
+      const rowStyle = isActivo
+        ? ""
+        : "opacity: 0.5; filter: grayscale(1); background-color: #f1f5f9;";
+
+      const btnBloquearClass = isActivo ? "btn-secondary" : "btn-fox-cyan";
+      const iconBloquear = isActivo ? "fa-ban" : "fa-check";
 
       const btnBloquear = esAdmin
-        ? `<button class="btn btn-sm btn-secondary mx-1 shadow-sm" disabled><i class="fas fa-ban"></i></button>`
-        : `<button onclick="bloquearPerfil(${p.PerfilID}, ${isActivo ? 0 : 1})" 
-                     class="btn btn-sm btn-outline-secondary mx-1 shadow-sm" 
-                     title="${isActivo ? "Desactivar Perfil" : "Activar Perfil"}">
-                <i class="fas ${isActivo ? "fa-ban" : "fa-check"}"></i>
-             </button>`;
+        ? `<button class="btn btn-sm btn-secondary mx-1 shadow-sm" style="width: 32px; height: 32px;" disabled><i class="fas fa-ban"></i></button>`
+        : `<button onclick="bloquearPerfil(${p.PerfilID}, ${isActivo ? 0 : 1})" class="btn btn-sm ${btnBloquearClass} mx-1 shadow-sm" style="width: 32px; height: 32px;" title="${isActivo ? "Desactivar Perfil" : "Activar Perfil"}">
+                <i class="fas ${iconBloquear}"></i>
+           </button>`;
 
       tabla.innerHTML += `
-                  <tr>
-                      <td class="font-weight-bold text-muted">${p.PerfilID}</td>
-                      <td class="font-weight-bold text-dark">${p.Nombre}</td>
-                      <td class="text-muted small">${p.Descripcion || "-"}</td>
-                      <td>${badgeEstado}</td>
-                      <td class="text-muted small">${new Date(p.FechaCreacion).toLocaleString("es-PE")}</td>
-                      <td>
-                          <button onclick="verPermisos(${p.PerfilID})" class="btn btn-sm btn-info mx-1 shadow-sm" title="Permisos"><i class="fas fa-key"></i></button>
-                          <button onclick="editarPerfil(${p.PerfilID})" class="btn btn-sm btn-warning mx-1 text-white shadow-sm" ${esAdmin ? "disabled" : ""}><i class="fas fa-pencil-alt"></i></button>
-                          ${btnBloquear}
-                          <button onclick="eliminarPerfil(${p.PerfilID})" class="btn btn-sm btn-danger mx-1 shadow-sm" ${esAdmin ? "disabled" : ""}><i class="fas fa-trash"></i></button>
-                      </td>
-                  </tr>`;
+        <tr style="${rowStyle}">
+            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${p.PerfilID}</td>
+            <td class="text-left dato-critico pl-4">${p.Nombre}</td>
+            <td class="text-left font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.85rem;">${p.Descripcion || "-"}</td>
+            <td>${badgeEstado}</td>
+            <td class="font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.85rem;">${new Date(p.FechaCreacion).toLocaleString("es-PE")}</td>
+            <td>
+                <div class="btn-group">
+                    <button onclick="verPermisos(${p.PerfilID})" class="btn btn-sm btn-fox-cyan mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Permisos">
+                        <i class="fas fa-key"></i>
+                    </button>
+                    <button onclick="editarPerfil(${p.PerfilID})" class="btn btn-sm btn-fox mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Editar" ${esAdmin ? "disabled" : ""}>
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    ${btnBloquear}
+                    <button onclick="eliminarPerfil(${p.PerfilID})" class="btn btn-sm btn-fox-danger mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Eliminar" ${esAdmin ? "disabled" : ""}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
     });
   }
 
-  // // Filtro dinámico del buscador de perfiles (Seguridad local sin saturar la red)
+  // Filtro dinámico del buscador
   const buscador = document.getElementById("busquedaPerfil");
   if (buscador) {
     buscador.addEventListener("input", (e) => {
@@ -111,7 +123,7 @@
     });
   }
 
-  // // 4. Ver modal de permisos por Perfil
+  // 4. Ver modal de permisos por Perfil
   window.verPermisos = async (id) => {
     const perfil = listaPerfilesGlobal.find((p) => p.PerfilID === id);
     if (!perfil) return;
@@ -122,11 +134,11 @@
 
     const badge = document.getElementById("lblPermisoRol");
     badge.textContent = perfil.Nombre.toUpperCase();
-    badge.className = `badge px-3 py-2 mt-1 shadow-sm ${perfil.Nombre.toUpperCase() === "ADMINISTRADOR" ? "badge-danger" : "badge-info"}`;
+    badge.className = `badge ${perfil.Nombre.toUpperCase() === "ADMINISTRADOR" ? "badge-danger" : "badge-info"} px-3 py-2 mt-1`;
 
     const contenedor = document.getElementById("contenedorPermisos");
     contenedor.innerHTML =
-      '<div class="col-12 text-center py-3"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+      '<div class="col-12 text-center py-4" style="color: var(--fox-text-gray);"><i class="fas fa-spinner fa-spin mr-2"></i> Cargando accesos...</div>';
 
     try {
       const res = await fetch(`http://localhost:3000/api/permisos/${id}`);
@@ -142,15 +154,15 @@
         const checkDisabled = esAdmin ? "disabled" : "";
 
         contenedor.innerHTML += `
-                    <div class="col-6 mb-3">
-                        <div class="custom-control custom-checkbox border rounded p-2 px-4 shadow-sm bg-white">
-                            <input type="checkbox" class="custom-control-input chk-permiso" id="chk-${mod.id}" value="${mod.id}" ${checkStatus} ${checkDisabled}>
-                            <label class="custom-control-label d-flex align-items-center" for="chk-${mod.id}">
-                                <i class="fas ${mod.icono} mr-2 text-secondary" style="width:20px"></i>
-                                <span class="small font-weight-bold">${mod.nombre}</span>
-                            </label>
-                        </div>
-                    </div>`;
+            <div class="col-6 mb-3">
+                <div class="custom-control custom-checkbox border rounded p-2 px-4 bg-white" style="border-color: #cbd5e1 !important;">
+                    <input type="checkbox" class="custom-control-input chk-permiso" id="chk-${mod.id}" value="${mod.id}" ${checkStatus} ${checkDisabled}>
+                    <label class="custom-control-label d-flex align-items-center cursor-pointer" for="chk-${mod.id}" style="color: var(--fox-text-gray);">
+                        <i class="fas ${mod.icono} mx-2" style="width: 20px; color: var(--fox-cyan);"></i>
+                        <span class="font-weight-bold" style="font-size: 0.9rem;">${mod.nombre}</span>
+                    </label>
+                </div>
+            </div>`;
       });
 
       $("#modalPermisos").modal("show");
@@ -163,7 +175,7 @@
     }
   };
 
-  // // 5. Guardar Permisos de un Perfil
+  // 5. Guardar Permisos de un Perfil
   const formPermisos = document.getElementById("formGestionPermisos");
   if (formPermisos) {
     formPermisos.addEventListener("submit", async (e) => {
@@ -216,7 +228,7 @@
     });
   }
 
-  // // 6. Cargar datos en Modal de Edición
+  // 6. Cargar datos en Modal de Edición
   window.editarPerfil = (id) => {
     if (id === 1) {
       Swal.fire(
@@ -236,7 +248,7 @@
     $("#modalEditarPerfil").modal("show");
   };
 
-  // // 7. Procesar Envío de Edición
+  // 7. Procesar Envío de Edición
   document
     .getElementById("formEditarPerfil")
     .addEventListener("submit", async (e) => {
@@ -248,7 +260,7 @@
       }
 
       const data = {
-        Nombre: document.getElementById("editPerfNombre").value, // Captura el valor del select estructurado
+        Nombre: document.getElementById("editPerfNombre").value,
         Descripcion: document.getElementById("editPerfDesc").value.trim(),
       };
 
@@ -283,7 +295,13 @@
         if ((await res.json()).success) {
           $("#modalEditarPerfil").modal("hide");
           listarPerfiles();
-          Swal.fire("¡Éxito!", "Perfil actualizado correctamente.", "success");
+          Swal.fire({
+            icon: "success",
+            title: "¡Éxito!",
+            text: "Perfil actualizado correctamente.",
+            timer: 1500,
+            showConfirmButton: false,
+          });
         }
       } catch (e) {
         console.error(e);
@@ -291,7 +309,7 @@
       }
     });
 
-  // // 8. Cambiar Estado (Activar/Desactivar)
+  // 8. Cambiar Estado (Activar/Desactivar)
   window.bloquearPerfil = async (id, nuevoEstado) => {
     if (id === 1) {
       Swal.fire(
@@ -303,7 +321,7 @@
     }
 
     const accion = nuevoEstado === 0 ? "desactivar" : "activar";
-    const color = nuevoEstado === 0 ? "#6c757d" : "#28a745";
+    const color = nuevoEstado === 0 ? "#64748b" : "#10b981";
 
     const conf = await Swal.fire({
       title: `¿Desea ${accion} este perfil?`,
@@ -312,7 +330,6 @@
       showCancelButton: true,
       confirmButtonColor: color,
       confirmButtonText: `Sí, ${accion}`,
-      cancelButtonText: "Cancelar",
     });
 
     if (conf.isConfirmed) {
@@ -331,7 +348,6 @@
           Swal.fire({
             icon: "success",
             title: "Estado actualizado",
-            text: data.mensaje,
             timer: 1500,
             showConfirmButton: false,
           });
@@ -343,24 +359,23 @@
     }
   };
 
-  // // 9. Lanzar Modal Crear
+  // 9. Lanzar Modal Crear
   window.abrirModalCrear = () => {
     document.getElementById("formCrearPerfil").reset();
     $("#modalCrearPerfil").modal("show");
   };
 
-  // // 10. Procesar Envío de Registro Nuevo
+  // 10. Procesar Envío de Registro Nuevo
   const formCrear = document.getElementById("formCrearPerfil");
   if (formCrear) {
     formCrear.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const data = {
-        Nombre: document.getElementById("nuevoPerfNombre").value, // Extrae la selección del select controlado
+        Nombre: document.getElementById("nuevoPerfNombre").value,
         Descripcion: document.getElementById("nuevoPerfDesc").value.trim(),
       };
 
-      // // VALIDACIÓN EXPLÍCITA CONTRA TEXTO BASURA O VALORES NULOS
       if (!data.Nombre) {
         Swal.fire(
           "Atención",
@@ -385,7 +400,7 @@
       if (existe) {
         Swal.fire(
           "Atención",
-          `El rol "${data.Nombre}" ya se encuentra registrado en el sistema.`,
+          `El rol "${data.Nombre}" ya se encuentra registrado.`,
           "warning",
         );
         return;
@@ -418,7 +433,7 @@
     });
   }
 
-  // // 11. Eliminar Registro
+  // 11. Eliminar Registro
   window.eliminarPerfil = async (id) => {
     if (id === 1) {
       Swal.fire(
@@ -437,10 +452,8 @@
       text: "Esta acción es permanente y borrará el registro de la base de datos.",
       icon: "error",
       showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#6c757d",
-      confirmButtonText: "Sí, eliminar definitivamente",
-      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#ef4444",
+      confirmButtonText: "Sí, eliminar",
     });
 
     if (conf.isConfirmed) {
@@ -448,14 +461,13 @@
         const res = await fetch(`http://localhost:3000/api/perfiles/${id}`, {
           method: "DELETE",
         });
-
         const data = await res.json();
+
         if (data.success) {
           Swal.fire({
             icon: "success",
             title: "¡Eliminado!",
-            text: data.mensaje,
-            timer: 2000,
+            timer: 1500,
             showConfirmButton: false,
           });
           listarPerfiles();
@@ -464,7 +476,7 @@
             icon: "warning",
             title: "Acción Bloqueada",
             text: data.mensaje,
-            confirmButtonColor: "#f89406",
+            confirmButtonColor: "#ff6a00",
           });
         }
       } catch (error) {
