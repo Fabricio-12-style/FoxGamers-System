@@ -19,7 +19,7 @@ const finalizarVenta = async (req, res) => {
         .request()
         .input("pId", sql.Int, item.ProductoID)
         .query(
-          "SELECT Nombre, PrecioVenta, StockActual FROM Inventario WHERE ProductoID = @pId",
+          "SELECT Nombre, PrecioVenta, StockActual, CategoriaID FROM Inventario WHERE ProductoID = @pId",
         );
 
       if (checkProd.recordset.length === 0) {
@@ -35,13 +35,50 @@ const finalizarVenta = async (req, res) => {
       }
 
       const precioReal = dbProd.PrecioVenta;
-      const subtotalItem = precioReal * item.cantidad;
+
+      // Buscar descuento vigente (prioridad: PRODUCTO > CATEGORIA > GENERAL)
+      const descuentoRes = await transaction
+        .request()
+        .input("pId", sql.Int, item.ProductoID)
+        .input("catId", sql.Int, dbProd.CategoriaID)
+        .query(`
+    SELECT TOP 1 DescuentoID, TipoDescuento, Valor
+    FROM Descuento
+    WHERE Activo = 1
+      AND (
+        (AplicaA = 'GENERAL')
+        OR (AplicaA = 'PRODUCTO'  AND ReferenciaID = @pId)
+        OR (AplicaA = 'CATEGORIA' AND ReferenciaID = @catId)
+      )
+    ORDER BY
+      CASE AplicaA
+        WHEN 'PRODUCTO'  THEN 1
+        WHEN 'CATEGORIA' THEN 2
+        WHEN 'GENERAL'   THEN 3
+      END
+  `);
+
+      let montoDescuento = 0;
+      let descuentoID = null;
+
+      if (descuentoRes.recordset.length > 0) {
+        const dsc = descuentoRes.recordset[0];
+        descuentoID = dsc.DescuentoID;
+        montoDescuento = dsc.TipoDescuento === "PORCENTAJE"
+          ? precioReal * item.cantidad * (dsc.Valor / 100)
+          : Math.min(dsc.Valor, precioReal * item.cantidad);
+        montoDescuento = Math.round(montoDescuento * 100) / 100;
+      }
+
+      const subtotalItem = (precioReal * item.cantidad) - montoDescuento;
       realTotal += subtotalItem;
 
       itemsValidados.push({
         ProductoID: item.ProductoID,
         Cantidad: item.cantidad,
         PrecioUnitario: precioReal,
+        Descuento: montoDescuento,
+        DescuentoID: descuentoID,
         Subtotal: subtotalItem,
       });
     }
@@ -78,11 +115,12 @@ const finalizarVenta = async (req, res) => {
         .input("ProductoID", sql.Int, item.ProductoID)
         .input("Cantidad", sql.Int, item.Cantidad)
         .input("PrecioUnitario", sql.Decimal(18, 2), item.PrecioUnitario)
-        .input("Descuento", sql.Decimal(18, 2), 0)
+        .input("Descuento", sql.Decimal(18, 2), item.Descuento)
+        .input("DescuentoID", sql.Int, item.DescuentoID || null)
         .input("Subtotal", sql.Decimal(18, 2), item.Subtotal).query(`
-                    INSERT INTO DetalleVenta (VentaID, ProductoID, Cantidad, PrecioUnitario, Descuento, Subtotal)
-                    VALUES (@VentaID, @ProductoID, @Cantidad, @PrecioUnitario, @Descuento, @Subtotal)
-                `);
+    INSERT INTO DetalleVenta (VentaID, ProductoID, Cantidad, PrecioUnitario, Descuento, DescuentoID, Subtotal)
+    VALUES (@VentaID, @ProductoID, @Cantidad, @PrecioUnitario, @Descuento, @DescuentoID, @Subtotal)
+        `);
 
       await transaction
         .request()
@@ -109,7 +147,7 @@ const finalizarVenta = async (req, res) => {
     if (transaction) await transaction.rollback();
     const mensajeError =
       error.message.includes("Stock insuficiente") ||
-      error.message.includes("no existe")
+        error.message.includes("no existe")
         ? error.message
         : "Error al procesar la transacción de venta en la base de datos.";
     res.status(400).json({ success: false, mensaje: mensajeError });
@@ -165,10 +203,18 @@ const getVentaById = async (req, res) => {
     }
 
     const detalles = await pool.request().input("VentaID", sql.Int, id)
-      .query(`SELECT dv.*, p.Nombre AS ProductoNombre
-                    FROM DetalleVenta dv
-                    INNER JOIN Inventario p ON dv.ProductoID = p.ProductoID
-                    WHERE dv.VentaID = @VentaID`);
+      .query(`
+              SELECT
+                dv.*,
+                i.Nombre AS ProductoNombre,
+                d.Nombre AS DescuentoNombre,
+                d.TipoDescuento,
+                d.Valor AS DescuentoValor
+              FROM DetalleVenta dv
+              INNER JOIN Inventario i ON dv.ProductoID = i.ProductoID
+              LEFT JOIN Descuento d   ON dv.DescuentoID = d.DescuentoID
+              WHERE dv.VentaID = @VentaID
+            `);
 
     res.json({
       success: true,

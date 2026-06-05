@@ -13,6 +13,7 @@ const productoRoutes = require("./routes/productoRoutes");
 const ventaRoutes = require("./routes/ventaRoutes");
 const proveedorRoutes = require("./routes/proveedorRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const descuentoRoutes = require("./routes/descuentosRoutes");
 const perfilRoutes = require("./routes/perfilRoutes");
 const webConfigRoutes = require("./routes/webConfigRoutes");
 
@@ -26,6 +27,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/auth", authRoutes);
 app.use("/api/usuarios", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/descuentos", descuentoRoutes);
 app.use("/api/perfiles", perfilRoutes);
 app.use("/api/permisos", perfilRoutes);
 app.use("/api/clientes", clienteRoutes);
