@@ -49,6 +49,13 @@ const menuDefinicion = [
     js: "../modules/proveedores/proveedores.js",
   },
   {
+    id: "descuentos",
+    nombre: "Descuentos",
+    icono: "fas fa-percentage",
+    vista: "../modules/descuentos/descuentos_vista.html",
+    js: "../modules/descuentos/descuentos.js",
+  },
+  {
     id: "usuarios",
     nombre: "Usuarios",
     icono: "fas fa-users",

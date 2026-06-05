@@ -2,6 +2,7 @@
   let carrito = [];
   let productosBase = [];
   let clienteSeleccionado = null;
+  let descuentosVigentes = [];
 
   const IGV_RATE = 0.18; // 18%
   const BASE_URL = "http://localhost:3000";
@@ -44,14 +45,39 @@
   // =======================================================
   async function cargarProductosPOS() {
     try {
-      const res = await fetch("http://localhost:3000/api/productos");
-      const productos = await res.json();
-      productosBase = productos.filter(
-        (p) => p.Activo === true || p.Activo === 1,
-      );
+      const [resProductos, resDescuentos] = await Promise.all([
+        fetch("http://localhost:3000/api/productos"),
+        fetch("http://localhost:3000/api/descuentos/vigentes"),
+      ]);
+      const productos = await resProductos.json();
+      const descuentos = await resDescuentos.json();
+      productosBase = productos.filter(p => p.Activo === true || p.Activo === 1);
+      descuentosVigentes = Array.isArray(descuentos) ? descuentos : [];
     } catch (error) {
       console.error("Error cargando productos al POS:", error);
     }
+  }
+
+  function buscarDescuentoParaProducto(productoID, categoriaID) {
+    // Prioridad: PRODUCTO > CATEGORIA > GENERAL
+    const porProducto = descuentosVigentes.find(d => d.AplicaA === "PRODUCTO" && d.ReferenciaID === productoID);
+    if (porProducto) return porProducto;
+
+    const porCategoria = descuentosVigentes.find(d => d.AplicaA === "CATEGORIA" && d.ReferenciaID === categoriaID);
+    if (porCategoria) return porCategoria;
+
+    const general = descuentosVigentes.find(d => d.AplicaA === "GENERAL");
+    if (general) return general;
+
+    return null;
+  }
+
+  function calcularMontoDescuento(descuento, precio, cantidad) {
+    if (!descuento) return 0;
+    if (descuento.TipoDescuento === "PORCENTAJE") {
+      return Math.round(precio * cantidad * (descuento.Valor / 100) * 100) / 100;
+    }
+    return Math.min(descuento.Valor, precio * cantidad);
   }
 
   const inputBuscarProd = document.getElementById("posBuscarProducto");
@@ -130,12 +156,14 @@
         );
       }
     } else {
+      const descuento = buscarDescuentoParaProducto(prod.ProductoID, prod.CategoriaID);
       carrito.push({
         id: prod.ProductoID,
         nombre: prod.Nombre,
         precio: prod.PrecioVenta,
         cantidad: 1,
         stockMaximo: prod.StockActual,
+        descuento: descuento,
       });
     }
     actualizarVistaCarrito();
@@ -176,22 +204,42 @@
     }
 
     carrito.forEach((item, index) => {
-      const subtotal = item.precio * item.cantidad;
-      total += subtotal;
+      const montoDesc = calcularMontoDescuento(item.descuento, item.precio, item.cantidad);
+      const subtotal = (item.precio * item.cantidad) - montoDesc;
+      total += item.precio * item.cantidad;
+
+      const precioHTML = item.descuento
+        ? `<span style="text-decoration:line-through;color:#94a3b8;font-size:11px;">S/ ${item.precio.toFixed(2)}</span>
+       <br><span class="dato-critico" style="color:var(--fox-green);">S/ ${(item.precio - calcularMontoDescuento(item.descuento, item.precio, 1)).toFixed(2)}</span>`
+        : `<span class="font-weight-bold">S/ ${item.precio.toFixed(2)}</span>`;
+
+      const descBadge = item.descuento
+        ? `<br><span class="badge" style="background:#d1fae5;color:#065f46;font-size:9px;">
+         ${item.descuento.TipoDescuento === "PORCENTAJE"
+          ? `-${item.descuento.Valor}%`
+          : `-S/ ${item.descuento.Valor}`}
+         ${item.descuento.Nombre ? `· ${item.descuento.Nombre}` : ""}
+       </span>`
+        : "";
+
       body.innerHTML += `
-        <tr>
-            <td class="text-left py-2 dato-critico">${item.nombre}</td>
-            <td class="font-weight-bold">S/ ${item.precio.toFixed(2)}</td>
-            <td width="80">
-                <input type="number" value="${item.cantidad}" min="1" max="${item.stockMaximo}" 
-                    class="form-control form-control-sm text-center font-weight-bold" 
-                    onchange="cambiarCantidad(${index}, this.value)">
-            </td>
-            <td class="dato-critico">S/ ${subtotal.toFixed(2)}</td>
-            <td>
-                <button class="btn btn-sm btn-fox-danger px-2 py-1" onclick="eliminarItem(${index})"><i class="fas fa-times"></i></button>
-            </td>
-        </tr>`;
+    <tr>
+        <td class="text-left py-2 dato-critico">
+          ${item.nombre}${descBadge}
+        </td>
+        <td>${precioHTML}</td>
+        <td width="80">
+            <input type="number" value="${item.cantidad}" min="1" max="${item.stockMaximo}" 
+                class="form-control form-control-sm text-center font-weight-bold" 
+                onchange="cambiarCantidad(${index}, this.value)">
+        </td>
+        <td class="dato-critico">S/ ${subtotal.toFixed(2)}</td>
+        <td>
+            <button class="btn btn-sm btn-fox-danger px-2 py-1" onclick="eliminarItem(${index})">
+              <i class="fas fa-times"></i>
+            </button>
+        </td>
+    </tr>`;
     });
     actualizarTotales(total);
 
@@ -207,13 +255,30 @@
 
   function actualizarTotales(total) {
     totalActualVenta = total;
+
+    const totalDescuento = carrito.reduce((sum, item) => {
+      return sum + calcularMontoDescuento(item.descuento, item.precio, item.cantidad);
+    }, 0);
+
     const subtotal = total / (1 + IGV_RATE);
     const igv = total - subtotal;
 
-    document.getElementById("posSubtotal").textContent =
-      `S/ ${subtotal.toFixed(2)}`;
+    const totalFinal = total - totalDescuento;
+    totalActualVenta = totalFinal;
+
+    document.getElementById("posSubtotal").textContent = `S/ ${subtotal.toFixed(2)}`;
     document.getElementById("posIGV").textContent = `S/ ${igv.toFixed(2)}`;
-    document.getElementById("posTotal").textContent = `S/ ${total.toFixed(2)}`;
+    document.getElementById("posTotal").textContent = `S/ ${totalFinal.toFixed(2)}`;
+
+    const filaDesc = document.getElementById("filaDescuento");
+    if (filaDesc) {
+      if (totalDescuento > 0) {
+        filaDesc.style.display = "";
+        document.getElementById("posDescuento").textContent = `-S/ ${totalDescuento.toFixed(2)}`;
+      } else {
+        filaDesc.style.display = "none";
+      }
+    }
 
     validarCaja();
   }
@@ -470,17 +535,22 @@
         document.getElementById("tkMetodo").textContent = cabecera.MetodoPago;
 
         let htmlItems = "";
+        let totalDescuentoTicket = 0;
         detalles.forEach((item) => {
+          const desc = parseFloat(item.Descuento) || 0;
+          totalDescuentoTicket += desc;
           htmlItems += `
-                    <div style="display: flex; margin-bottom: 3px;">
-                        <div style="width: 15%;">${item.Cantidad}</div>
-                        <div style="width: 55%; padding-right: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            ${item.ProductoNombre}
-                        </div>
-                        <div style="width: 30%; text-align: right;">S/ ${parseFloat(item.Subtotal).toFixed(2)}</div>
-                    </div>
-                `;
+        <div style="display: flex; margin-bottom: 3px;">
+        <div style="width: 15%;">${item.Cantidad}</div>
+        <div style="width: 55%; padding-right: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${item.ProductoNombre}
+            ${desc > 0 ? `<br><span style="font-size:10px;">(Desc: -S/ ${desc.toFixed(2)})</span>` : ""}
+        </div>
+        <div style="width: 30%; text-align: right;">S/ ${parseFloat(item.Subtotal).toFixed(2)}</div>
+        </div>
+        `;
         });
+        document.getElementById("tkDescuento").textContent = totalDescuentoTicket.toFixed(2);
         document.getElementById("tkItems").innerHTML = htmlItems;
 
         document.getElementById("tkSubtotal").textContent = parseFloat(
@@ -529,14 +599,20 @@
 
         let htmlItems = "";
         detalles.forEach((item) => {
+          const descuentoTexto = item.Descuento && parseFloat(item.Descuento) > 0
+            ? `<span style="color:var(--fox-green);">-S/ ${parseFloat(item.Descuento).toFixed(2)}</span>
+       ${item.DescuentoNombre ? `<br><small style="color:#64748b;">${item.DescuentoNombre}</small>` : ""}`
+            : '<span style="color:#94a3b8;">-</span>';
+
           htmlItems += `
-            <tr>
-                <td class="text-left dato-critico">${item.ProductoNombre}</td>
-                <td class="font-weight-bold">S/ ${parseFloat(item.PrecioUnitario).toFixed(2)}</td>
-                <td>${item.Cantidad}</td>
-                <td class="dato-critico">S/ ${parseFloat(item.Subtotal).toFixed(2)}</td>
-            </tr>
-          `;
+        <tr>
+        <td class="text-left dato-critico">${item.ProductoNombre}</td>
+        <td class="font-weight-bold">S/ ${parseFloat(item.PrecioUnitario).toFixed(2)}</td>
+        <td>${item.Cantidad}</td>
+        <td>${descuentoTexto}</td>
+        <td class="dato-critico">S/ ${parseFloat(item.Subtotal).toFixed(2)}</td>
+        </tr>
+        `;
         });
         document.getElementById("detTablaItems").innerHTML = htmlItems;
 

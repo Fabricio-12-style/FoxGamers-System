@@ -57,11 +57,25 @@
     if (!grid) return;
 
     try {
-      const res = await fetch(API_URL);
-      const productos = await res.json();
+      const [resProductos, resDescuentos] = await Promise.all([
+        fetch(API_URL),
+        fetch("http://localhost:3000/api/descuentos/vigentes"),
+      ]);
+      const productos = await resProductos.json();
+      const descuentos = await resDescuentos.json();
       const productosActivos = productos.filter(
         (p) => p.Activo === true || p.Activo === 1,
       );
+
+      const buscarDescuento = (productoID, categoriaID) => {
+        const porProducto = descuentos.find(d => d.AplicaA === "PRODUCTO" && d.ReferenciaID === productoID);
+        if (porProducto) return porProducto;
+        const porCategoria = descuentos.find(d => d.AplicaA === "CATEGORIA" && d.ReferenciaID === categoriaID);
+        if (porCategoria) return porCategoria;
+        const general = descuentos.find(d => d.AplicaA === "GENERAL");
+        if (general) return general;
+        return null;
+      };
 
       grid.innerHTML = productosActivos
         .map((prod) => {
@@ -85,10 +99,40 @@
             <h5 class="card-title">${prod.Nombre}</h5>
             <p class="small text-muted font-weight-bold mb-3">SKU: ${prod.Codigo}</p>
             <div class="mt-auto">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-uppercase small font-weight-bold" style="color:var(--fox-text-gray)">Precio:</span>
-                    <span class="price-tag">S/ ${prod.PrecioVenta.toFixed(2)}</span>
+                ${(() => {
+              const dsc = buscarDescuento(prod.ProductoID, prod.CategoriaID);
+              if (!dsc) return `
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-uppercase small font-weight-bold" style="color:var(--fox-text-gray)">Precio:</span>
+                <span class="price-tag">S/ ${prod.PrecioVenta.toFixed(2)}</span>
+              </div>`;
+
+              const montoDesc = dsc.TipoDescuento === "PORCENTAJE"
+                ? prod.PrecioVenta * (dsc.Valor / 100)
+                : Math.min(dsc.Valor, prod.PrecioVenta);
+              const precioFinal = (prod.PrecioVenta - montoDesc).toFixed(2);
+              const badgeDesc = dsc.TipoDescuento === "PORCENTAJE"
+                ? `-${dsc.Valor}%`
+                : `-S/ ${dsc.Valor}`;
+
+              return `
+              <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="text-uppercase small font-weight-bold" style="color:var(--fox-text-gray)">Precio:</span>
+                  <div class="text-right">
+                    <span style="text-decoration:line-through;color:#64748b;font-size:13px;">S/ ${prod.PrecioVenta.toFixed(2)}</span>
+                    <span class="badge ml-1" style="background:#ff6a00;color:#fff;font-size:11px;">${badgeDesc}</span>
+                    <br>
+                    <span class="price-tag" style="color:var(--fox-green);">S/ ${precioFinal}</span>
+                  </div>
                 </div>
+                <div class="mt-1 text-right">
+                  <span class="badge" style="background:#d1fae5;color:#065f46;font-size:10px;">
+                    <i class="fas fa-tag mr-1"></i>${dsc.Nombre || "Descuento"}
+                  </span>
+                </div>
+              </div>`;
+            })()}
                 <a href="${tieneStock ? wapp : "#"}" target="_blank" 
                    class="btn btn-block font-weight-bold py-2 ${tieneStock ? "btn-fox" : "btn-secondary"}" 
                    style="border-radius: 8px;">
