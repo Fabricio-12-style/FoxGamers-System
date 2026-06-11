@@ -80,32 +80,28 @@ const menuDefinicion = [
 
 document.addEventListener("DOMContentLoaded", () => {
   const usuarioString = localStorage.getItem("usuarioFoxGamers");
+
   if (!usuarioString) {
-    window.location.href = "../login/login.html";
+    window.location.replace("../login/login.html");
     return;
   }
 
   const usuario = JSON.parse(usuarioString);
-
-  // 2. Pintar datos del usuario
   document.getElementById("welcomeMessage").textContent =
     `Hola, ${usuario.Nombre || "Usuario"}`;
   document.getElementById("userRole").textContent = (
     usuario.Rol || "Sin Rol"
   ).toUpperCase();
 
-  // 3. GENERAR SIDEBAR DINÁMICO SEGÚN PERMISOS
   const sidebar = document.querySelector(".nav-sidebar");
   sidebar.innerHTML = "";
-
   const permisosUsuario = usuario.permisos || [];
 
   menuDefinicion.forEach((item) => {
     if (permisosUsuario.includes(item.id)) {
-      const activeClass = item.id === "dashboard" ? "active" : "";
       sidebar.innerHTML += `
                 <li class="nav-item">
-                    <a href="#" onclick="cargarModulo('${item.vista}', '${item.js}')" class="nav-link ${activeClass}">
+                    <a href="#" onclick="cargarModulo('${item.vista}', '${item.js}')" class="nav-link" id="nav-${item.id}">
                         <i class="nav-icon ${item.icono}"></i>
                         <p>${item.nombre}</p>
                     </a>
@@ -118,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnCerrarSesion) {
     btnCerrarSesion.addEventListener("click", () => {
       localStorage.removeItem("usuarioFoxGamers");
-      window.location.href = "../login/login.html";
+      window.location.href = "/frontend/login/login.html";
     });
   }
 
@@ -131,30 +127,27 @@ document.addEventListener("DOMContentLoaded", () => {
 // 5. MOTOR SPA
 async function cargarModulo(urlHtml, urlJs = null) {
   const contenedor = document.getElementById("app-content");
+  // Usar una ruta relativa limpia
   try {
-    contenedor.innerHTML = `
-            <div class="d-flex flex-column justify-content-center align-items-center" style="height: 70vh;">
-                <i class="fas fa-spinner fa-spin fa-3x mb-3" style="color: var(--fox-cyan);"></i>
-                <h5 class="text-muted font-weight-bold">Cargando interfaz...</h5>
-            </div>`;
+    const response = await fetch(urlHtml + "?t=" + new Date().getTime());
+    if (!response.ok) throw new Error("Vista no encontrada");
 
-    const response = await fetch(urlHtml);
-    if (!response.ok) throw new Error("No se encontró el archivo de la vista.");
-    const html = await response.text();
-    contenedor.innerHTML = html;
+    contenedor.innerHTML = await response.text();
 
     if (urlJs) {
       const scriptViejo = document.getElementById("script-modulo-dinamico");
       if (scriptViejo) scriptViejo.remove();
+
       const scriptNuevo = document.createElement("script");
       scriptNuevo.id = "script-modulo-dinamico";
       scriptNuevo.src = urlJs + "?v=" + new Date().getTime();
       document.body.appendChild(scriptNuevo);
     }
+
     actualizarMenuActivo(urlHtml);
   } catch (error) {
-    console.error("Error del motor SPA:", error);
-    contenedor.innerHTML = `<div class="alert alert-danger p-5 text-center">Error al cargar módulo</div>`;
+    console.error("Error cargando módulo:", error);
+    contenedor.innerHTML = `<div class="alert alert-danger p-4">Error al cargar módulo. Verifica que la ruta exista.</div>`;
   }
 }
 

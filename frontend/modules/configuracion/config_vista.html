@@ -1,3 +1,9 @@
+<script>
+    if (!document.getElementById("app-content")) {
+        window.location.replace("../../index.html");
+    }
+</script>
+
 <div class="container-fluid px-4 px-lg-5 py-4 animate__animated animate__fadeIn">
 
     <div class="mb-4">
@@ -21,7 +27,7 @@
                     <button class="nav-link font-weight-bold text-muted" id="sliders-tab" data-toggle="tab"
                         data-target="#nav-sliders" type="button" role="tab"
                         style="background-color: transparent; border: 1px solid transparent; border-bottom: 1px solid #cbd5e1; cursor: pointer;">
-                        <i class="fas fa-images mr-2" style="color: var(--fox-orange);"></i> Sliders
+                        <i class="fas fa-images mr-2" style="color: var(--fox-orange);"></i> Sliders Promocionales
                     </button>
                 </li>
             </ul>
@@ -30,7 +36,6 @@
 
                 <div class="tab-pane fade show active" id="nav-logo" role="tabpanel">
                     <div class="row">
-
                         <div class="col-md-5 col-12 mb-4">
                             <div class="card shadow-sm h-100 border-0 bg-white" style="border-radius: 12px;">
                                 <div class="card-header bg-light border-bottom pt-4">
@@ -41,9 +46,9 @@
                                 </div>
                                 <div class="card-body text-center d-flex flex-column py-3 px-4">
                                     <p class="small mb-4 text-left font-weight-bold"
-                                        style="color: var(--fox-text-gray);">Seleccionar imagen (Cuadrada. JPG o PNG.
-                                        Máx 2MB).</p>
-
+                                        style="color: var(--fox-text-gray);">
+                                        Formatos admitidos: Solo imágenes (JPG o PNG. Máx 2MB).
+                                    </p>
                                     <div class="mb-4 d-flex justify-content-center">
                                         <div style="width: 130px; height: 130px; border-radius: 50%; overflow: hidden; border: 2px dashed #cbd5e1; background-color: #f8fafc;"
                                             class="d-flex align-items-center justify-content-center shadow-sm">
@@ -53,14 +58,12 @@
                                                 style="font-size: 2.5rem; color: var(--fox-text-gray);"></i>
                                         </div>
                                     </div>
-
                                     <input type="file" id="inputFileLogo" accept="image/png, image/jpeg" class="d-none">
                                     <button type="button"
                                         class="btn btn-secondary btn-sm mb-4 font-weight-bold py-2 shadow-sm"
                                         id="btnSeleccionarArchivo">
                                         Seleccionar archivo
                                     </button>
-
                                     <button type="button" class="btn btn-fox btn-block py-2 mt-auto shadow-sm"
                                         id="btnSubirLogo">
                                         <i class="fas fa-save mr-2"></i> Guardar Logo
@@ -74,83 +77,76 @@
                                 <div class="card-header bg-light border-bottom pt-4">
                                     <h6 class="font-weight-bold dato-critico m-0">
                                         <i class="fas fa-th mr-2" style="color: var(--fox-cyan);"></i>Logos Guardados
-                                        <span class="small font-weight-normal d-block d-sm-inline mt-1 mt-sm-0"
-                                            style="color: var(--fox-text-gray);">Haz clic en "Usar" para
-                                            establecerlo.</span>
                                     </h6>
                                 </div>
                                 <div class="card-body py-4 px-4 bg-light">
                                     <div class="row justify-content-start" id="galeriaLogos">
                                         <div class="col-12 text-center py-4 font-weight-bold"
                                             style="color: var(--fox-text-gray);">
-                                            <i class="fas fa-spinner fa-spin mr-2"></i> Cargando galería...
+                                            <i class="fas fa-spinner fa-spin mr-2"></i> Cargando galería de logos...
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
 
                 <div class="tab-pane fade" id="nav-sliders" role="tabpanel">
-                    <div class="card shadow-sm border-0 bg-white" style="border-radius: 12px;">
-                        <div class="card-body py-4 px-5">
-                            <p class="small mb-4 font-weight-bold" style="color: var(--fox-text-gray);">Sube las
-                                imágenes que rotarán en el carrusel principal de la Landing Page. Tamaño recomendado:
-                                1200x400 píxeles.</p>
-
-                            <div class="p-3 mb-3 d-flex flex-column flex-sm-row align-items-center justify-content-between shadow-sm bg-light"
-                                style="border-radius: 8px; border: 1px dashed #cbd5e1;">
-                                <div class="d-flex align-items-center flex-grow-1 w-100 mb-2 mb-sm-0">
-                                    <div class="bg-white rounded mr-3 d-flex align-items-center justify-content-center shadow-sm"
-                                        style="width: 100px; height: 50px; overflow: hidden; border: 1px solid #cbd5e1;">
-                                        <img id="imgPreviewBanner1"
-                                            src="https://placehold.co/120x60/f8fafc/1e293b?text=Banner+1"
-                                            style="width: 100%; height: 100%; object-fit: cover;">
-                                    </div>
-                                    <span class="font-weight-bold dato-critico">Banner Principal 1</span>
+                    <div class="row">
+                        <div class="col-md-5 col-12 mb-4">
+                            <div class="card shadow-sm h-100 border-0 bg-white" style="border-radius: 12px;">
+                                <div class="card-header bg-light border-bottom pt-4">
+                                    <h6 class="font-weight-bold dato-critico m-0" style="color: var(--fox-orange);">
+                                        <i class="fas fa-plus-circle mr-2"></i>Añadir Slider Promocional
+                                    </h6>
                                 </div>
-                                <input type="file" id="inputFileBanner1" accept="image/*" class="d-none">
-                                <button class="btn btn-sm btn-fox-cyan w-100 w-sm-auto shadow-sm" id="btnSubirBanner1">
-                                    <i class="fas fa-sync-alt mr-1"></i> CAMBIAR
-                                </button>
-                            </div>
-
-                            <div class="p-3 mb-3 d-flex flex-column flex-sm-row align-items-center justify-content-between shadow-sm bg-light"
-                                style="border-radius: 8px; border: 1px dashed #cbd5e1;">
-                                <div class="d-flex align-items-center flex-grow-1 w-100 mb-2 mb-sm-0">
-                                    <div class="bg-white rounded mr-3 d-flex align-items-center justify-content-center shadow-sm"
-                                        style="width: 100px; height: 50px; overflow: hidden; border: 1px solid #cbd5e1;">
-                                        <img id="imgPreviewBanner2"
-                                            src="https://placehold.co/120x60/f8fafc/1e293b?text=Banner+2"
-                                            style="width: 100%; height: 100%; object-fit: cover;">
+                                <div class="card-body text-center d-flex flex-column py-3 px-4">
+                                    <p class="small mb-4 text-left font-weight-bold"
+                                        style="color: var(--fox-text-gray);">
+                                        Medida recomendada: 1200x400px. Formatos válidos: JPG o PNG.
+                                    </p>
+                                    <div class="mb-4 d-flex justify-content-center">
+                                        <div style="width: 100%; height: 120px; border-radius: 8px; overflow: hidden; border: 2px dashed #cbd5e1; background-color: #f8fafc;"
+                                            class="d-flex align-items-center justify-content-center shadow-sm p-2">
+                                            <img id="imgPreviewSliderNuevo" src=""
+                                                style="width: 100%; height: 100%; object-fit: contain; display: none;">
+                                            <i class="fas fa-images" id="iconPlaceholderSlider"
+                                                style="font-size: 2.5rem; color: var(--fox-text-gray);"></i>
+                                        </div>
                                     </div>
-                                    <span class="font-weight-bold dato-critico">Banner Principal 2</span>
+                                    <input type="file" id="inputFileSlider" accept="image/png, image/jpeg"
+                                        class="d-none">
+                                    <button type="button"
+                                        class="btn btn-secondary btn-sm mb-4 font-weight-bold py-2 shadow-sm"
+                                        id="btnSeleccionarSlider">
+                                        Seleccionar imagen
+                                    </button>
+                                    <button type="button" class="btn btn-fox py-2 mt-auto shadow-sm btn-block"
+                                        id="btnSubirSlider">
+                                        <i class="fas fa-cloud-upload-alt mr-2"></i> Cargar a la Vitrina
+                                    </button>
                                 </div>
-                                <input type="file" id="inputFileBanner2" accept="image/*" class="d-none">
-                                <button class="btn btn-sm btn-fox-cyan w-100 w-sm-auto shadow-sm" id="btnSubirBanner2">
-                                    <i class="fas fa-sync-alt mr-1"></i> CAMBIAR
-                                </button>
                             </div>
+                        </div>
 
-                            <div class="p-3 mb-0 d-flex flex-column flex-sm-row align-items-center justify-content-between shadow-sm bg-light"
-                                style="border-radius: 8px; border: 1px dashed #cbd5e1;">
-                                <div class="d-flex align-items-center flex-grow-1 w-100 mb-2 mb-sm-0">
-                                    <div class="bg-white rounded mr-3 d-flex align-items-center justify-content-center shadow-sm"
-                                        style="width: 100px; height: 50px; overflow: hidden; border: 1px solid #cbd5e1;">
-                                        <img id="imgPreviewBanner3"
-                                            src="https://placehold.co/120x60/f8fafc/1e293b?text=Banner+3"
-                                            style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="col-md-7 col-12 mb-4">
+                            <div class="card shadow-sm h-100 border-0 bg-white" style="border-radius: 12px;">
+                                <div class="card-header bg-light border-bottom pt-4">
+                                    <h6 class="font-weight-bold dato-critico m-0">
+                                        <i class="fas fa-sliders-h mr-2" style="color: var(--fox-cyan);"></i>Vitrina de
+                                        Sliders Activos y Campañas
+                                    </h6>
+                                </div>
+                                <div class="card-body py-4 px-4 bg-light">
+                                    <div class="row justify-content-start" id="galeriaSliders">
+                                        <div class="col-12 text-center py-4 font-weight-bold"
+                                            style="color: var(--fox-text-gray);">
+                                            <i class="fas fa-spinner fa-spin mr-2"></i> Cargando carrusel dinámico...
+                                        </div>
                                     </div>
-                                    <span class="font-weight-bold dato-critico">Banner Principal 3</span>
                                 </div>
-                                <input type="file" id="inputFileBanner3" accept="image/*" class="d-none">
-                                <button class="btn btn-sm btn-fox-cyan w-100 w-sm-auto shadow-sm" id="btnSubirBanner3">
-                                    <i class="fas fa-sync-alt mr-1"></i> CAMBIAR
-                                </button>
                             </div>
-
                         </div>
                     </div>
                 </div>

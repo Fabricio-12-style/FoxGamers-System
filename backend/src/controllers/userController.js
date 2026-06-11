@@ -1,12 +1,13 @@
 const { getConnection, sql } = require("../config/db");
 const bcrypt = require("bcryptjs");
 
-// // Expresiones Regulares Centralizadas
+// Expresiones Regulares Centralizadas
 const regexPwdFuerte =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&._-]{8,}$/;
 const regexBasura = /([a-zA-Z0-9])\1\1/;
+const regexUsuarioValido = /^[a-zA-Z]+$/;
 
-// // 1. Listar Usuarios
+// 1. Listar Usuarios
 const getUsers = async (req, res) => {
   try {
     const pool = await getConnection();
@@ -32,7 +33,7 @@ const getUsers = async (req, res) => {
   }
 };
 
-// // 2. Crear Usuario (Con Hashing y Filtros Estrictos)
+// 2. Crear Usuario
 const createUser = async (req, res) => {
   const { Nombre, Usuario, Password, Rol } = req.body;
 
@@ -43,23 +44,27 @@ const createUser = async (req, res) => {
   }
 
   if (regexBasura.test(Nombre.trim()) || regexBasura.test(Usuario.trim())) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje:
-          "El sistema ha bloqueado el registro por detección de texto ilógico o repetitivo.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje:
+        "El sistema ha bloqueado el registro por detección de texto ilógico o repetitivo.",
+    });
+  }
+
+  if (!regexUsuarioValido.test(Usuario.trim())) {
+    return res.status(400).json({
+      success: false,
+      mensaje:
+        "El nombre de inicio de sesión no puede contener números, espacios ni caracteres especiales.",
+    });
   }
 
   if (!regexPwdFuerte.test(Password.trim())) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje:
-          "La contraseña es muy débil. Requiere mayúscula, minúscula, número y 8 caracteres mínimos.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje:
+        "La contraseña es muy débil. Requiere mayúscula, minúscula, número y 8 caracteres mínimos.",
+    });
   }
 
   let perfilId = 3;
@@ -69,7 +74,6 @@ const createUser = async (req, res) => {
   try {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(Password.trim(), salt);
-
     const pool = await getConnection();
 
     const existe = await pool
@@ -80,12 +84,10 @@ const createUser = async (req, res) => {
       );
 
     if (existe.recordset.length > 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          mensaje: "El nombre de usuario ya está registrado en el sistema.",
-        });
+      return res.status(400).json({
+        success: false,
+        mensaje: "El nombre de usuario ya está registrado en el sistema.",
+      });
     }
 
     await pool
@@ -114,7 +116,7 @@ const createUser = async (req, res) => {
   }
 };
 
-// // 3. Bloquear / Desbloquear
+// 3. Bloquear / Desbloquear
 const toggleBlockUser = async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
@@ -152,7 +154,7 @@ const toggleBlockUser = async (req, res) => {
   }
 };
 
-// // 4. Eliminar definitivamente
+// 4. Eliminar definitivamente
 const deleteUser = async (req, res) => {
   const { id } = req.params;
 
@@ -172,20 +174,17 @@ const deleteUser = async (req, res) => {
       .request()
       .input("UsuarioID", sql.Int, id)
       .query("DELETE FROM Usuario WHERE UsuarioID = @UsuarioID");
-
     res.json({
       success: true,
       mensaje: "Perfil de usuario eliminado permanentemente.",
     });
   } catch (error) {
     if (error.number === 547) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          mensaje:
-            "Existen registros vinculados a este usuario. Inactívelo en lugar de eliminarlo.",
-        });
+      return res.status(400).json({
+        success: false,
+        mensaje:
+          "Existen registros vinculados a este usuario. Inactívelo en lugar de eliminarlo.",
+      });
     }
     console.error("Error al eliminar:", error);
     res
@@ -197,7 +196,7 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// // 5. Editar Usuario (Con soporte para Hashing Dinámico)
+// 5. Editar Usuario
 const updateUser = async (req, res) => {
   const { id } = req.params;
   const { Nombre, Usuario, Password, Correo, Rol } = req.body;
@@ -209,6 +208,14 @@ const updateUser = async (req, res) => {
         success: false,
         mensaje: "Los datos principales no pueden quedar vacíos.",
       });
+  }
+
+  if (!regexUsuarioValido.test(Usuario.trim())) {
+    return res.status(400).json({
+      success: false,
+      mensaje:
+        "El nombre de usuario no es válido. No se permiten números, espacios ni caracteres especiales.",
+    });
   }
 
   if (regexBasura.test(Nombre.trim()) || regexBasura.test(Usuario.trim())) {
@@ -247,13 +254,11 @@ const updateUser = async (req, res) => {
             `;
     } else {
       if (!regexPwdFuerte.test(Password.trim())) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            mensaje:
-              "La nueva contraseña es débil. Requiere mayúscula, minúscula, número y 8 caracteres.",
-          });
+        return res.status(400).json({
+          success: false,
+          mensaje:
+            "La nueva contraseña es débil. Requiere mayúscula, minúscula, número y 8 caracteres.",
+        });
       }
 
       const salt = await bcrypt.genSalt(10);

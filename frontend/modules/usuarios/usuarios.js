@@ -136,6 +136,7 @@
       };
 
       const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+      const regexUsuario = /^[a-zA-Z]+$/;
       const regexPwdFuerte =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&._-]{8,}$/;
       const regexBasura = /([a-zA-Z0-9])\1\1/;
@@ -160,6 +161,15 @@
           "Nombre Inválido",
           "El nombre completo solo debe contener letras y espacios reales.",
           "warning",
+        );
+        return;
+      }
+
+      if (!regexUsuario.test(userData.Usuario)) {
+        Swal.fire(
+          "Usuario Inválido",
+          "El nombre de inicio de sesión es estricto: solo puede contener letras (sin números, espacios ni símbolos).",
+          "error",
         );
         return;
       }
@@ -359,6 +369,14 @@
           (u.Correo || "").toLowerCase().includes(txt),
       );
       renderizarTablaUsuarios(filtrados);
+    });
+  }
+
+  // 11. Bloqueo en tiempo real de caracteres especiales y NÚMEROS para el campo Usuario
+  const inputUsuarioLogin = document.getElementById("usuLogin");
+  if (inputUsuarioLogin) {
+    inputUsuarioLogin.addEventListener("input", function () {
+      this.value = this.value.replace(/[^a-zA-Z]/g, "");
     });
   }
 })();
