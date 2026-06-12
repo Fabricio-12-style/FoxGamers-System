@@ -1,18 +1,54 @@
 (() => {
   let categoriaEditandoId = null;
   let listaCategoriasGlobal = [];
+  let debounceTimeoutCategorias = null;
 
-  // 1. Expresiones regulares de validación
   const regexBasura = /([a-zA-Z0-9])\1\1/;
   const regexNombre = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-&]+$/;
+  const BASE_URL = "http://localhost:3000";
 
-  // 2. Verificación de sesión
+  // =======================================================
+  // 1. VERIFICACIÓN DE SESIÓN
+  // =======================================================
   const usuarioString = localStorage.getItem("usuarioFoxGamers");
   if (!usuarioString) return (window.location.href = "../../login/login.html");
 
   listarCategorias();
 
-  // 3. Renderizado de tabla dinámico
+  // =======================================================
+  // 2. OBTENER CATEGORÍAS (HÍBRIDO TOP-5 / SEARCH)
+  // =======================================================
+  async function listarCategorias(terminoBusqueda = "") {
+    const lblModo = document.getElementById("lblModoCargaCategorias");
+    try {
+      const url =
+        terminoBusqueda.trim() !== ""
+          ? `${BASE_URL}/api/categorias?q=${encodeURIComponent(terminoBusqueda)}`
+          : `${BASE_URL}/api/categorias`;
+
+      const res = await fetch(url);
+      listaCategoriasGlobal = await res.json();
+
+      if (lblModo) {
+        lblModo.textContent =
+          terminoBusqueda.trim() !== ""
+            ? `Resultados encontrados: ${listaCategoriasGlobal.length}`
+            : "Mostrando últimos 5 registros";
+        lblModo.className =
+          terminoBusqueda.trim() !== ""
+            ? "badge badge-info p-2"
+            : "badge badge-secondary p-2";
+      }
+
+      renderizarTabla(listaCategoriasGlobal);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // =======================================================
+  // 3. RENDERIZADO DINÁMICO DE LA TABLA
+  // =======================================================
   function renderizarTabla(datos) {
     const tabla = document.getElementById("tablaCategorias");
     if (!tabla) return;
@@ -29,7 +65,6 @@
         ? '<span class="badge badge-success">Activa</span>'
         : '<span class="badge badge-secondary">Suspendida</span>';
 
-      // Uso de las nuevas clases de botones Fox
       const btnToggle = c.Activo
         ? `<button onclick="toggleEstadoCat(${c.CategoriaID}, 0)" class="btn btn-sm btn-secondary mx-1" style="width: 34px; height: 34px;" title="Suspender"><i class="fas fa-eye-slash"></i></button>`
         : `<button onclick="toggleEstadoCat(${c.CategoriaID}, 1)" class="btn btn-sm btn-fox-cyan mx-1" style="width: 34px; height: 34px;" title="Reactivar"><i class="fas fa-eye"></i></button>`;
@@ -41,9 +76,7 @@
       tabla.innerHTML += `
         <tr style="${rowStyle}">
             <td class="font-weight-bold" style="color: var(--fox-text-gray);">${c.CategoriaID}</td>
-            <td class="text-left dato-critico" style="padding-left: 15px;">
-                ${c.Nombre}
-            </td>
+            <td class="text-left dato-critico" style="padding-left: 15px;">${c.Nombre}</td>
             <td class="text-left font-weight-bold" style="color: var(--fox-text-gray);">${c.Descripcion || "-"}</td>
             <td>${statusBadge}</td>
             <td>
@@ -57,35 +90,27 @@
                     </button>
                 </div>
             </td>
-        </tr>
-      `;
+        </tr>`;
     });
   }
 
-  // 4. Obtener categorías del servidor
-  async function listarCategorias() {
-    try {
-      const res = await fetch("http://localhost:3000/api/categorias");
-      listaCategoriasGlobal = await res.json();
-      renderizarTabla(listaCategoriasGlobal);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  // 5. Configurar búsqueda en tiempo real
+  // =======================================================
+  // 4. MOTOR DE ESCUDO DEBOUNCE (PROTECTOR DEL HOSTING)
+  // =======================================================
   const inputBuscar = document.getElementById("buscarCategoria");
   if (inputBuscar) {
     inputBuscar.addEventListener("input", (e) => {
-      const txt = e.target.value.toLowerCase();
-      const filtrados = listaCategoriasGlobal.filter((c) =>
-        c.Nombre.toLowerCase().includes(txt),
-      );
-      renderizarTabla(filtrados);
+      const valor = e.target.value;
+      clearTimeout(debounceTimeoutCategorias);
+      debounceTimeoutCategorias = setTimeout(() => {
+        listarCategorias(valor);
+      }, 400);
     });
   }
 
-  // 6. Guardar o Actualizar categoría (Con validaciones)
+  // =======================================================
+  // 5. GUARDAR O ACTUALIZAR FAMILIA CON VALIDACIONES
+  // =======================================================
   const formCat = document.getElementById("formCategoria");
   if (formCat) {
     formCat.addEventListener("submit", async (e) => {
@@ -96,45 +121,39 @@
         .getElementById("catDescripcion")
         .value.trim();
 
-      // Validación 1: Vacíos
       if (!nombreLimpio) {
-        Swal.fire(
+        return Swal.fire(
           "Atención",
           "El nombre de la familia es obligatorio.",
           "warning",
         );
-        return;
       }
 
-      // Validación 2: Anti-Basura y caracteres extraños
       if (!regexNombre.test(nombreLimpio) || regexBasura.test(nombreLimpio)) {
-        Swal.fire(
+        return Swal.fire(
           "Texto Inválido",
           "El nombre contiene caracteres no permitidos o texto sin sentido.",
           "error",
         );
-        return;
       }
 
-      // Validación 3: Anti-Duplicados en Frontend
       const existe = listaCategoriasGlobal.some(
         (c) =>
           c.Nombre.toLowerCase() === nombreLimpio.toLowerCase() &&
           c.CategoriaID !== categoriaEditandoId,
       );
-      if (existe) {
-        Swal.fire(
+      if (existe && !categoriaEditandoId) {
+        return Swal.fire(
           "Atención",
-          "Ya existe una categoría con ese nombre.",
+          "Ya existe una categoría con ese nombre en los registros actuales.",
           "warning",
         );
-        return;
       }
 
       const data = { Nombre: nombreLimpio, Descripcion: descripcionLimpia };
       const url = categoriaEditandoId
-        ? `http://localhost:3000/api/categorias/${categoriaEditandoId}`
-        : "http://localhost:3000/api/categorias";
+        ? `${BASE_URL}/api/categorias/${categoriaEditandoId}`
+        : `${BASE_URL}/api/categorias`;
       const method = categoriaEditandoId ? "PUT" : "POST";
 
       try {
@@ -147,7 +166,7 @@
 
         if (result.success) {
           $("#modalCategoria").modal("hide");
-          listarCategorias();
+          listarCategorias(document.getElementById("buscarCategoria").value);
           Swal.fire("¡Éxito!", result.mensaje, "success");
         } else {
           Swal.fire("Error", result.mensaje, "error");
@@ -158,20 +177,19 @@
     });
   }
 
-  // 7. Cambiar estado (Activar/Suspender)
+  // =======================================================
+  // 6. CAMBIAR ESTADO DE VISIBILIDAD (PATCH)
+  // =======================================================
   window.toggleEstadoCat = async (id, nuevoEstado) => {
     try {
-      const res = await fetch(
-        `http://localhost:3000/api/categorias/estado/${id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nuevoEstado }),
-        },
-      );
+      const res = await fetch(`${BASE_URL}/api/categorias/estado/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nuevoEstado }),
+      });
       const result = await res.json();
       if (result.success) {
-        listarCategorias();
+        listarCategorias(document.getElementById("buscarCategoria").value);
         Swal.fire({
           icon: "success",
           title: "Estado actualizado",
@@ -184,7 +202,9 @@
     }
   };
 
-  // 8. Preparar formulario para edición
+  // =======================================================
+  // 7. PREPARAR FORMULARIO PARA EDICIÓN
+  // =======================================================
   window.prepararEdicionCat = (id) => {
     const c = listaCategoriasGlobal.find((item) => item.CategoriaID === id);
     if (c) {
@@ -197,7 +217,9 @@
     }
   };
 
-  // 9. Limpiar formulario para creación
+  // =======================================================
+  // 8. LIMPIAR FORMULARIO PARA CREACIÓN
+  // =======================================================
   const btnAbrirModal = document.getElementById("btnCrearCategoriaModal");
   if (btnAbrirModal) {
     btnAbrirModal.addEventListener("click", () => {
@@ -209,7 +231,9 @@
     });
   }
 
-  // 10. Eliminar categoría de la BD
+  // =======================================================
+  // 9. ELIMINAR CATEGORÍA FÍSICAMENTE (RESTRICCIÓN DE LLAVE)
+  // =======================================================
   window.eliminarCategoriaFisica = async (id) => {
     const cat = listaCategoriasGlobal.find((c) => c.CategoriaID === id);
     const conf = await Swal.fire({
@@ -223,13 +247,13 @@
 
     if (conf.isConfirmed) {
       try {
-        const res = await fetch(`http://localhost:3000/api/categorias/${id}`, {
+        const res = await fetch(`${BASE_URL}/api/categorias/${id}`, {
           method: "DELETE",
         });
         const data = await res.json();
         if (data.success) {
           Swal.fire("¡Eliminado!", data.mensaje, "success");
-          listarCategorias();
+          listarCategorias(document.getElementById("buscarCategoria").value);
         } else {
           Swal.fire("Acción Bloqueada", data.mensaje, "warning");
         }

@@ -1,19 +1,55 @@
 (() => {
   let clienteEditandoId = null;
   let listaClientesGlobal = [];
+  let debounceTimeoutClientes = null;
 
-  // 1. Expresiones Regulares de Validación (Espejo del Backend)
   const regexDNI = /^\d{8}$/;
   const regexRUC = /^\d{11}$/;
   const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const BASE_URL = "http://localhost:3000";
 
-  // 2. Verificación de sesión y carga inicial
+  // =======================================================
+  // 1. VERIFICACIÓN DE SESIÓN Y CARGA INICIAL
+  // =======================================================
   const usuarioString = localStorage.getItem("usuarioFoxGamers");
   if (!usuarioString) return (window.location.href = "../../login/login.html");
 
   listarClientes();
 
-  // 3. Renderizado de tabla
+  // =======================================================
+  // 2. OBTENER CLIENTES (HÍBRIDO TOP-5 / SEARCH)
+  // =======================================================
+  async function listarClientes(terminoBusqueda = "") {
+    const lblModo = document.getElementById("lblModoCargaClientes");
+    try {
+      const url =
+        terminoBusqueda.trim() !== ""
+          ? `${BASE_URL}/api/clientes?q=${encodeURIComponent(terminoBusqueda)}`
+          : `${BASE_URL}/api/clientes`;
+
+      const res = await fetch(url);
+      listaClientesGlobal = await res.json();
+
+      if (lblModo) {
+        lblModo.textContent =
+          terminoBusqueda.trim() !== ""
+            ? `Resultados encontrados: ${listaClientesGlobal.length}`
+            : "Mostrando últimos 5 registros";
+        lblModo.className =
+          terminoBusqueda.trim() !== ""
+            ? "badge badge-info p-2"
+            : "badge badge-secondary p-2";
+      }
+
+      renderizarTabla(listaClientesGlobal);
+    } catch (error) {
+      console.error("Error al listar:", error);
+    }
+  }
+
+  // =======================================================
+  // 3. RENDERIZADO DINÁMICO DE LA TABLA
+  // =======================================================
   function renderizarTabla(datos) {
     const tabla = document.getElementById("tablaClientes");
     if (!tabla) return;
@@ -61,38 +97,27 @@
                     </button>
                 </div>
             </td>
-        </tr>
-      `;
+        </tr>`;
     });
   }
 
-  // 4. Listar clientes
-  async function listarClientes() {
-    try {
-      const res = await fetch("http://localhost:3000/api/clientes");
-      listaClientesGlobal = await res.json();
-      renderizarTabla(listaClientesGlobal);
-    } catch (error) {
-      console.error("Error al listar:", error);
-    }
-  }
-
-  // 5. Búsqueda en tiempo real
+  // =======================================================
+  // 4. MOTOR DE ESCUDO DEBOUNCE (PROTECTOR DEL HOSTING)
+  // =======================================================
   const inputBuscar = document.getElementById("buscarCliente");
   if (inputBuscar) {
     inputBuscar.addEventListener("input", (e) => {
-      const txt = e.target.value.toLowerCase();
-      const filtrados = listaClientesGlobal.filter(
-        (c) =>
-          (c.NombreRazonSocial &&
-            c.NombreRazonSocial.toLowerCase().includes(txt)) ||
-          (c.Documento && c.Documento.includes(txt)),
-      );
-      renderizarTabla(filtrados);
+      const valor = e.target.value;
+      clearTimeout(debounceTimeoutClientes);
+      debounceTimeoutClientes = setTimeout(() => {
+        listarClientes(valor);
+      }, 400);
     });
   }
 
-  // 6. Activar/Desactivar cliente
+  // =======================================================
+  // 5. CAMBIAR ESTADO DE DISPONIBILIDAD (PATCH)
+  // =======================================================
   window.toggleEstado = async (id, nuevoEstado) => {
     const accion = nuevoEstado === 1 ? "Activar" : "Desactivar";
     const conf = await Swal.fire({
@@ -106,14 +131,11 @@
 
     if (conf.isConfirmed) {
       try {
-        const res = await fetch(
-          `http://localhost:3000/api/clientes/estado/${id}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nuevoEstado }),
-          },
-        );
+        const res = await fetch(`${BASE_URL}/api/clientes/estado/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nuevoEstado }),
+        });
         const data = await res.json();
         if (data.success) {
           Swal.fire({
@@ -122,7 +144,7 @@
             timer: 1000,
             showConfirmButton: false,
           });
-          listarClientes();
+          listarClientes(document.getElementById("buscarCliente").value);
         }
       } catch (e) {
         Swal.fire("Error", "No se pudo cambiar el estado.", "error");
@@ -130,7 +152,9 @@
     }
   };
 
-  // 7. Eliminar cliente
+  // =======================================================
+  // 6. ELIMINAR CLIENTE DE LA BASE DE DATOS
+  // =======================================================
   window.eliminarClienteFisico = async (id) => {
     const cli = listaClientesGlobal.find((c) => c.ClienteID === id);
     const conf = await Swal.fire({
@@ -144,13 +168,13 @@
 
     if (conf.isConfirmed) {
       try {
-        const res = await fetch(`http://localhost:3000/api/clientes/${id}`, {
+        const res = await fetch(`${BASE_URL}/api/clientes/${id}`, {
           method: "DELETE",
         });
         const data = await res.json();
         if (data.success) {
           Swal.fire("¡Eliminado!", data.mensaje, "success");
-          listarClientes();
+          listarClientes(document.getElementById("buscarCliente").value);
         } else {
           Swal.fire("Atención", data.mensaje, "warning");
         }
@@ -160,7 +184,9 @@
     }
   };
 
-  // 8. Consulta a API con Filtro
+  // =======================================================
+  // 7. CONSULTA EXTERNA PADRÓN SUNAT / RENIEC EN VIVO
+  // =======================================================
   const btnConsultarDoc = document.getElementById("btnConsultarDoc");
   if (btnConsultarDoc) {
     btnConsultarDoc.addEventListener("click", async () => {
@@ -184,10 +210,11 @@
         );
       }
 
+      btnConsultarDoc.disabled = true;
       btnConsultarDoc.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
       try {
         const res = await fetch(
-          `http://localhost:3000/api/clientes/consulta/${tipo.toLowerCase()}/${documento}`,
+          `${BASE_URL}/api/clientes/consulta/${tipo.toLowerCase()}/${documento}`,
         );
         const apiResponse = await res.json();
         if (apiResponse.success) {
@@ -204,13 +231,17 @@
           "No se pudo conectar con el servicio de consultas.",
           "error",
         );
+      } finally {
+        btnConsultarDoc.disabled = false;
+        btnConsultarDoc.innerHTML =
+          '<i class="fas fa-search mr-1"></i> Consultar';
       }
-      btnConsultarDoc.innerHTML =
-        '<i class="fas fa-search mr-1"></i> Consultar';
     });
   }
 
-  // 9. Guardar o Actualizar con Validaciones
+  // =======================================================
+  // 8. GUARDAR O ACTUALIZAR REGISTRO TRANSACCIONAL
+  // =======================================================
   const formCliente = document.getElementById("formCliente");
   if (formCliente) {
     formCliente.addEventListener("submit", async (e) => {
@@ -252,8 +283,8 @@
       };
 
       const url = clienteEditandoId
-        ? `http://localhost:3000/api/clientes/${clienteEditandoId}`
-        : "http://localhost:3000/api/clientes";
+        ? `${BASE_URL}/api/clientes/${clienteEditandoId}`
+        : `${BASE_URL}/api/clientes`;
       const method = clienteEditandoId ? "PUT" : "POST";
 
       try {
@@ -266,7 +297,7 @@
 
         if (data.success) {
           $("#modalCliente").modal("hide");
-          listarClientes();
+          listarClientes(document.getElementById("buscarCliente").value);
           Swal.fire("Éxito", data.mensaje, "success");
         } else {
           Swal.fire("Error", data.mensaje, "error");
@@ -277,7 +308,9 @@
     });
   }
 
-  // 10. Limpiar formulario
+  // =======================================================
+  // 9. REINICIAR FORMULARIO PARA CREACIÓN
+  // =======================================================
   const btnAbrirCrear = document.getElementById("btnCrearClienteModal");
   if (btnAbrirCrear) {
     btnAbrirCrear.addEventListener("click", () => {
@@ -289,7 +322,9 @@
     });
   }
 
-  // 11. Preparar edición
+  // =======================================================
+  // 10. CARGAR FICHA TÉCNICA EN MODO EDICIÓN
+  // =======================================================
   window.prepararEdicionCli = (id) => {
     const c = listaClientesGlobal.find((item) => item.ClienteID === id);
     if (c) {

@@ -1,26 +1,30 @@
 const { getConnection, sql } = require("../config/db");
 
-// 1. Expresiones Regulares de Validación
 const regexDNI = /^\d{8}$/;
 const regexRUC = /^\d{11}$/;
 const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// 2. CONSULTA A API EXTERNA (Decolecta) - Con Filtro de Ahorro
+// =======================================================
+// 1. CONSULTA A API EXTERNA (DECOLECTA)
+// =======================================================
 const consultarDocumento = async (req, res) => {
   const { tipo, documento } = req.params;
 
-  // Evitar llamadas inútiles a la API externa
   if (tipo === "dni" && !regexDNI.test(documento)) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "El DNI debe tener exactamente 8 dígitos numéricos.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "El DNI debe tener exactamente 8 dígitos numéricos.",
+      });
   }
   if (tipo === "ruc" && !regexRUC.test(documento)) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "El RUC debe tener exactamente 11 dígitos numéricos.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "El RUC debe tener exactamente 11 dígitos numéricos.",
+      });
   }
 
   const token = process.env.DECOLECTA_TOKEN;
@@ -37,10 +41,12 @@ const consultarDocumento = async (req, res) => {
 
     const dataApi = await response.json();
     if (!response.ok) {
-      return res.status(response.status).json({
-        success: false,
-        mensaje: dataApi.message || "Documento no válido en RENIEC/SUNAT.",
-      });
+      return res
+        .status(response.status)
+        .json({
+          success: false,
+          mensaje: dataApi.message || "Documento no válido en RENIEC/SUNAT.",
+        });
     }
 
     const payload = dataApi.data ? dataApi.data : dataApi;
@@ -59,14 +65,18 @@ const consultarDocumento = async (req, res) => {
 
     res.json({ success: true, data: resultado });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      mensaje: "Error de conexión con el proveedor de identidad.",
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        mensaje: "Error de conexión con el proveedor de identidad.",
+      });
   }
 };
 
-// 3. Crear Cliente (Con validación y Anti-Duplicados)
+// =======================================================
+// 2. CREAR CLIENTE
+// =======================================================
 const createCliente = async (req, res) => {
   const {
     TipoDocumento,
@@ -77,7 +87,6 @@ const createCliente = async (req, res) => {
     Direccion,
   } = req.body;
 
-  // Validaciones Estrictas
   if (TipoDocumento === "DNI" && !regexDNI.test(Documento)) {
     return res
       .status(400)
@@ -89,26 +98,29 @@ const createCliente = async (req, res) => {
       .json({ success: false, mensaje: "RUC inválido. Deben ser 11 números." });
   }
   if (Correo && Correo.trim() !== "" && !regexCorreo.test(Correo)) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "Formato de correo electrónico no válido.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "Formato de correo electrónico no válido.",
+      });
   }
 
   try {
     const pool = await getConnection();
 
-    // Verificación Anti-Duplicados
     const existe = await pool
       .request()
       .input("Doc", sql.VarChar, Documento)
       .query("SELECT ClienteID FROM Cliente WHERE Documento = @Doc");
 
     if (existe.recordset.length > 0) {
-      return res.status(400).json({
-        success: false,
-        mensaje: "Este número de documento ya está registrado.",
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          mensaje: "Este número de documento ya está registrado.",
+        });
     }
 
     await pool
@@ -131,18 +143,39 @@ const createCliente = async (req, res) => {
   }
 };
 
-// 4. Listar Clientes
+// =======================================================
+// 3. LISTAR CLIENTES (HÍBRIDO PARA DIRECTORIO)
+// =======================================================
 const getClientes = async (req, res) => {
+  const { q } = req.query;
   try {
     const pool = await getConnection();
-    const result = await pool.request().query(`
-            SELECT 
-                ClienteID, TipoDocumento, Documento, NombreRazonSocial, 
-                Telefono, Correo, Direccion, Activo, 
-                FORMAT(FechaCreacion, 'yyyy-MM-dd HH:mm:ss') AS FechaCreacion
-            FROM Cliente 
-            ORDER BY FechaCreacion DESC
-        `);
+    const request = pool.request();
+    let query = "";
+
+    if (q && q.trim() !== "") {
+      request.input("search", sql.VarChar, `%${q.trim()}%`);
+      query = `
+        SELECT 
+            ClienteID, TipoDocumento, Documento, NombreRazonSocial, 
+            Telefono, Correo, Direccion, Activo, 
+            FORMAT(FechaCreacion, 'yyyy-MM-dd HH:mm:ss') AS FechaCreacion
+        FROM Cliente 
+        WHERE Documento LIKE @search OR NombreRazonSocial LIKE @search
+        ORDER BY FechaCreacion DESC
+      `;
+    } else {
+      query = `
+        SELECT TOP 5
+            ClienteID, TipoDocumento, Documento, NombreRazonSocial, 
+            Telefono, Correo, Direccion, Activo, 
+            FORMAT(FechaCreacion, 'yyyy-MM-dd HH:mm:ss') AS FechaCreacion
+        FROM Cliente 
+        ORDER BY FechaCreacion DESC
+      `;
+    }
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (error) {
     res
@@ -151,7 +184,9 @@ const getClientes = async (req, res) => {
   }
 };
 
-// 5. Actualizar Cliente (Con validación y Anti-Colisión)
+// =======================================================
+// 4. ACTUALIZAR CLIENTE
+// =======================================================
 const updateCliente = async (req, res) => {
   const { id } = req.params;
   const {
@@ -174,16 +209,17 @@ const updateCliente = async (req, res) => {
       .json({ success: false, mensaje: "RUC inválido. Deben ser 11 números." });
   }
   if (Correo && Correo.trim() !== "" && !regexCorreo.test(Correo)) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "Formato de correo electrónico no válido.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "Formato de correo electrónico no válido.",
+      });
   }
 
   try {
     const pool = await getConnection();
 
-    // Verificación Anti-Colisión (Que no le ponga el DNI de otro cliente existente)
     const existe = await pool
       .request()
       .input("Doc", sql.VarChar, Documento)
@@ -193,10 +229,13 @@ const updateCliente = async (req, res) => {
       );
 
     if (existe.recordset.length > 0) {
-      return res.status(400).json({
-        success: false,
-        mensaje: "El documento ingresado pertenece a otro cliente registrado.",
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          mensaje:
+            "El documento ingresado pertenece a otro cliente registrado.",
+        });
     }
 
     await pool
@@ -222,14 +261,18 @@ const updateCliente = async (req, res) => {
       mensaje: "Ficha del cliente actualizada correctamente.",
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      mensaje: "Error al actualizar los datos del cliente.",
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        mensaje: "Error al actualizar los datos del cliente.",
+      });
   }
 };
 
-// 6. Eliminar Cliente Físicamente
+// =======================================================
+// 5. ELIMINAR CLIENTE
+// =======================================================
 const deleteCliente = async (req, res) => {
   const { id } = req.params;
   try {
@@ -243,7 +286,6 @@ const deleteCliente = async (req, res) => {
       mensaje: "Cliente borrado permanentemente de la base de datos.",
     });
   } catch (error) {
-    // Captura de Integridad Referencial
     if (error.number === 547) {
       return res.status(400).json({
         success: false,
@@ -257,7 +299,9 @@ const deleteCliente = async (req, res) => {
   }
 };
 
-// 7. Cambiar estado (Activo/Inactivo)
+// =======================================================
+// 6. CAMBIAR ESTADO
+// =======================================================
 const cambiarEstadoCliente = async (req, res) => {
   const { id } = req.params;
   const { nuevoEstado } = req.body;
@@ -276,17 +320,19 @@ const cambiarEstadoCliente = async (req, res) => {
   }
 };
 
+// =======================================================
+// 7. BUSCADOR LIGERO (EXCLUSIVO PARA EL POS)
+// =======================================================
 const buscarCliente = async (req, res) => {
   const { q } = req.query;
   try {
     const pool = await getConnection();
-    const result = await pool
-      .request()
-      .input("busqueda", sql.VarChar, `%${q}%`)
-      .query(
-        "SELECT ClienteID, Documento, NombreRazonSocial FROM Cliente WHERE Documento LIKE @busqueda OR NombreRazonSocial LIKE @busqueda",
-      );
-
+    const result = await pool.request().input("busqueda", sql.VarChar, `%${q}%`)
+      .query(`
+        SELECT TOP 10 ClienteID, Documento, NombreRazonSocial 
+        FROM Cliente 
+        WHERE Activo = 1 AND (Documento LIKE @busqueda OR NombreRazonSocial LIKE @busqueda)
+      `);
     res.json(result.recordset);
   } catch (error) {
     res
@@ -302,5 +348,5 @@ module.exports = {
   updateCliente,
   deleteCliente,
   cambiarEstadoCliente,
-  buscarCliente,
+  buscarCliente, 
 };

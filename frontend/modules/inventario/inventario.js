@@ -1,32 +1,63 @@
 (() => {
   let listaInventarioGlobal = [];
-  const placeholderImg = "https://placehold.co/50x50/f8fafc/1e293b?text=Fox"; // Actualizado a la nueva paleta
+  let debounceTimeoutInventario = null;
+  const placeholderImg = "https://placehold.co/50x50/f8fafc/1e293b?text=Fox";
+  const BASE_URL = "http://localhost:3000";
 
-  listarInventario();
-
-  async function listarInventario() {
+  // =======================================================
+  // 1. OBTENER LISTADO DE INVENTARIO (HÍBRIDO TOP-5 / SEARCH)
+  // =======================================================
+  async function listarInventario(terminoBusqueda = "") {
+    const lblModo = document.getElementById("lblModoCargaInventario");
     try {
-      const res = await fetch("http://localhost:3000/api/productos");
+      const url =
+        terminoBusqueda.trim() !== ""
+          ? `${BASE_URL}/api/productos?q=${encodeURIComponent(terminoBusqueda)}`
+          : `${BASE_URL}/api/productos`;
+
+      const res = await fetch(url);
       listaInventarioGlobal = await res.json();
+
+      if (lblModo) {
+        lblModo.textContent =
+          terminoBusqueda.trim() !== ""
+            ? `Resultados encontrados: ${listaInventarioGlobal.length}`
+            : "Mostrando últimos 5 registros";
+        lblModo.className =
+          terminoBusqueda.trim() !== ""
+            ? "badge badge-info p-2"
+            : "badge badge-secondary p-2";
+      }
+
       renderizarTabla(listaInventarioGlobal);
     } catch (e) {
       console.error("Error cargando inventario:", e);
     }
   }
 
+  listarInventario();
+
+  // =======================================================
+  // 2. RENDERIZADO DINÁMICO DE FILAS
+  // =======================================================
   function renderizarTabla(datos) {
     const tabla = document.getElementById("tablaInventario");
     if (!tabla) return;
     tabla.innerHTML = "";
+
+    if (datos.length === 0) {
+      tabla.innerHTML =
+        '<tr><td colspan="9" class="py-4 italic" style="color: var(--fox-text-gray);">No se encontraron productos en el inventario.</td></tr>';
+      return;
+    }
 
     datos.forEach((p) => {
       const esBajoStock = p.StockActual <= p.StockMinimo;
       const rowStyle = p.Activo
         ? ""
         : "opacity: 0.5; filter: grayscale(1); background-color: #f1f5f9;";
-
       const urlImagen = p.ImagenURL
-        ? `http://localhost:3000${p.ImagenURL}`
+        ? `${BASE_URL}${p.ImagenURL}`
         : placeholderImg;
 
       tabla.innerHTML += `
@@ -60,7 +91,9 @@
     });
   }
 
-  // ABRIR MODAL DE AJUSTE
+  // =======================================================
+  // 3. APERTURA DE FORMULARIO DE AJUSTES
+  // =======================================================
   window.abrirAjuste = (id) => {
     const p = listaInventarioGlobal.find((item) => item.ProductoID === id);
     const form = document.getElementById("formAjusteStock");
@@ -70,7 +103,7 @@
     if (!p || !form || !lbl) return;
 
     form.dataset.id = id;
-    lbl.textContent = p.Nombre;
+    lbl.textContent = p.ModeloBase || "Producto";
     if (lblStock) lblStock.textContent = p.StockActual;
 
     form.reset();
@@ -80,11 +113,12 @@
     $("#modalAjusteStock").modal("show");
   };
 
-  // GUARDAR AJUSTE DE STOCK
+  // =======================================================
+  // 4. TRANSACCIÓN DE AJUSTE DE STOCK
+  // =======================================================
   const formAjuste = document.getElementById("formAjusteStock");
   if (formAjuste) {
     formAjuste.addEventListener("submit", async (e) => {
-      /* (Lógica de guardar intacta) ... */
       e.preventDefault();
 
       const cantidadVal = parseInt(
@@ -94,27 +128,24 @@
       const motivoBase = document.getElementById("ajusteMotivoSelect").value;
 
       if (!cantidadVal || cantidadVal <= 0) {
-        Swal.fire(
+        return Swal.fire(
           "Cantidad Inválida",
           "La cantidad a mover debe ser al menos 1.",
           "warning",
         );
-        return;
       }
       if (!tipoAjuste || !motivoBase) {
-        Swal.fire(
+        return Swal.fire(
           "Datos Incompletos",
           "Debe seleccionar un Tipo de Movimiento y un Motivo.",
           "warning",
         );
-        return;
       }
 
       const idProducto = e.target.dataset.id;
-      const usuarioString = localStorage.getItem("usuarioFoxGamers");
-      const usuario = JSON.parse(usuarioString);
-
+      const usuario = JSON.parse(localStorage.getItem("usuarioFoxGamers"));
       const divAjusteProveedor = document.getElementById("divAjusteProveedor");
+
       const proveedorID =
         !divAjusteProveedor.classList.contains("d-none") &&
         document.getElementById("ajusteProveedorSelect").value
@@ -140,17 +171,20 @@
       const pActual = listaInventarioGlobal.find(
         (p) => p.ProductoID == idProducto,
       );
-      if (tipoAjuste === "SALIDA" && cantidadVal > pActual.StockActual) {
-        Swal.fire(
+      if (
+        tipoAjuste === "SALIDA" &&
+        pActual &&
+        cantidadVal > pActual.StockActual
+      ) {
+        return Swal.fire(
           "Stock Insuficiente",
           `Operación denegada. Solo tienes ${pActual.StockActual} unidades disponibles.`,
           "error",
         );
-        return;
       }
 
       try {
-        const res = await fetch("http://localhost:3000/api/productos/ajuste", {
+        const res = await fetch(`${BASE_URL}/api/productos/ajuste`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
@@ -159,7 +193,7 @@
 
         if (result.success) {
           $("#modalAjusteStock").modal("hide");
-          listarInventario();
+          listarInventario(document.getElementById("buscarInventario").value);
           Swal.fire({
             icon: "success",
             title: "Movimiento Registrado",
@@ -180,7 +214,9 @@
     });
   }
 
-  // KARDEX Y DEPENDENCIAS
+  // =======================================================
+  // 5. CONSULTA DE MOVIMIENTOS KARDEX POR PRODUCTO
+  // =======================================================
   window.verKardex = async (id) => {
     const p = listaInventarioGlobal.find((item) => item.ProductoID === id);
     const lbl = document.getElementById("lblKardexProducto");
@@ -188,14 +224,12 @@
 
     if (!p || !lbl || !tabla) return;
 
-    lbl.textContent = p.Nombre;
+    lbl.textContent = p.ModeloBase || "Historial";
     tabla.innerHTML =
       '<tr><td colspan="5" class="py-4 font-weight-bold" style="color: var(--fox-text-gray);">Cargando historial...</td></tr>';
 
     try {
-      const res = await fetch(
-        `http://localhost:3000/api/productos/kardex/${id}`,
-      );
+      const res = await fetch(`${BASE_URL}/api/productos/kardex/${id}`);
       const movimientos = await res.json();
       tabla.innerHTML = "";
 
@@ -227,21 +261,23 @@
     }
   };
 
+  // =======================================================
+  // 6. MOTOR DE ESCUDO DEBOUNCE (HOSTING PROTECTOR)
+  // =======================================================
   const inputBuscar = document.getElementById("buscarInventario");
   if (inputBuscar) {
     inputBuscar.addEventListener("input", (e) => {
-      const txt = e.target.value.toLowerCase();
-      const filtrados = listaInventarioGlobal.filter(
-        (p) =>
-          (p.ModeloBase && p.ModeloBase.toLowerCase().includes(txt)) ||
-          (p.Atributo && p.Atributo.toLowerCase().includes(txt)),
-      );
-      renderizarTabla(filtrados);
+      const valor = e.target.value;
+      clearTimeout(debounceTimeoutInventario);
+      debounceTimeoutInventario = setTimeout(() => {
+        listarInventario(valor);
+      }, 400);
     });
   }
 
-  // LOGICA DE SELECTS EN CASCADA
-  /* (Lógica de selects intacta) ... */
+  // =======================================================
+  // 7. COMPORTAMIENTO DE SELECTS EN CASCADA Y PROVEEDORES
+  // =======================================================
   const ajusteTipo = document.getElementById("ajusteTipo");
   const ajusteMotivoSelect = document.getElementById("ajusteMotivoSelect");
   const divAjusteProveedor = document.getElementById("divAjusteProveedor");
@@ -265,8 +301,9 @@
 
   async function cargarProveedoresParaAjuste() {
     try {
-      const res = await fetch("http://localhost:3000/api/proveedores");
+      const res = await fetch(`${BASE_URL}/api/proveedores`);
       const proveedores = await res.json();
+      if (!ajusteProveedorSelect) return;
       ajusteProveedorSelect.innerHTML =
         '<option value="" disabled selected>-- Seleccione Proveedor --</option>';
 

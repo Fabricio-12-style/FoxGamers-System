@@ -212,41 +212,109 @@ body {
 }
 
 /* =========================================
-   7. IMPRESIÓN DEL TICKET
+   7. IMPRESIÓN DEL TICKET Y NOTA A4
    ========================================= */
 #zonaTicket {
     display: none;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap');
+
 @media print {
+    @page {
+        size: A4;
+        margin: 0 !important;
+    }
+
+    html,
+    body {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 210mm !important;
+        height: 297mm !important;
+        overflow: hidden !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
     body * {
         visibility: hidden;
+        background-color: transparent !important;
+        box-shadow: none !important;
     }
 
-    .modal,
-    .modal-backdrop {
-        display: none !important;
-    }
-
-    #zonaTicket,
-    #zonaTicket * {
+    /* --- MODO TICKET TÉRMICO --- */
+    body.print-ticket #zonaTicket,
+    body.print-ticket #zonaTicket * {
         visibility: visible;
     }
 
-    #zonaTicket {
-        display: block !important;
+    body.print-ticket #zonaTicket {
         position: absolute;
         left: 0;
         top: 0;
-        width: 80mm;
-        padding: 5mm;
-        font-family: 'Montserrat', sans-serif;
-        color: #000;
-        background: #fff;
+        width: 100%;
         margin: 0;
+        padding: 0;
     }
 
-    @page {
-        margin: 0;
+    body.print-a4 #modalVistaPreviaA4,
+    body.print-a4 #modalVistaPreviaA4 .modal-dialog,
+    body.print-a4 #modalVistaPreviaA4 .modal-content,
+    body.print-a4 #modalVistaPreviaA4 .modal-body {
+        visibility: visible !important;
+        display: block !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 210mm !important;
+        max-width: 210mm !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        transform: none !important;
+        overflow: hidden !important;
+    }
+
+    body.print-a4 #contenedorPapelA4,
+    body.print-a4 #contenedorPapelA4 * {
+        visibility: visible !important;
+    }
+
+    body.print-a4 #contenedorPapelA4 {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 210mm !important;
+        height: 297mm !important;
+        max-height: 297mm !important;
+        box-sizing: border-box !important;
+        padding: 20mm 15mm !important;
+        /* Margen interno elegante para el contenido */
+        margin: 0 !important;
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+    }
+
+    body.print-a4 #contenedorPapelA4 table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    /* Ocultar elementos interactivos del modal */
+    body.print-a4 .modal-header,
+    body.print-a4 .modal-footer,
+    body.print-a4 button,
+    body.print-a4 .btn {
+        display: none !important;
+        visibility: hidden !important;
     }
 }
