@@ -1,6 +1,6 @@
 <script>
     if (!document.getElementById("app-content")) {
-        window.location.replace("../../index.html"); 
+        window.location.replace("../../index.html");
     }
 </script>
 
@@ -16,10 +16,11 @@
 <section class="content mt-3">
     <div class="container-fluid">
         <div class="card shadow-sm border-0">
-            <div class="card-header border-bottom-0 pt-3 pb-3 bg-light">
+            <div
+                class="card-header border-bottom-0 pt-3 pb-3 bg-light d-flex justify-content-between align-items-center">
                 <div class="input-group" style="max-width: 400px;">
                     <input type="text" id="buscarCategoria" class="form-control"
-                        placeholder="Buscar categoría por nombre...">
+                        placeholder="Buscar categoría por nombre en el hosting...">
                     <div class="input-group-append">
                         <span class="input-group-text"
                             style="background-color: var(--fox-surface); border-color: #cbd5e1; color: var(--fox-cyan);">
@@ -27,6 +28,8 @@
                         </span>
                     </div>
                 </div>
+                <span class="badge badge-secondary p-2" style="font-size: 0.85rem;"
+                    id="lblModoCargaCategorias">Mostrando últimos 5</span>
             </div>
 
             <div class="card-body p-0 table-responsive">
@@ -40,8 +43,7 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaCategorias">
-                    </tbody>
+                    <tbody id="tablaCategorias"></tbody>
                 </table>
             </div>
         </div>
@@ -51,7 +53,6 @@
 <div class="modal fade" id="modalCategoria" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0">
-
             <div class="modal-header"
                 style="background-color: var(--fox-surface); border-bottom: 3px solid var(--fox-orange) !important;">
                 <h5 class="modal-title font-weight-bold" id="tituloModalCategoria"

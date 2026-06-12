@@ -9,5 +9,6 @@ router.delete("/:id", clienteController.deleteCliente);
 router.patch("/estado/:id", clienteController.cambiarEstadoCliente);
 router.get("/consulta/:tipo/:documento", clienteController.consultarDocumento);
 router.get("/buscar", clienteController.buscarCliente);
+router.get("/consultar/:tipo/:documento", clienteController.consultarDocumento);
 
 module.exports = router;

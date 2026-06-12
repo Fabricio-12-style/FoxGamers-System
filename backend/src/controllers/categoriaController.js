@@ -1,18 +1,35 @@
 const { getConnection, sql } = require("../config/db");
 
-// 1. Expresiones regulares para control de calidad
 const regexBasura = /([a-zA-Z0-9])\1\1/;
 const regexNombre = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-&]+$/;
 
-// 2. Listar todas las categorías
+// =======================================================
+// 1. LISTAR CATEGORÍAS (OPTIMIZADO TOP-5 / BÚSQUEDA)
+// =======================================================
 const getCategorias = async (req, res) => {
+  const { q } = req.query;
   try {
     const pool = await getConnection();
-    const result = await pool.request().query(`
-            SELECT CategoriaID, Nombre, Descripcion, Activo 
-            FROM Categoria 
-            ORDER BY Nombre ASC
-        `);
+    const request = pool.request();
+    let query = "";
+
+    if (q && q.trim() !== "") {
+      request.input("search", sql.VarChar, `%${q.trim()}%`);
+      query = `
+        SELECT CategoriaID, Nombre, Descripcion, Activo 
+        FROM Categoria 
+        WHERE Nombre LIKE @search
+        ORDER BY Nombre ASC
+      `;
+    } else {
+      query = `
+        SELECT TOP 5 CategoriaID, Nombre, Descripcion, Activo 
+        FROM Categoria 
+        ORDER BY CategoriaID DESC
+      `;
+    }
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (error) {
     console.error("Error al obtener categorías:", error);
@@ -22,11 +39,12 @@ const getCategorias = async (req, res) => {
   }
 };
 
-// 3. Crear nueva categoría
+// =======================================================
+// 2. CREAR NUEVA CATEGORÍA
+// =======================================================
 const createCategoria = async (req, res) => {
   const { Nombre, Descripcion } = req.body;
 
-  // 4. Validaciones de entrada
   if (!Nombre || !Nombre.trim()) {
     return res
       .status(400)
@@ -46,7 +64,6 @@ const createCategoria = async (req, res) => {
   try {
     const pool = await getConnection();
 
-    // 5. Prevención de duplicados
     const existe = await pool
       .request()
       .input("Nombre", sql.VarChar, nombreLimpio)
@@ -78,7 +95,9 @@ const createCategoria = async (req, res) => {
   }
 };
 
-// 6. Actualizar categoría
+// =======================================================
+// 3. ACTUALIZAR CATEGORÍA
+// =======================================================
 const updateCategoria = async (req, res) => {
   const { id } = req.params;
   const { Nombre, Descripcion } = req.body;
@@ -102,7 +121,6 @@ const updateCategoria = async (req, res) => {
   try {
     const pool = await getConnection();
 
-    // 7. Evitar colisión de nombres con otras categorías existentes
     const existe = await pool
       .request()
       .input("Nombre", sql.VarChar, nombreLimpio)
@@ -139,7 +157,9 @@ const updateCategoria = async (req, res) => {
   }
 };
 
-// 8. Cambiar estado (Activar/Desactivar)
+// =======================================================
+// 4. CAMBIAR ESTADO DE VISIBILIDAD (ACTIVAR/SUSPENDER)
+// =======================================================
 const cambiarEstadoCategoria = async (req, res) => {
   const { id } = req.params;
   const { nuevoEstado } = req.body;
@@ -157,7 +177,9 @@ const cambiarEstadoCategoria = async (req, res) => {
   }
 };
 
-// 9. Eliminar categoría físicamente
+// =======================================================
+// 5. ELIMINAR CATEGORÍA FÍSICAMENTE
+// =======================================================
 const deleteCategoria = async (req, res) => {
   const { id } = req.params;
   try {
@@ -172,7 +194,6 @@ const deleteCategoria = async (req, res) => {
       mensaje: "Categoría eliminada de la base de datos.",
     });
   } catch (error) {
-    // 10. Captura de integridad referencial
     if (error.number === 547) {
       return res.status(400).json({
         success: false,

@@ -1,19 +1,42 @@
 const { getConnection, sql } = require("../config/db");
 
-// 1. Listar productos
+// =======================================================
+// 1. LISTAR PRODUCTOS (OPTIMIZADO TOP-5 / BÚSQUEDA)
+// =======================================================
 const getProductos = async (req, res) => {
+  const { q } = req.query;
   try {
     const pool = await getConnection();
-    const result = await pool.request().query(`
-            SELECT 
-                p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo,
-                p.StockActual, p.StockMinimo, p.PrecioCompra, p.PrecioVenta, 
-                p.Activo, p.ImagenURL, p.Descripcion,
-                c.Nombre AS NombreCategoria, c.CategoriaID
-            FROM Inventario p
-            LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID
-            ORDER BY p.ProductoID DESC
-        `);
+    const request = pool.request();
+    let query = "";
+
+    if (q && q.trim() !== "") {
+      request.input("search", sql.VarChar, `%${q.trim()}%`);
+      query = `
+        SELECT 
+            p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo,
+            p.StockActual, p.StockMinimo, p.PrecioCompra, p.PrecioVenta, 
+            p.Activo, p.ImagenURL, p.Descripcion,
+            c.Nombre AS NombreCategoria, c.CategoriaID
+        FROM Inventario p
+        LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID
+        WHERE p.ModeloBase LIKE @search OR p.Atributo LIKE @search OR p.Codigo LIKE @search
+        ORDER BY p.ProductoID DESC
+      `;
+    } else {
+      query = `
+        SELECT TOP 5
+            p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo,
+            p.StockActual, p.StockMinimo, p.PrecioCompra, p.PrecioVenta, 
+            p.Activo, p.ImagenURL, p.Descripcion,
+            c.Nombre AS NombreCategoria, c.CategoriaID
+        FROM Inventario p
+        LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID
+        ORDER BY CASE WHEN p.StockActual <= p.StockMinimo THEN 0 ELSE 1 END ASC, p.ProductoID DESC
+      `;
+    }
+
+    const result = await request.query(query);
     res.json(result.recordset);
   } catch (error) {
     console.error("Error en getProductos:", error);
@@ -23,7 +46,9 @@ const getProductos = async (req, res) => {
   }
 };
 
-// 2. Crear producto (MODIFICADO PARA MULTER)
+// =======================================================
+// 2. CREAR PRODUCTO
+// =======================================================
 const createProducto = async (req, res) => {
   const {
     CategoriaID,
@@ -40,29 +65,33 @@ const createProducto = async (req, res) => {
     ? `/uploads/productos/${req.file.filename}`
     : null;
 
-  // 3. Validaciones financieras y de negocio
   if (!Codigo || !ModeloBase || !CategoriaID) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "Código, Modelo y Categoría son obligatorios.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "Código, Modelo y Categoría son obligatorios.",
+      });
   }
   if (parseFloat(PrecioCompra) < 0 || parseFloat(PrecioVenta) < 0) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "Los precios no pueden ser negativos.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "Los precios no pueden ser negativos.",
+      });
   }
   if (parseInt(StockMinimo) < 0) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "El stock mínimo no puede ser negativo.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "El stock mínimo no puede ser negativo.",
+      });
   }
 
   try {
     const pool = await getConnection();
-
     const catRes = await pool
       .request()
       .input("catId", sql.Int, CategoriaID)
@@ -83,8 +112,7 @@ const createProducto = async (req, res) => {
       .input("SMin", sql.Int, StockMinimo)
       .input("Mod", sql.VarChar, ModeloBase.trim())
       .input("Atr", sql.VarChar, Atributo ? Atributo.trim() : "")
-      .input("Img", sql.VarChar(sql.MAX), rutaImagen) // <--- Guardamos la ruta de texto
-      .query(`
+      .input("Img", sql.VarChar(sql.MAX), rutaImagen).query(`
                 INSERT INTO Inventario 
                 (CategoriaID, Codigo, Nombre, Descripcion, StockActual, StockMinimo, PrecioCompra, PrecioVenta, Activo, FechaCreacion, ModeloBase, Atributo, ImagenURL)
                 VALUES 
@@ -94,24 +122,27 @@ const createProducto = async (req, res) => {
     res.json({ success: true, mensaje: "Producto creado y catalogado." });
   } catch (error) {
     console.error("Error al crear:", error);
-    res.status(500).json({
-      success: false,
-      mensaje: "Error al registrar producto. Verifique duplicidad de código.",
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        mensaje: "Error al registrar producto. Verifique duplicidad de código.",
+      });
   }
 };
 
-// 4. Actualizar producto (MODIFICADO PARA MULTER)
+// =======================================================
+// 3. ACTUALIZAR PRODUCTO
+// =======================================================
 const updateProducto = async (req, res) => {
-  console.log("DEBUG - BODY recibido:", req.body);
-  console.log("DEBUG - ARCHIVO recibido:", req.file);
-
   if (!req.body || Object.keys(req.body).length === 0) {
-    return res.status(400).json({
-      success: false,
-      mensaje:
-        "No se recibieron datos. Asegúrate de enviar FormData y no JSON.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje:
+          "No se recibieron datos. Asegúrate de enviar FormData y no JSON.",
+      });
   }
   const { id } = req.params;
   const {
@@ -131,29 +162,33 @@ const updateProducto = async (req, res) => {
     ? `/uploads/productos/${req.file.filename}`
     : ImagenURL || null;
 
-  // 5. Validaciones financieras en edición
   if (!Codigo || !ModeloBase || !CategoriaID) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "Código, Modelo y Categoría son obligatorios.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "Código, Modelo y Categoría son obligatorios.",
+      });
   }
   if (parseFloat(PrecioCompra) < 0 || parseFloat(PrecioVenta) < 0) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "Los precios no pueden ser negativos.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "Los precios no pueden ser negativos.",
+      });
   }
   if (parseInt(StockMinimo) < 0) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "El stock mínimo no puede ser negativo.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "El stock mínimo no puede ser negativo.",
+      });
   }
 
   try {
     const pool = await getConnection();
-
     const catRes = await pool
       .request()
       .input("catId", sql.Int, CategoriaID)
@@ -175,7 +210,7 @@ const updateProducto = async (req, res) => {
       .input("SMin", sql.Int, StockMinimo)
       .input("Mod", sql.VarChar, ModeloBase.trim())
       .input("Atr", sql.VarChar, Atributo ? Atributo.trim() : "")
-      .input("Img", sql.VarChar(sql.MAX), rutaImagenFinal) // <--- Guardamos la ruta final
+      .input("Img", sql.VarChar(sql.MAX), rutaImagenFinal)
       .input("Activo", sql.Bit, Activo).query(`
                 UPDATE Inventario SET 
                 CategoriaID=@CatID, Codigo=@Cod, Nombre=@Nom, Descripcion=@Desc, 
@@ -191,7 +226,9 @@ const updateProducto = async (req, res) => {
   }
 };
 
-// 6. Cambiar visibilidad
+// =======================================================
+// 4. CAMBIAR ESTADO DE VISIBILIDAD
+// =======================================================
 const cambiarEstadoProducto = async (req, res) => {
   const { id } = req.params;
   const { nuevoEstado } = req.body;
@@ -210,23 +247,26 @@ const cambiarEstadoProducto = async (req, res) => {
   }
 };
 
-// 7. Ajuste de stock transaccional
+// =======================================================
+// 5. AJUSTE DE STOCK TRANSACCIONAL
+// =======================================================
 const ajustarStock = async (req, res) => {
   const { idProducto, tipoAjuste, cantidad, motivo, proveedorID, idUsuario } =
     req.body;
   const cantAjuste = parseInt(cantidad);
 
   if (cantAjuste <= 0) {
-    return res.status(400).json({
-      success: false,
-      mensaje: "La cantidad a ajustar debe ser mayor a 0.",
-    });
+    return res
+      .status(400)
+      .json({
+        success: false,
+        mensaje: "La cantidad a ajustar debe ser mayor a 0.",
+      });
   }
 
   try {
     const pool = await getConnection();
     const transaction = new sql.Transaction(pool);
-
     await transaction.begin();
 
     try {
@@ -271,23 +311,29 @@ const ajustarStock = async (req, res) => {
     } catch (errTransaccion) {
       await transaction.rollback();
       if (errTransaccion.message === "INSUFFICIENT_STOCK") {
-        return res.status(400).json({
-          success: false,
-          mensaje: "Stock insuficiente para realizar esta salida.",
-        });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            mensaje: "Stock insuficiente para realizar esta salida.",
+          });
       }
       throw errTransaccion;
     }
   } catch (error) {
     console.error("Error crítico en transacción:", error);
-    res.status(500).json({
-      success: false,
-      mensaje: "Error al procesar el ajuste de almacén.",
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        mensaje: "Error al procesar el ajuste de almacén.",
+      });
   }
 };
 
-// 10. Ver Kardex
+// =======================================================
+// 6. CONSULTAR MOVIMIENTOS KARDEX
+// =======================================================
 const getKardex = async (req, res) => {
   const { id } = req.params;
   try {
@@ -317,7 +363,9 @@ const getKardex = async (req, res) => {
   }
 };
 
-// 11. Eliminar producto físicamente
+// =======================================================
+// 7. ELIMINAR PRODUCTO FÍSICAMENTE
+// =======================================================
 const deleteProducto = async (req, res) => {
   const { id } = req.params;
   try {
@@ -329,16 +377,20 @@ const deleteProducto = async (req, res) => {
     res.json({ success: true, mensaje: "Producto eliminado definitivamente." });
   } catch (error) {
     if (error.number === 547) {
-      return res.status(400).json({
-        success: false,
-        mensaje:
-          "No se puede eliminar porque existen movimientos en el Kardex. Desactívelo en su lugar.",
-      });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          mensaje:
+            "No se puede eliminar porque existen movimientos en el Kardex. Desactívelo en su lugar.",
+        });
     }
-    res.status(500).json({
-      success: false,
-      mensaje: "Error interno al eliminar el producto.",
-    });
+    res
+      .status(500)
+      .json({
+        success: false,
+        mensaje: "Error interno al eliminar el producto.",
+      });
   }
 };
 
