@@ -1,71 +1,70 @@
-/* fox-web.css - Estilos exclusivos para convertir visitas en ventas */
-
 :root {
-    --web-accent-cyan: #00d2ff;
-    --web-accent-orange: #ff6a00;
-    --web-bg: #0f172a;
+    --web-accent-cyan: #0ea5e9;
+    --web-bg: #f1f5f9;
     --web-card-bg: #ffffff;
 }
 
-/* Estilo Premium para Tarjetas Web */
 .web-card {
-    border-radius: 16px !important;
-    transition: all 0.3s ease;
+    border-radius: 12px !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     border: 1px solid #e2e8f0 !important;
-    background-color: #ffffff;
+    background-color: var(--web-card-bg);
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Efecto de elevación al pasar el mouse */
 .web-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Títulos más potentes y legibles */
 .web-card .card-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 900;
+    font-size: 1rem;
+    font-weight: 800;
     color: #0f172a;
-    /* Azul muy oscuro casi negro */
     line-height: 1.3;
     margin-bottom: 0.5rem;
 }
 
-/* Contenedor de la imagen con fondo neutro */
 .img-container {
-    height: 200px;
-    background: #f8fafc;
-    padding: 15px;
+    height: 180px;
+    background: #ffffff;
+    padding: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-/* Precio con estilo Gaming Cyan */
 .price-tag {
     font-family: 'Archivo Black', sans-serif;
-    font-size: 1.4rem;
-    color: var(--fox-surface);
-    /* Azul oscuro corporativo */
-    letter-spacing: -0.5px;
+    font-size: 1.25rem;
+    color: #0f172a;
 }
 
-/* Badges con estilo moderno */
 .badge-stock {
-    background-color: #0ea5e9;
-    /* Azul cian vibrante */
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: 800;
+    background-color: #e0f2fe;
+    color: #0284c7;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
 }
 
 .badge-soldout {
-    background-color: #64748b;
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: 800;
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+}
+
+@media (max-width: 576px) {
+    .web-card {
+        margin-bottom: 15px;
+    }
+
+    .img-container {
+        height: 150px;
+    }
 }
