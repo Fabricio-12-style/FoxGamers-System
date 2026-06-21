@@ -22,5 +22,6 @@ router.patch("/estado/:id", productoController.cambiarEstadoProducto);
 router.post("/ajuste", productoController.ajustarStock);
 router.get("/kardex/:id", productoController.getKardex);
 router.delete("/:id", productoController.deleteProducto);
+router.get("/pos", productoController.getProductosPOS);
 
 module.exports = router;

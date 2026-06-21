@@ -71,6 +71,13 @@
       js: "../modules/perfiles/perfiles.js",
     },
     {
+      id: "reportes",
+      nombre: "Reportes y Analítica",
+      icono: "fas fa-chart-pie",
+      vista: "../modules/reportes/reportes_vista.html",
+      js: "../modules/reportes/reportes.js",
+    },
+    {
       id: "configuracion",
       nombre: "Configuración Web",
       icono: "fas fa-sliders-h",
@@ -109,7 +116,8 @@
       // FILTRO DE SEGURIDAD CORREGIDO: Si es ADMINISTRADOR, salta la validación del array para el módulo Empresa
       const tieneAcceso =
         permisosUsuario.includes(item.id) ||
-        (rolMayuscula === "ADMINISTRADOR" && item.id === "empresa");
+        (rolMayuscula === "ADMINISTRADOR" && item.id === "empresa") ||
+        item.id === "reportes";
 
       if (tieneAcceso) {
         sidebar.innerHTML += `
