@@ -54,16 +54,22 @@
   }
 
   // =======================================================
-  // 2. BUSCADOR DE PRODUCTOS
+  // 2. BUSCADOR DE PRODUCTOS (APUNTANDO AL NUEVO ENDPOINT POS)
   // =======================================================
   async function cargarProductosPOS() {
     try {
+      const timestamp = new Date().getTime();
       const [resProductos, resDescuentos] = await Promise.all([
-        fetch("http://localhost:3000/api/productos"),
-        fetch("http://localhost:3000/api/descuentos/vigentes"),
+        fetch(`${BASE_URL}/api/productos/pos?t=${timestamp}`, {
+          headers: { "Cache-Control": "no-cache" },
+        }),
+        fetch(`${BASE_URL}/api/descuentos/vigentes?t=${timestamp}`, {
+          headers: { "Cache-Control": "no-cache" },
+        }),
       ]);
       const productos = await resProductos.json();
       const descuentos = await resDescuentos.json();
+
       productosBase = productos.filter(
         (p) => p.Activo === true || p.Activo === 1,
       );
@@ -578,7 +584,7 @@
   }
 
   // =======================================================
-  // 6. HISTORIAL DE VENTAS (OPTIMIZADO CON DEBOUNCE)
+  // 6. HISTORIAL DE VENTAS (OPTIMIZADO Y CON ROMPE-CACHÉ)
   // =======================================================
   async function cargarHistorialVentas(terminoBusqueda = "") {
     const tabla = document.getElementById("tablaHistorialVentas");
@@ -586,12 +592,20 @@
     if (!tabla) return;
 
     try {
-      const url =
+      const urlBase =
         terminoBusqueda.trim() !== ""
           ? `${BASE_URL}/api/ventas?q=${encodeURIComponent(terminoBusqueda)}`
           : `${BASE_URL}/api/ventas`;
 
-      const res = await fetch(url);
+      const urlFresca =
+        urlBase +
+        (urlBase.includes("?") ? "&" : "?") +
+        "t=" +
+        new Date().getTime();
+
+      const res = await fetch(urlFresca, {
+        headers: { "Cache-Control": "no-cache" },
+      });
       const ventas = await res.json();
       tabla.innerHTML = "";
 
@@ -632,6 +646,7 @@
                 <td>${estadoBadge}</td>
                 <td>
                     <button class="btn btn-sm btn-fox-cyan mx-1" onclick="verDetalleVenta(${v.VentaID})" title="Ver Detalle"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-sm btn-info mx-1" onclick="enviarTicketEmail(${v.VentaID})" title="Enviar por Correo"><i class="fas fa-envelope"></i></button>
                     <button class="btn btn-sm btn-fox-danger mx-1" onclick="anularVenta(${v.VentaID})" title="Anular Venta" ${v.Estado === "ANULADA" ? "disabled" : ""}><i class="fas fa-times-circle"></i></button>
                     <button class="btn btn-sm btn-dark mx-1" onclick="imprimirTicketHistorial(${v.VentaID})" title="Imprimir Nota de Venta"><i class="fas fa-print"></i></button>
                 </td>
@@ -747,6 +762,40 @@
           );
         }
       }
+    });
+  }
+
+  const btnClienteGeneral = document.getElementById("btnClienteGeneral");
+  if (btnClienteGeneral) {
+    btnClienteGeneral.addEventListener("click", () => {
+      clienteSeleccionado = null;
+      esClienteNuevo = false;
+
+      document.getElementById("lblNombreCliente").textContent =
+        "Público General";
+      document
+        .getElementById("posClienteSeleccionado")
+        .classList.remove("d-none");
+      document.getElementById("zonaBusquedaCliente").classList.add("d-none");
+      document.getElementById("panelNuevoCliente").classList.add("d-none");
+
+      validarCaja();
+    });
+  }
+
+  const btnQuitarCliente = document.getElementById("btnQuitarCliente");
+  if (btnQuitarCliente) {
+    btnQuitarCliente.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      clienteSeleccionado = null;
+      esClienteNuevo = false;
+
+      document.getElementById("posClienteSeleccionado").classList.add("d-none");
+      document.getElementById("zonaBusquedaCliente").classList.remove("d-none");
+      document.getElementById("posBuscarCliente").value = "";
+
+      validarCaja();
     });
   }
 
@@ -1152,5 +1201,58 @@
     setTimeout(() => {
       lblCatalogo.classList.remove("animate__animated", "animate__rubberBand");
     }, 1000);
+  };
+
+  // =======================================================
+  // 10. ENVÍO DE TICKET POR CORREO ELECTRÓNICO
+  // =======================================================
+  window.enviarTicketEmail = async (idVenta) => {
+    const { value: email } = await Swal.fire({
+      title: "Enviar Comprobante",
+      input: "email",
+      inputLabel: "Correo electrónico del cliente",
+      showCancelButton: true,
+      confirmButtonColor: "#0ea5e9",
+      confirmButtonText: '<i class="fas fa-paper-plane mr-1"></i> Enviar',
+      cancelButtonText: "Cancelar",
+      inputPlaceholder: "ejemplo@correo.com",
+      customClass: { confirmButton: "btn btn-fox-cyan" },
+    });
+
+    if (email) {
+      Swal.fire({
+        title: "Enviando...",
+        text: "Despachando correo al servidor.",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      try {
+        const res = await fetch(
+          `${BASE_URL}/api/ventas/enviar-ticket/${idVenta}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ correoDestino: email }),
+          },
+        );
+
+        const result = await res.json();
+
+        if (result.success) {
+          Swal.fire("¡Enviado!", result.mensaje, "success");
+        } else {
+          Swal.fire("Error", result.mensaje, "error");
+        }
+      } catch (error) {
+        Swal.fire(
+          "Error de Conexión",
+          "No se pudo comunicar con el servidor de correo.",
+          "error",
+        );
+      }
+    }
   };
 })();

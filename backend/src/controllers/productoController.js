@@ -394,10 +394,28 @@ const deleteProducto = async (req, res) => {
   }
 };
 
+// =======================================================
+// 8. CATÁLOGO LIGERO EXCLUSIVO PARA EL POS
+// =======================================================
+const getProductosPOS = async (req, res) => {
+  try {
+    const pool = await getConnection();
+    const result = await pool.request().query(`
+        SELECT ProductoID, Codigo, Nombre, ModeloBase, Atributo, StockActual, PrecioVenta, Activo, CategoriaID, ImagenURL 
+        FROM Inventario 
+        WHERE Activo = 1
+    `);
+    res.json(result.recordset);
+  } catch (error) {
+    res.status(500).json({ success: false, mensaje: "Error al cargar catálogo POS." });
+  }
+};
+
 module.exports = {
   getProductos,
   createProducto,
   updateProducto,
+  getProductosPOS,
   cambiarEstadoProducto,
   ajustarStock,
   getKardex,

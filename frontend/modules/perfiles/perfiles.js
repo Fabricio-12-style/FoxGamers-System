@@ -15,6 +15,7 @@
     { id: "usuarios", nombre: "Usuarios", icono: "fa-users-cog" },
     { id: "perfiles", nombre: "Perfiles", icono: "fa-user-lock" },
     { id: "configuracion", nombre: "Configuración Web", icono: "fa-sliders-h" },
+    { id: "reportes", nombre: "Reportes y Analítica", icono: "fa-chart-pie" },
   ];
 
   // 2. Verificación de rango Administrador
