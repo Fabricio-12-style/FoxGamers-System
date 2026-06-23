@@ -128,13 +128,29 @@ const finalizarVenta = async (req, res) => {
     const realIGV = realTotal - realSubtotal;
 
     // =======================================================
-    // 5. REGISTRO DE CABECERA DE VENTA
+    // 5. REGISTRO DE CABECERA DE VENTA (N-SECUENCIAL)
     // =======================================================
+    const lastDocReq = await transaction.request().query(`
+      SELECT TOP 1 NumeroDoc 
+      FROM Venta 
+      WHERE NumeroDoc LIKE 'N-%' 
+      ORDER BY VentaID DESC
+    `);
+
+    let nuevoCorrelativo = "N-000001";
+    if (lastDocReq.recordset.length > 0) {
+      const ultimoDoc = lastDocReq.recordset[0].NumeroDoc; // Ej: "N-000015"
+      const numeroInt = parseInt(ultimoDoc.replace("N-", ""), 10);
+      if (!isNaN(numeroInt)) {
+        nuevoCorrelativo = "N-" + (numeroInt + 1).toString().padStart(6, "0");
+      }
+    }
+
     const ventaRes = await transaction
       .request()
       .input("ClienteID", sql.Int, finalClienteID)
       .input("UsuarioID", sql.Int, UsuarioID)
-      .input("NumeroDoc", sql.VarChar, NumeroDoc)
+      .input("NumeroDoc", sql.VarChar, nuevoCorrelativo)
       .input("TipoDoc", sql.VarChar, "NOTA DE VENTA")
       .input("MetodoPago", sql.VarChar, MetodoPago || "EFECTIVO")
       .input("Subtotal", sql.Decimal(18, 2), realSubtotal)
@@ -207,6 +223,7 @@ const finalizarVenta = async (req, res) => {
       success: true,
       mensaje: "Venta processed with success",
       ventaID,
+      NumeroDoc: nuevoCorrelativo,
     });
   } catch (error) {
     if (transaction) await transaction.rollback();
@@ -288,9 +305,10 @@ const getVentaById = async (req, res) => {
     `);
 
     const detalles = await pool.request().input("VentaID", sql.Int, id).query(`
-        SELECT dv.*, i.Nombre AS ProductoNombre, i.Codigo AS ProductoCodigo
+        SELECT dv.*, i.Nombre AS ProductoNombre, i.Codigo AS ProductoCodigo, d.Nombre AS DescuentoNombre
         FROM DetalleVenta dv
         INNER JOIN Inventario i ON dv.ProductoID = i.ProductoID
+        LEFT JOIN Descuento d ON dv.DescuentoID = d.DescuentoID
         WHERE dv.VentaID = @VentaID
     `);
 
