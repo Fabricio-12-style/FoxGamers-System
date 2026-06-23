@@ -275,12 +275,22 @@
 
   function actualizarTotales(total) {
     totalActualVenta = total;
-    const totalDescuento = carrito.reduce(
-      (sum, item) =>
-        sum +
-        calcularMontoDescuento(item.descuento, item.precio, item.cantidad),
-      0,
-    );
+    let nombresDescuentosAplicados = [];
+
+    const totalDescuento = carrito.reduce((sum, item) => {
+      const monto = calcularMontoDescuento(
+        item.descuento,
+        item.precio,
+        item.cantidad,
+      );
+      if (monto > 0 && item.descuento && item.descuento.Nombre) {
+        if (!nombresDescuentosAplicados.includes(item.descuento.Nombre)) {
+          nombresDescuentosAplicados.push(item.descuento.Nombre);
+        }
+      }
+      return sum + monto;
+    }, 0);
+
     const totalFinal = total - totalDescuento;
     totalActualVenta = totalFinal;
 
@@ -297,8 +307,12 @@
     if (filaDesc) {
       if (totalDescuento > 0) {
         filaDesc.style.display = "";
-        document.getElementById("posDescuento").textContent =
-          `-S/ ${totalDescuento.toFixed(2)}`;
+        const textoNombres =
+          nombresDescuentosAplicados.length > 0
+            ? `<br><small class="text-muted" style="font-size:10px;">(${nombresDescuentosAplicados.join(", ")})</small>`
+            : "";
+        document.getElementById("posDescuento").innerHTML =
+          `-S/ ${totalDescuento.toFixed(2)}${textoNombres}`;
       } else {
         filaDesc.style.display = "none";
       }
@@ -503,7 +517,6 @@
       const dataVenta = {
         ClienteID: esClienteNuevo ? null : clienteSeleccionado,
         UsuarioID: usuario.UsuarioID || usuario.id,
-        NumeroDoc: "TK-" + Date.now().toString().slice(-6),
         MetodoPago: metodoPagoString,
         Observacion: esClienteNuevo
           ? "Venta POS + Alta de Cliente"
@@ -535,7 +548,7 @@
           Swal.fire({
             icon: "success",
             title: "¡Venta Completada!",
-            text: `Documento generado: ${dataVenta.NumeroDoc}`,
+            text: `Documento generado: ${result.NumeroDoc}`,
             timer: 2000,
             showConfirmButton: false,
           });
@@ -958,7 +971,7 @@
           const desc = parseFloat(item.Descuento) || 0;
           const descuentoTexto =
             desc > 0
-              ? `<span class="text-danger">-S/ ${desc.toFixed(2)}</span>`
+              ? `<span class="text-danger font-weight-bold">-S/ ${desc.toFixed(2)}</span><br><small class="text-muted" style="font-size: 10px;">${item.DescuentoNombre || "Promoción"}</small>`
               : '<span class="text-muted">-</span>';
           htmlItems += `
             <tr>
@@ -1054,6 +1067,11 @@
 
         let a4Html = "";
         detalles.forEach((item) => {
+          const etiquetaDesc =
+            parseFloat(item.Descuento) > 0
+              ? `<br><span style="color: #ef4444; font-size: 10px; font-weight: 600;">(Aplica: ${item.DescuentoNombre || "Promoción"})</span>`
+              : "";
+
           a4Html += `
             <tr style="border-bottom: 1px solid #cbd5e1;">
                 <td style="padding: 10px; text-align: center; font-weight: bold;">${parseFloat(item.Cantidad).toFixed(2)}</td>
@@ -1061,6 +1079,7 @@
                 <td style="padding: 10px; text-align: left;">
                     <strong>${item.ProductoNombre}</strong><br>
                     <small style="color: #64748b;">${item.ProductoCodigo || "N/A"}</small>
+                    ${etiquetaDesc}
                 </td>
                 <td style="padding: 10px; text-align: center;">S/ ${parseFloat(item.PrecioUnitario).toFixed(2)}</td>
                 <td style="padding: 10px; text-align: right; font-weight: 700; color: #0A192F;">S/ ${parseFloat(item.Subtotal).toFixed(2)}</td>
@@ -1077,13 +1096,13 @@
         document.getElementById("visorTotal").textContent =
           `S/ ${parseFloat(cabecera.Total).toFixed(2)}`;
 
-        document.getElementById("btnReimprimirA4").onclick = () => {
-          if (document.activeElement) document.activeElement.blur();
-          $("#modalDetalleVenta").modal("hide");
-          setTimeout(() => {
-            $("#modalVistaPreviaA4").modal("show");
-          }, 400);
-        };
+        // document.getElementById("btnReimprimirA4").onclick = () => {
+        //   if (document.activeElement) document.activeElement.blur();
+        //   $("#modalDetalleVenta").modal("hide");
+        //   setTimeout(() => {
+        //     $("#modalVistaPreviaA4").modal("show");
+        //   }, 400);
+        // };
 
         document.getElementById("btnImprimirA4Final").onclick = () => {
           document.body.classList.add("print-a4");
