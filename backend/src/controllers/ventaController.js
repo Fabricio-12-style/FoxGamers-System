@@ -1,3 +1,4 @@
+const nodemailer = require("nodemailer");
 const { getConnection, sql } = require("../config/db");
 
 // =======================================================
@@ -227,11 +228,14 @@ const finalizarVenta = async (req, res) => {
     });
   } catch (error) {
     if (transaction) await transaction.rollback();
+
+    console.error("🚨 ERROR SQL EN FINALIZAR VENTA:", error);
     const mensajeError =
       error.message.includes("Stock insuficiente") ||
       error.message.includes("no existe")
         ? error.message
         : "Error al procesar la transacción de venta en la base de datos.";
+
     res.status(400).json({ success: false, mensaje: mensajeError });
   }
 };
@@ -402,5 +406,251 @@ const anularVenta = async (req, res) => {
       .json({ success: false, mensaje: "Error crítico al anular la venta." });
   }
 };
+// =======================================================
+// X. ENVIAR TICKET POR CORREO ELECTRÓNICO (DISEÑO PREMIUM)
+// =======================================================
+const enviarTicketPorCorreo = async (req, res) => {
+  const { id } = req.params;
+  const { correoDestino } = req.body;
 
-module.exports = { finalizarVenta, getVentas, getVentaById, anularVenta };
+  if (!correoDestino) {
+    return res
+      .status(400)
+      .json({ success: false, mensaje: "Se requiere un correo de destino." });
+  }
+
+  try {
+    const pool = await getConnection();
+
+    // 1. Consulta de Cabecera (Asegurando traer al vendedor)
+    const cabeceraQuery = await pool.request().input("VentaID", sql.Int, id)
+      .query(`
+        SELECT v.NumeroDoc, v.FechaVenta, v.Subtotal, v.Total, v.MetodoPago,
+               c.NombreRazonSocial as ClienteNombre, c.Documento as ClienteDoc,
+               u.NombreUsuario as UsuarioNombre
+        FROM Venta v
+        LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID
+        LEFT JOIN Usuario u ON v.UsuarioID = u.UsuarioID
+        WHERE v.VentaID = @VentaID
+      `);
+
+    if (cabeceraQuery.recordset.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, mensaje: "Venta no encontrada." });
+    }
+    const cabecera = cabeceraQuery.recordset[0];
+
+    // 2. Consulta de Detalles
+    const detallesQuery = await pool.request().input("VentaID", sql.Int, id)
+      .query(`
+        SELECT dv.Cantidad, dv.PrecioUnitario, dv.Subtotal, dv.Descuento,
+               p.Nombre as ProductoNombre, p.Codigo as ProductoCodigo
+        FROM DetalleVenta dv
+        INNER JOIN Inventario p ON dv.ProductoID = p.ProductoID
+        WHERE dv.VentaID = @VentaID
+      `);
+    const detalles = detallesQuery.recordset;
+
+    // 3. Consulta de Desglose de Pagos (Vital para el recuadro inferior izquierdo)
+    const pagosQuery = await pool.request().input("VentaID", sql.Int, id)
+      .query(`
+        SELECT Metodo, MontoRecibido, Vuelto 
+        FROM VentaPago 
+        WHERE VentaID = @VentaID
+      `);
+    const pagos = pagosQuery.recordset;
+
+    // 4. Cálculos y formateo
+    const sumaDescuentosGral = detalles.reduce(
+      (acc, item) => acc + (parseFloat(item.Descuento) || 0),
+      0,
+    );
+    const fechaLimpia = cabecera.FechaVenta.toISOString().split("T")[0];
+
+    // Formateo de los Items
+    let filasItems = "";
+    detalles.forEach((item) => {
+      filasItems += `
+        <tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 15px 10px; text-align: center; font-weight: bold; color: #0f172a;">${parseFloat(item.Cantidad).toFixed(2)}</td>
+          <td style="padding: 15px 10px; text-align: center; color: #94a3b8; font-size: 11px;">UND</td>
+          <td style="padding: 15px 10px; text-align: left;">
+            <strong style="color: #0f172a; font-size: 13px;">${item.ProductoNombre}</strong><br>
+            <span style="color: #94a3b8; font-size: 11px;">${item.ProductoCodigo || "N/A"}</span>
+          </td>
+          <td style="padding: 15px 10px; text-align: right; color: #334155;">S/ ${parseFloat(item.PrecioUnitario).toFixed(2)}</td>
+          <td style="padding: 15px 10px; text-align: right; font-weight: bold; color: #0f172a;">S/ ${parseFloat(item.Subtotal).toFixed(2)}</td>
+        </tr>
+      `;
+    });
+
+    // Formateo del Cuadro de Pagos
+    let listaPagosHtml = "";
+    if (pagos.length > 0) {
+      pagos.forEach((p) => {
+        listaPagosHtml += `
+          <tr>
+            <td style="padding: 4px 0; color: #0f172a; font-size: 12px;">• ${p.Metodo}:</td>
+            <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 12px;">S/ ${parseFloat(p.MontoRecibido).toFixed(2)}</td>
+          </tr>`;
+        if (p.Metodo === "EFECTIVO" && parseFloat(p.Vuelto) > 0) {
+          listaPagosHtml += `
+          <tr>
+            <td style="padding: 4px 0; color: #ef4444; font-size: 12px;">Vuelto entregado:</td>
+            <td style="padding: 4px 0; text-align: right; color: #ef4444; font-size: 12px;">-S/ ${parseFloat(p.Vuelto).toFixed(2)}</td>
+          </tr>`;
+        }
+      });
+    } else {
+      listaPagosHtml = `
+        <tr>
+          <td style="padding: 4px 0; color: #0f172a; font-size: 12px;">• ${cabecera.MetodoPago}:</td>
+          <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 12px;">S/ ${cabecera.Total.toFixed(2)}</td>
+        </tr>`;
+    }
+
+    // 5. CONSTRUCCIÓN DEL HTML (Clon de la previsualización)
+    const htmlCorreo = `
+      <div style="background-color: #e2e8f0; padding: 40px 10px; font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;">
+        <div style="max-width: 800px; margin: 0 auto; background-color: #e2e8f0;">
+          
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 25px;">
+            <tr>
+              <td width="60%">
+                <h1 style="margin: 0; color: #0f172a; font-size: 28px; font-weight: 900; letter-spacing: -0.5px;">FOX GAMERS</h1>
+                <p style="margin: 5px 0 0 0; color: #475569; font-size: 12px;">Av. Principal 123, Chiclayo - Perú</p>
+                <p style="margin: 2px 0 0 0; color: #475569; font-size: 12px;">Tel: +51 961 460 326 | Web: foxgamers.pe</p>
+              </td>
+              <td width="40%" align="right">
+                <table cellpadding="0" cellspacing="0" style="width: 200px;">
+                  <tr>
+                    <td style="background-color: #0f172a; color: #a3e635; text-align: center; padding: 8px; font-size: 11px; font-weight: bold; letter-spacing: 1px;">
+                      NOTA DE VENTA
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color: #ffffff; border: 2px solid #0f172a; border-top: none; text-align: center; padding: 12px; font-size: 20px; font-weight: bold; color: #0f172a; border-radius: 0 0 6px 6px;">
+                      ${cabecera.NumeroDoc}
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td width="48%" style="background-color: #ffffff; border-left: 5px solid #a3e635; padding: 20px; border-radius: 0 6px 6px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); vertical-align: top;">
+                <p style="margin: 0 0 10px 0; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Datos del Cliente</p>
+                <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px; text-transform: uppercase;">${cabecera.ClienteNombre || "PÚBLICO GENERAL"}</h3>
+                <p style="margin: 0; color: #334155; font-size: 12px;"><strong>Documento:</strong> ${cabecera.ClienteDoc || "00000000"}</p>
+              </td>
+              
+              <td width="4%"></td> <td width="48%" style="background-color: #ffffff; border-left: 5px solid #eab308; padding: 20px; border-radius: 0 6px 6px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); vertical-align: top;">
+                <p style="margin: 0 0 10px 0; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Detalles de Emisión</p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 12px; color: #334155;">
+                  <tr><td style="padding-bottom: 4px;"><strong>Fecha:</strong></td><td style="padding-bottom: 4px;">${fechaLimpia}</td></tr>
+                  <tr><td style="padding-bottom: 4px;"><strong>Pago:</strong></td><td style="padding-bottom: 4px;">${cabecera.MetodoPago}</td></tr>
+                  <tr><td><strong>Vendedor:</strong></td><td>${cabecera.UsuarioNombre || "Cajero"}</td></tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px; background-color: #ffffff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <thead style="background-color: #0f172a; color: #ffffff;">
+              <tr>
+                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: center;">CANT.</th>
+                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: center;">UND.</th>
+                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: left;">DESCRIPCIÓN</th>
+                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: right;">P. UNIT.</th>
+                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: right;">IMPORTE</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filasItems}
+            </tbody>
+          </table>
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
+            <tr>
+              <td width="48%" style="vertical-align: bottom;">
+                <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                  <p style="margin: 0 0 10px 0; color: #0f172a; font-size: 11px; font-weight: bold; text-transform: uppercase;">
+                    <span style="color: #64748b;">■</span> DESGLOSE DE MEDIOS DE PAGO:
+                  </p>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    ${listaPagosHtml}
+                  </table>
+                </div>
+              </td>
+              
+              <td width="4%"></td> <td width="48%" style="vertical-align: bottom;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 13px; margin-bottom: 10px;">
+                  <tr>
+                    <td style="color: #64748b; padding: 4px 15px;">Subtotal:</td>
+                    <td align="right" style="color: #0f172a; font-weight: bold; padding: 4px 15px;">S/ ${cabecera.Subtotal.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #ef4444; padding: 4px 15px;">Descuento:</td>
+                    <td align="right" style="color: #ef4444; font-weight: bold; padding: 4px 15px;">
+                      ${sumaDescuentosGral > 0 ? `-S/ ${sumaDescuentosGral.toFixed(2)}` : `S/ 0.00`}
+                    </td>
+                  </tr>
+                </table>
+                <div style="background-color: #0f172a; border-radius: 6px; padding: 15px;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 2px;">TOTAL</td>
+                      <td align="right" style="color: #a3e635; font-size: 24px; font-weight: bold;">S/ ${cabecera.Total.toFixed(2)}</td>
+                    </tr>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <div style="text-align: center; margin-top: 50px; color: #0f172a;">
+            <h3 style="margin: 0; font-size: 16px;">¡GRACIAS POR SU PREFERENCIA!</h3>
+            <p style="margin: 8px 0 0 0; color: #64748b; font-size: 11px;">Representación impresa de la nota de venta generada por el sistema.</p>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Fox Gamers" <${process.env.EMAIL_USER}>`,
+      to: correoDestino,
+      subject: `Comprobante Electrónico - ${cabecera.NumeroDoc}`,
+      html: htmlCorreo,
+    });
+
+    res.json({
+      success: true,
+      mensaje: "Comprobante enviado exitosamente por correo.",
+    });
+  } catch (error) {
+    console.error("Error al enviar correo:", error);
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error al enviar el correo." });
+  }
+};
+
+module.exports = {
+  finalizarVenta,
+  getVentas,
+  getVentaById,
+  anularVenta,
+  enviarTicketPorCorreo,
+};

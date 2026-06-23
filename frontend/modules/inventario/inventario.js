@@ -5,24 +5,32 @@
   const BASE_URL = "http://localhost:3000";
 
   // =======================================================
-  // 1. OBTENER LISTADO DE INVENTARIO (HÍBRIDO TOP-5 / SEARCH)
+  // 1. OBTENER LISTADO (CON ROMPE-CACHÉ)
   // =======================================================
   async function listarInventario(terminoBusqueda = "") {
     const lblModo = document.getElementById("lblModoCargaInventario");
     try {
-      const url =
+      const urlBase =
         terminoBusqueda.trim() !== ""
           ? `${BASE_URL}/api/productos?q=${encodeURIComponent(terminoBusqueda)}`
           : `${BASE_URL}/api/productos`;
 
-      const res = await fetch(url);
+      const urlFresca =
+        urlBase +
+        (urlBase.includes("?") ? "&" : "?") +
+        "t=" +
+        new Date().getTime();
+
+      const res = await fetch(urlFresca, {
+        headers: { "Cache-Control": "no-cache" },
+      });
       listaInventarioGlobal = await res.json();
 
       if (lblModo) {
         lblModo.textContent =
           terminoBusqueda.trim() !== ""
             ? `Resultados encontrados: ${listaInventarioGlobal.length}`
-            : "Mostrando últimos 5 registros";
+            : "Mostrando últimos 5 registros críticos";
         lblModo.className =
           terminoBusqueda.trim() !== ""
             ? "badge badge-info p-2"
@@ -34,7 +42,6 @@
       console.error("Error cargando inventario:", e);
     }
   }
-
   listarInventario();
 
   // =======================================================
@@ -213,9 +220,9 @@
       }
     });
   }
-
+  
   // =======================================================
-  // 5. CONSULTA DE MOVIMIENTOS KARDEX POR PRODUCTO
+  // 5. CONSULTA DE MOVIMIENTOS KARDEX (CON ROMPE-CACHÉ)
   // =======================================================
   window.verKardex = async (id) => {
     const p = listaInventarioGlobal.find((item) => item.ProductoID === id);
@@ -229,7 +236,11 @@
       '<tr><td colspan="5" class="py-4 font-weight-bold" style="color: var(--fox-text-gray);">Cargando historial...</td></tr>';
 
     try {
-      const res = await fetch(`${BASE_URL}/api/productos/kardex/${id}`);
+      const urlKardex = `${BASE_URL}/api/productos/kardex/${id}?t=${new Date().getTime()}`;
+      const res = await fetch(urlKardex, {
+        headers: { "Cache-Control": "no-cache" },
+      });
+
       const movimientos = await res.json();
       tabla.innerHTML = "";
 

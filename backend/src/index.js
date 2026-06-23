@@ -17,6 +17,7 @@ const descuentoRoutes = require("./routes/descuentosRoutes");
 const perfilRoutes = require("./routes/perfilRoutes");
 const webConfigRoutes = require("./routes/webConfigRoutes");
 const empresaRoutes = require("./routes/empresaRoutes");
+const reporteRoutes = require("./routes/reporteRoutes");
 
 // Middlewares
 app.use(cors());
@@ -38,6 +39,7 @@ app.use("/api/ventas", ventaRoutes);
 app.use("/api/proveedores", proveedorRoutes);
 app.use("/api/config-web", webConfigRoutes);
 app.use("/api/empresa", empresaRoutes);
+app.use("/api/reportes", reporteRoutes);
 
 app.get("/test", (req, res) => {
   res.json({ message: "Server is working" });

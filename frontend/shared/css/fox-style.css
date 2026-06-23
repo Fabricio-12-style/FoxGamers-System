@@ -1,131 +1,144 @@
 :root {
-    /* Fondos y Estructura Base (Se mantiene tu estilo original) */
     --fox-bg-dark: #0f172a;
     --fox-surface: #1e293b;
     --fox-card: #ffffff;
-
-    /* Textos (Ajustados para Alto Contraste) */
     --fox-text-light: #f8fafc;
-    --fox-text-black: #000000;
-    /* Negro puro para lectura crítica */
+    --fox-text-black: #0f172a;
     --fox-text-gray: #475569;
-    /* Gris oscuro para textos secundarios */
-
-    /* Colores de Acción Fox */
-    --fox-orange: #ff6a00;
-    --fox-orange-hover: #e65f00;
+    --fox-orange: #ea580c;
+    --fox-orange-hover: #c2410c;
     --fox-cyan: #00d2ff;
     --fox-cyan-hover: #00b8e6;
     --fox-red: #ef4444;
-    /* Anular / Eliminar / Salidas */
     --fox-green: #10b981;
-    /* Completado / Stock / Entradas */
 }
 
 body {
     font-family: 'Quicksand', sans-serif !important;
     background-color: var(--fox-bg-dark) !important;
+    overflow-x: hidden;
 }
 
 /* =========================================
-   1. BOTONES GLOBALES (ADIÓS AZULES GENÉRICOS)
+   1. BOTONES GLOBALES (FLAT DESIGN SÓLIDO)
    ========================================= */
+.btn-fox,
+.btn-fox-cyan,
+.btn-fox-danger,
+.btn-fox-success {
+    border: none !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    /* Bordes ligeramente más suaves */
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .btn-fox {
     background-color: var(--fox-orange) !important;
     color: white !important;
-    border: none;
-    font-weight: 700;
-    transition: all 0.3s;
 }
 
 .btn-fox:hover {
     background-color: var(--fox-orange-hover) !important;
-    transform: scale(1.02);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(234, 88, 12, 0.25);
 }
 
 .btn-fox-cyan {
     background-color: var(--fox-cyan) !important;
-    color: #000 !important;
-    border: none;
-    font-weight: 700;
-    transition: all 0.3s;
+    color: #000000 !important;
 }
 
 .btn-fox-cyan:hover {
     background-color: var(--fox-cyan-hover) !important;
-    transform: scale(1.02);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 210, 255, 0.25);
 }
 
 .btn-fox-danger {
     background-color: var(--fox-red) !important;
     color: white !important;
-    border: none;
-    font-weight: 700;
 }
 
 .btn-fox-success {
     background-color: var(--fox-green) !important;
     color: white !important;
-    border: none;
-    font-weight: 700;
 }
 
 /* =========================================
-   2. ALTO CONTRASTE: MODALES Y CAJAS (BLANCO Y NEGRO)
+   2. CAJAS Y MODALES (IDENTIDAD GAMING)
    ========================================= */
 .modal-content,
 .card {
     background-color: var(--fox-card) !important;
     color: var(--fox-text-black) !important;
-    border: none !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    border-radius: 8px !important;
 }
 
-/* Cabeceras de Modales */
 .modal-header {
     background-color: var(--fox-surface) !important;
-    color: var(--fox-text-light) !important;
+    color: #ffffff !important;
     border-bottom: 3px solid var(--fox-cyan) !important;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.modal-header h1,
+.modal-header h2,
+.modal-header h3,
+.modal-header h4,
+.modal-header h5,
+.modal-header h6,
+.modal-title {
+    color: #ffffff !important;
+    font-weight: 700;
+    margin: 0;
 }
 
 .modal-header .close {
-    color: var(--fox-text-light) !important;
+    color: #ffffff !important;
     opacity: 0.8;
+    text-shadow: none;
+}
+
+.modal-header .close:hover {
+    color: var(--fox-cyan) !important;
+    opacity: 1;
 }
 
 /* =========================================
-   3. TABLAS DE GESTIÓN (PURA LEGIBILIDAD)
+   3. TABLAS DE GESTIÓN 
    ========================================= */
 .table {
     background-color: #ffffff !important;
     color: var(--fox-text-black) !important;
-    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 0 !important;
 }
 
 .table thead {
-    background-color: #f1f5f9 !important;
-    color: var(--fox-text-black) !important;
-    font-weight: 900 !important;
-    /* Negrita extra fuerte para cabeceras */
+    background-color: #f8fafc !important;
+    color: #334155 !important;
+    font-weight: 800 !important;
     text-transform: uppercase;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
 }
 
 .table td,
 .table th {
     vertical-align: middle !important;
-    border-top: 1px solid #e2e8f0 !important;
+    border-top: 1px solid #f1f5f9 !important;
 }
 
-/* Filas alternadas para no perderse leyendo */
 .table-striped tbody tr:nth-of-type(odd) {
     background-color: #f8fafc !important;
 }
 
-/* Clases utilitarias para resaltar datos críticos (Nombres, Precios, Totales) */
 .dato-critico {
-    font-weight: 900 !important;
-    color: #000000 !important;
-    font-size: 1.05rem;
+    font-weight: 800 !important;
+    color: var(--fox-text-black) !important;
 }
 
 /* =========================================
@@ -133,76 +146,65 @@ body {
    ========================================= */
 .form-control,
 .login-input {
-    background-color: #ffffff !important;
-    border: 2px solid #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    /* Fondo sutil para distinguir inputs */
+    border: 1px solid #cbd5e1 !important;
     color: var(--fox-text-black) !important;
-    font-weight: 700 !important;
-    /* Lo que escribes se ve fuerte */
+    font-weight: 600 !important;
+    border-radius: 6px !important;
 }
 
 .form-control:focus,
 .login-input:focus {
-    border-color: var(--fox-orange) !important;
-    box-shadow: 0 0 0 3px rgba(255, 106, 0, 0.2) !important;
+    background-color: #ffffff !important;
+    border-color: var(--fox-cyan) !important;
+    box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.15) !important;
+    /* Resplandor color cian */
 }
 
 /* =========================================
-   5. ESTADOS Y ETIQUETAS (VERDE Y ROJO PUROS)
+   5. ETIQUETAS Y ESTADOS (PASTELES MODERNOS)
    ========================================= */
 .badge {
-    padding: 6px 12px !important;
-    font-weight: 800 !important;
+    padding: 5px 10px !important;
+    font-weight: 700 !important;
     border-radius: 4px !important;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
+    font-size: 0.75rem;
 }
 
 .badge-success {
-    background-color: var(--fox-green) !important;
-    color: white !important;
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
 }
 
 .badge-danger {
-    background-color: var(--fox-red) !important;
-    color: white !important;
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
 }
 
 .badge-info {
-    background-color: var(--fox-cyan) !important;
-    color: #000 !important;
+    background-color: #e0f2fe !important;
+    color: #075985 !important;
 }
 
 /* =========================================
-   6. SIDEBAR Y LAYOUT PRINCIPAL (INTACTO)
+   6. SIDEBAR Y LAYOUT PRINCIPAL
    ========================================= */
 .main-sidebar {
     background-color: var(--fox-bg-dark) !important;
 }
 
-.brand-link {
-    background-color: var(--fox-surface) !important;
-    border-bottom: 1px solid #334155 !important;
+.brand-link,
+.main-header {
+    background-color: var(--fox-bg-dark) !important;
+    border-bottom: 1px solid #1e293b !important;
     color: var(--fox-text-light) !important;
 }
 
 .nav-pills .nav-link.active {
     background-color: var(--fox-orange) !important;
-    color: white !important;
-    box-shadow: 0 2px 8px rgba(255, 106, 0, 0.4);
-}
-
-.main-header {
-    background-color: var(--fox-surface) !important;
-    border-bottom: 1px solid #334155 !important;
-}
-
-.user-panel {
-    border-bottom: 1px solid #334155 !important;
-}
-
-.user-panel .info a {
-    color: var(--fox-text-light) !important;
-    font-weight: 700;
+    color: #ffffff !important;
+    box-shadow: none !important;
 }
 
 .role-badge {
@@ -261,6 +263,7 @@ body {
         padding: 0;
     }
 
+    /* --- MODO A4 --- */
     body.print-a4 #modalVistaPreviaA4,
     body.print-a4 #modalVistaPreviaA4 .modal-dialog,
     body.print-a4 #modalVistaPreviaA4 .modal-content,
@@ -296,7 +299,6 @@ body {
         max-height: 297mm !important;
         box-sizing: border-box !important;
         padding: 20mm 15mm !important;
-        /* Margen interno elegante para el contenido */
         margin: 0 !important;
         background: #ffffff !important;
         background-color: #ffffff !important;
@@ -309,7 +311,6 @@ body {
         border-collapse: collapse !important;
     }
 
-    /* Ocultar elementos interactivos del modal */
     body.print-a4 .modal-header,
     body.print-a4 .modal-footer,
     body.print-a4 button,
@@ -319,4 +320,32 @@ body {
     }
 }
 
-/* git reflog
+/* =========================================
+   8. MEDIA QUERIES (RESPONSIVIDAD MÓVIL)
+   ========================================= */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px !important;
+    }
+
+    h1 {
+        font-size: 1.5rem !important;
+    }
+
+    .table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .btn-fox,
+    .btn-fox-cyan,
+    .btn-fox-danger,
+    .btn-fox-success {
+        padding: 10px 15px !important;
+    }
+
+    .modal-dialog {
+        margin: 10px !important;
+    }
+}

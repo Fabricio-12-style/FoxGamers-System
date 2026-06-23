@@ -147,6 +147,14 @@
                                 <p>Perfiles y Accesos</p>
                             </a>
                         </li>
+                        <li class="nav-item" id="menuReportes">
+                            <a href="#"
+                                onclick="cargarModulo('../modules/reportes/reportes_vista.html', '../modules/reportes/reportes.js')"
+                                class="nav-link">
+                                <i class="nav-icon fas fa-chart-pie"></i>
+                                <p>Reportes y Analítica </p>
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a href="#"
                                 onclick="cargarModulo('../modules/configuracion/config_vista.html', '../modules/configuracion/configuracion.js')"
@@ -189,6 +197,9 @@
 
     <script src="../shared/js/global.js"></script>
     <script src="./dashboard.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </body>
 
 </html>
