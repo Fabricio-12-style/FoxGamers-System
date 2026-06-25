@@ -4,10 +4,10 @@
     }
 </script>
 
-<div class="content-header pt-4">
+<div class="content-header pt-4 pb-2">
     <div class="container-fluid">
-        <h1 class="m-0 font-weight-bold" style="color: var(--fox-dark);">Panel General</h1>
-        <p class="text-muted">Resumen operativo del día</p>
+        <h1 class="m-0 font-weight-bold dato-critico">¡Hola, <span id="dashNombreUsuario">Administrador</span>! 👋</h1>
+        <p class="text-muted font-weight-bold" id="dashFechaActual">Cargando fecha...</p>
     </div>
 </div>
 
@@ -15,120 +15,166 @@
     <div class="container-fluid">
 
         <div class="row">
-
             <div class="col-lg-3 col-6 mb-3">
-                <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid var(--fox-cyan) !important;">
-                    <div class="card-body d-flex justify-content-between align-items-center py-3">
-                        <div>
-                            <h3 id="kpiGananciasHoy" class="font-weight-bold text-dark mb-0">S/ 0.00</h3>
-                            <span class="text-muted small text-uppercase font-weight-bold">Ganancias Diarias</span>
+                <div class="card shadow-sm border-0 h-100 bg-white"
+                    style="border-left: 4px solid var(--fox-cyan) !important; border-radius: 8px;">
+                    <div class="card-body py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="text-muted small text-uppercase font-weight-bold">Ventas de Hoy</span>
+                                <h3 id="kpiGananciasHoy" class="font-weight-bold text-dark mt-1 mb-0">S/ 0.00</h3>
+                                <small class="text-success font-weight-bold"><i class="fas fa-arrow-up"></i> 0% vs
+                                    ayer</small>
+                            </div>
+                            <div class="p-2 rounded" style="background-color: rgba(0, 210, 255, 0.1);">
+                                <i class="fas fa-money-bill-wave fa-lg" style="color: var(--fox-cyan);"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-chart-line fa-2x text-muted" style="opacity: 0.3;"></i>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-3 col-6 mb-3">
-                <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #28a745 !important;">
-                    <div class="card-body d-flex justify-content-between align-items-center py-3">
-                        <div>
-                            <h3 id="kpiGananciasMes" class="font-weight-bold text-dark mb-0">S/ 0.00</h3>
-                            <span class="text-muted small text-uppercase font-weight-bold">Ganancias del Mes</span>
+                <div class="card shadow-sm border-0 h-100 bg-white"
+                    style="border-left: 4px solid var(--fox-cyan) !important; border-radius: 8px;">
+                    <div class="card-body py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="text-muted small text-uppercase font-weight-bold">Ventas del Mes</span>
+                                <h3 id="kpiGananciasMes" class="font-weight-bold text-dark mt-1 mb-0">S/ 0.00</h3>
+                                <small class="text-muted font-weight-bold">Ticket Prom: <span id="kpiTicketPromedio">S/
+                                        0.00</span></small>
+                            </div>
+                            <div class="p-2 rounded" style="background-color: rgba(0, 210, 255, 0.1);">
+                                <i class="fas fa-calendar-alt fa-lg" style="color: var(--fox-cyan);"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-wallet fa-2x text-muted" style="opacity: 0.3;"></i>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-3 col-6 mb-3">
-                <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #17a2b8 !important;">
-                    <div class="card-body d-flex justify-content-between align-items-center py-3">
-                        <div>
-                            <h3 id="kpiProductosVendidos" class="font-weight-bold text-dark mb-0">0</h3>
-                            <span class="text-muted small text-uppercase font-weight-bold">Productos Vendidos</span>
+                <div class="card shadow-sm border-0 h-100 bg-white"
+                    style="border-left: 4px solid var(--fox-orange) !important; border-radius: 8px;">
+                    <div class="card-body py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="text-muted small text-uppercase font-weight-bold">Prod. Vendidos
+                                    (Hoy)</span>
+                                <h3 id="kpiProductosVendidos" class="font-weight-bold text-dark mt-1 mb-0">0</h3>
+                                <small class="text-muted font-weight-bold">En <span id="kpiCantVentas">0</span>
+                                    transacciones</small>
+                            </div>
+                            <div class="p-2 rounded" style="background-color: rgba(234, 88, 12, 0.1);">
+                                <i class="fas fa-box-open fa-lg" style="color: var(--fox-orange);"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-shopping-cart fa-2x text-muted" style="opacity: 0.3;"></i>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-3 col-6 mb-3">
-                <div class="card shadow-sm border-0 h-100" style="border-left: 4px solid #ffc107 !important;"
-                    id="cardAlertas">
-                    <div class="card-body d-flex justify-content-between align-items-center py-3">
-                        <div>
-                            <h3 id="kpiAlertasStock" class="font-weight-bold text-warning mb-0">0</h3>
-                            <span class="text-muted small text-uppercase font-weight-bold">Alertas de Stock</span>
+                <div class="card shadow-sm border-0 h-100 bg-white"
+                    style="border-left: 4px solid var(--fox-red) !important; border-radius: 8px;" id="cardAlertas">
+                    <div class="card-body py-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="text-muted small text-uppercase font-weight-bold">Stock Crítico</span>
+                                <h3 id="kpiAlertasStock" class="font-weight-bold mt-1 mb-0"
+                                    style="color: var(--fox-red);">0</h3>
+                                <small class="text-muted font-weight-bold">Productos agotados</small>
+                            </div>
+                            <div class="p-2 rounded" style="background-color: rgba(239, 68, 68, 0.1);">
+                                <i class="fas fa-exclamation-triangle fa-lg" style="color: var(--fox-red);"></i>
+                            </div>
                         </div>
-                        <i class="fas fa-exclamation-triangle fa-2x text-warning" style="opacity: 0.5;"
-                            id="iconAlertas"></i>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <div class="row mt-3">
-
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-bottom-0 pt-3 pb-2">
-                        <h3 class="card-title font-weight-bold text-danger">
-                            <i class="fas fa-exclamation-circle mr-2"></i> Productos Críticos
-                        </h3>
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px;">
+                    <div class="card-header border-0 bg-transparent pt-3">
+                        <h5 class="font-weight-bold text-dark m-0"><i class="fas fa-chart-area mr-2"
+                                style="color: var(--fox-cyan);"></i> Ventas últimos 7 días</h5>
                     </div>
-                    <div class="card-body p-0 table-responsive" style="max-height: 300px; overflow-y: auto;">
+                    <div class="card-body">
+                        <div style="height: 300px; width: 100%;">
+                            <canvas id="chartVentasLinea"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px;">
+                    <div class="card-header border-0 bg-transparent pt-3 pb-0">
+                        <h5 class="font-weight-bold text-dark m-0"><i class="fas fa-users mr-2"
+                                style="color: var(--fox-orange);"></i> Top 5 Clientes</h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <ul class="list-group list-group-flush" id="listaTopClientes">
+                            <li class="list-group-item bg-transparent text-muted px-0 text-center border-0">Cargando
+                                ranking...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px;">
+                    <div class="card-header border-0 bg-transparent pt-3 pb-0 text-center">
+                        <h6 class="font-weight-bold text-dark m-0">Estado Global del Stock</h6>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div style="height: 220px; width: 100%; position: relative;">
+                            <canvas id="chartStockDona"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px;">
+                    <div class="card-header border-0 bg-transparent pt-3 pb-0">
+                        <h6 class="font-weight-bold text-dark m-0">Top 5 Productos Vendidos</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 220px; width: 100%;">
+                            <canvas id="chartProductosTop"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px;">
+                    <div
+                        class="card-header border-0 bg-transparent pt-3 pb-2 d-flex justify-content-between align-items-center">
+                        <h6 class="font-weight-bold m-0" style="color: var(--fox-red);"><i
+                                class="fas fa-exclamation-circle mr-1"></i> Alertas (Agotados)</h6>
+                    </div>
+                    <div class="card-body p-0 table-responsive" style="max-height: 220px; overflow-y: auto;">
                         <table class="table table-hover table-sm text-center align-middle mb-0">
-                            <thead class="bg-light sticky-top">
+                            <thead class="bg-light text-secondary font-weight-bold" style="font-size: 11px;">
                                 <tr>
-                                    <th class="text-left pl-3">Producto</th>
-                                    <th>Stock Actual</th>
-                                    <th>Stock Mín.</th>
+                                    <th class="text-left pl-3 py-2 border-0">Producto</th>
+                                    <th class="border-0">Stock</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaAlertasDashboard">
                                 <tr>
-                                    <td colspan="3" class="text-muted py-4">Evaluando inventario...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="card-footer bg-white border-top text-center py-2">
-                        <a href="#"
-                            onclick="cargarModulo('../modules/inventario/inventario_vista.html', '../modules/inventario/inventario.js')"
-                            class="text-muted small font-weight-bold text-decoration-none">Ver Inventario Completo <i
-                                class="fas fa-arrow-right ml-1"></i></a>
-                    </div>
-                </div>
-            </div>
-            
-
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-white border-bottom-0 pt-3 pb-2">
-                        <h3 class="card-title font-weight-bold" style="color: var(--fox-dark);">
-                            <i class="fas fa-receipt mr-2"></i> Últimas Ventas
-                        </h3>
-                    </div>
-                    <div class="card-body p-0 table-responsive" style="max-height: 300px; overflow-y: auto;">
-                        <table class="table table-hover table-sm text-center align-middle mb-0">
-                            <thead class="bg-light sticky-top">
-                                <tr>
-                                    <th>Hora</th>
-                                    <th class="text-left">Cliente</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaVentasDashboard">
-                                <tr>
-                                    <td colspan="3" class="text-muted py-4">Cargando ventas recientes...</td>
+                                    <td colspan="2" class="text-muted py-4">Evaluando inventario...</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-
         </div>
 
     </div>

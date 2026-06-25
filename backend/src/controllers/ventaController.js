@@ -1,8 +1,9 @@
 const nodemailer = require("nodemailer");
 const { getConnection, sql } = require("../config/db");
+const puppeteer = require("puppeteer");
 
 // =======================================================
-// 1. FINALIZAR VENTA (PROCESO TRANSACCIONAL)
+// 1. FINALIZAR VENTA
 // =======================================================
 const finalizarVenta = async (req, res) => {
   const {
@@ -406,8 +407,9 @@ const anularVenta = async (req, res) => {
       .json({ success: false, mensaje: "Error crítico al anular la venta." });
   }
 };
+
 // =======================================================
-// X. ENVIAR TICKET POR CORREO ELECTRÓNICO (DISEÑO PREMIUM)
+// 11. ENVIAR TICKET EN PDF POR CORREO ELECTRÓNICO
 // =======================================================
 const enviarTicketPorCorreo = async (req, res) => {
   const { id } = req.params;
@@ -422,7 +424,6 @@ const enviarTicketPorCorreo = async (req, res) => {
   try {
     const pool = await getConnection();
 
-    // 1. Consulta de Cabecera (Asegurando traer al vendedor)
     const cabeceraQuery = await pool.request().input("VentaID", sql.Int, id)
       .query(`
         SELECT v.NumeroDoc, v.FechaVenta, v.Subtotal, v.Total, v.MetodoPago,
@@ -441,7 +442,6 @@ const enviarTicketPorCorreo = async (req, res) => {
     }
     const cabecera = cabeceraQuery.recordset[0];
 
-    // 2. Consulta de Detalles
     const detallesQuery = await pool.request().input("VentaID", sql.Int, id)
       .query(`
         SELECT dv.Cantidad, dv.PrecioUnitario, dv.Subtotal, dv.Descuento,
@@ -452,7 +452,6 @@ const enviarTicketPorCorreo = async (req, res) => {
       `);
     const detalles = detallesQuery.recordset;
 
-    // 3. Consulta de Desglose de Pagos (Vital para el recuadro inferior izquierdo)
     const pagosQuery = await pool.request().input("VentaID", sql.Int, id)
       .query(`
         SELECT Metodo, MontoRecibido, Vuelto 
@@ -461,14 +460,12 @@ const enviarTicketPorCorreo = async (req, res) => {
       `);
     const pagos = pagosQuery.recordset;
 
-    // 4. Cálculos y formateo
     const sumaDescuentosGral = detalles.reduce(
       (acc, item) => acc + (parseFloat(item.Descuento) || 0),
       0,
     );
     const fechaLimpia = cabecera.FechaVenta.toISOString().split("T")[0];
 
-    // Formateo de los Items
     let filasItems = "";
     detalles.forEach((item) => {
       filasItems += `
@@ -485,7 +482,6 @@ const enviarTicketPorCorreo = async (req, res) => {
       `;
     });
 
-    // Formateo del Cuadro de Pagos
     let listaPagosHtml = "";
     if (pagos.length > 0) {
       pagos.forEach((p) => {
@@ -510,116 +506,141 @@ const enviarTicketPorCorreo = async (req, res) => {
         </tr>`;
     }
 
-    // 5. CONSTRUCCIÓN DEL HTML (Clon de la previsualización)
-    const htmlCorreo = `
-      <div style="background-color: #e2e8f0; padding: 40px 10px; font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;">
-        <div style="max-width: 800px; margin: 0 auto; background-color: #e2e8f0;">
-          
-          <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 25px;">
-            <tr>
-              <td width="60%">
-                <h1 style="margin: 0; color: #0f172a; font-size: 28px; font-weight: 900; letter-spacing: -0.5px;">FOX GAMERS</h1>
-                <p style="margin: 5px 0 0 0; color: #475569; font-size: 12px;">Av. Principal 123, Chiclayo - Perú</p>
-                <p style="margin: 2px 0 0 0; color: #475569; font-size: 12px;">Tel: +51 961 460 326 | Web: foxgamers.pe</p>
-              </td>
-              <td width="40%" align="right">
-                <table cellpadding="0" cellspacing="0" style="width: 200px;">
-                  <tr>
-                    <td style="background-color: #0f172a; color: #a3e635; text-align: center; padding: 8px; font-size: 11px; font-weight: bold; letter-spacing: 1px;">
-                      NOTA DE VENTA
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="background-color: #ffffff; border: 2px solid #0f172a; border-top: none; text-align: center; padding: 12px; font-size: 20px; font-weight: bold; color: #0f172a; border-radius: 0 0 6px 6px;">
-                      ${cabecera.NumeroDoc}
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-
-          <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-              <td width="48%" style="background-color: #ffffff; border-left: 5px solid #a3e635; padding: 20px; border-radius: 0 6px 6px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); vertical-align: top;">
-                <p style="margin: 0 0 10px 0; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Datos del Cliente</p>
-                <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px; text-transform: uppercase;">${cabecera.ClienteNombre || "PÚBLICO GENERAL"}</h3>
-                <p style="margin: 0; color: #334155; font-size: 12px;"><strong>Documento:</strong> ${cabecera.ClienteDoc || "00000000"}</p>
-              </td>
-              
-              <td width="4%"></td> <td width="48%" style="background-color: #ffffff; border-left: 5px solid #eab308; padding: 20px; border-radius: 0 6px 6px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); vertical-align: top;">
-                <p style="margin: 0 0 10px 0; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Detalles de Emisión</p>
-                <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 12px; color: #334155;">
-                  <tr><td style="padding-bottom: 4px;"><strong>Fecha:</strong></td><td style="padding-bottom: 4px;">${fechaLimpia}</td></tr>
-                  <tr><td style="padding-bottom: 4px;"><strong>Pago:</strong></td><td style="padding-bottom: 4px;">${cabecera.MetodoPago}</td></tr>
-                  <tr><td><strong>Vendedor:</strong></td><td>${cabecera.UsuarioNombre || "Cajero"}</td></tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px; background-color: #ffffff; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <thead style="background-color: #0f172a; color: #ffffff;">
+    const htmlComprobante = `
+      <html>
+        <head>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+            body { font-family: 'Montserrat', sans-serif; background-color: #ffffff; padding: 20px; }
+          </style>
+        </head>
+        <body>
+          <div style="max-width: 800px; margin: 0 auto;">
+            
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 25px;">
               <tr>
-                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: center;">CANT.</th>
-                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: center;">UND.</th>
-                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: left;">DESCRIPCIÓN</th>
-                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: right;">P. UNIT.</th>
-                <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: right;">IMPORTE</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filasItems}
-            </tbody>
-          </table>
-
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
-            <tr>
-              <td width="48%" style="vertical-align: bottom;">
-                <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px dashed #cbd5e1;">
-                  <p style="margin: 0 0 10px 0; color: #0f172a; font-size: 11px; font-weight: bold; text-transform: uppercase;">
-                    <span style="color: #64748b;">■</span> DESGLOSE DE MEDIOS DE PAGO:
-                  </p>
-                  <table width="100%" cellpadding="0" cellspacing="0">
-                    ${listaPagosHtml}
-                  </table>
-                </div>
-              </td>
-              
-              <td width="4%"></td> <td width="48%" style="vertical-align: bottom;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 13px; margin-bottom: 10px;">
-                  <tr>
-                    <td style="color: #64748b; padding: 4px 15px;">Subtotal:</td>
-                    <td align="right" style="color: #0f172a; font-weight: bold; padding: 4px 15px;">S/ ${cabecera.Subtotal.toFixed(2)}</td>
-                  </tr>
-                  <tr>
-                    <td style="color: #ef4444; padding: 4px 15px;">Descuento:</td>
-                    <td align="right" style="color: #ef4444; font-weight: bold; padding: 4px 15px;">
-                      ${sumaDescuentosGral > 0 ? `-S/ ${sumaDescuentosGral.toFixed(2)}` : `S/ 0.00`}
-                    </td>
-                  </tr>
-                </table>
-                <div style="background-color: #0f172a; border-radius: 6px; padding: 15px;">
-                  <table width="100%" cellpadding="0" cellspacing="0">
+                <td width="60%">
+                  <h1 style="margin: 0; color: #0f172a; font-size: 28px; font-weight: 900; letter-spacing: -0.5px;">FOX GAMERS</h1>
+                  <p style="margin: 5px 0 0 0; color: #475569; font-size: 12px;">Av. Principal 123, Chiclayo - Perú</p>
+                  <p style="margin: 2px 0 0 0; color: #475569; font-size: 12px;">Tel: +51 961 460 326 | Web: foxgamers.pe</p>
+                </td>
+                <td width="40%" align="right">
+                  <table cellpadding="0" cellspacing="0" style="width: 200px;">
                     <tr>
-                      <td style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 2px;">TOTAL</td>
-                      <td align="right" style="color: #a3e635; font-size: 24px; font-weight: bold;">S/ ${cabecera.Total.toFixed(2)}</td>
+                      <td style="background-color: #0f172a; color: #a3e635; text-align: center; padding: 8px; font-size: 11px; font-weight: bold; letter-spacing: 1px;">
+                        NOTA DE VENTA
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #ffffff; border: 2px solid #0f172a; border-top: none; text-align: center; padding: 12px; font-size: 20px; font-weight: bold; color: #0f172a; border-radius: 0 0 6px 6px;">
+                        ${cabecera.NumeroDoc}
+                      </td>
                     </tr>
                   </table>
-                </div>
-              </td>
-            </tr>
-          </table>
+                </td>
+              </tr>
+            </table>
 
-          <div style="text-align: center; margin-top: 50px; color: #0f172a;">
-            <h3 style="margin: 0; font-size: 16px;">¡GRACIAS POR SU PREFERENCIA!</h3>
-            <p style="margin: 8px 0 0 0; color: #64748b; font-size: 11px;">Representación impresa de la nota de venta generada por el sistema.</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="48%" style="background-color: #f8fafc; border-left: 5px solid #a3e635; padding: 20px; border-radius: 0 6px 6px 0; vertical-align: top;">
+                  <p style="margin: 0 0 10px 0; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Datos del Cliente</p>
+                  <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 16px; text-transform: uppercase;">${cabecera.ClienteNombre || "PÚBLICO GENERAL"}</h3>
+                  <p style="margin: 0; color: #334155; font-size: 12px;"><strong>Documento:</strong> ${cabecera.ClienteDoc || "00000000"}</p>
+                </td>
+                
+                <td width="4%"></td> 
+                <td width="48%" style="background-color: #f8fafc; border-left: 5px solid #eab308; padding: 20px; border-radius: 0 6px 6px 0; vertical-align: top;">
+                  <p style="margin: 0 0 10px 0; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Detalles de Emisión</p>
+                  <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 12px; color: #334155;">
+                    <tr><td style="padding-bottom: 4px;"><strong>Fecha:</strong></td><td style="padding-bottom: 4px;">${fechaLimpia}</td></tr>
+                    <tr><td style="padding-bottom: 4px;"><strong>Pago:</strong></td><td style="padding-bottom: 4px;">${cabecera.MetodoPago}</td></tr>
+                    <tr><td><strong>Vendedor:</strong></td><td>${cabecera.UsuarioNombre || "Cajero"}</td></tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px; background-color: #ffffff; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0;">
+              <thead style="background-color: #0f172a; color: #ffffff;">
+                <tr>
+                  <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: center;">CANT.</th>
+                  <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: center;">UND.</th>
+                  <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: left;">DESCRIPCIÓN</th>
+                  <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: right;">P. UNIT.</th>
+                  <th style="padding: 12px 10px; font-size: 10px; letter-spacing: 1px; text-align: right;">IMPORTE</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filasItems}
+              </tbody>
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 30px;">
+              <tr>
+                <td width="48%" style="vertical-align: bottom;">
+                  <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                    <p style="margin: 0 0 10px 0; color: #0f172a; font-size: 11px; font-weight: bold; text-transform: uppercase;">
+                      <span style="color: #64748b;">■</span> DESGLOSE DE MEDIOS DE PAGO:
+                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      ${listaPagosHtml}
+                    </table>
+                  </div>
+                </td>
+                
+                <td width="4%"></td> 
+                <td width="48%" style="vertical-align: bottom;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 13px; margin-bottom: 10px;">
+                    <tr>
+                      <td style="color: #64748b; padding: 4px 15px;">Subtotal:</td>
+                      <td align="right" style="color: #0f172a; font-weight: bold; padding: 4px 15px;">S/ ${cabecera.Subtotal.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                      <td style="color: #ef4444; padding: 4px 15px;">Descuento:</td>
+                      <td align="right" style="color: #ef4444; font-weight: bold; padding: 4px 15px;">
+                        ${sumaDescuentosGral > 0 ? `-S/ ${sumaDescuentosGral.toFixed(2)}` : `S/ 0.00`}
+                      </td>
+                    </tr>
+                  </table>
+                  <div style="background-color: #0f172a; border-radius: 6px; padding: 15px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 2px;">TOTAL</td>
+                        <td align="right" style="color: #a3e635; font-size: 24px; font-weight: bold;">S/ ${cabecera.Total.toFixed(2)}</td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <div style="text-align: center; margin-top: 60px; color: #0f172a;">
+              <h3 style="margin: 0; font-size: 16px;">¡GRACIAS POR SU PREFERENCIA!</h3>
+              <p style="margin: 8px 0 0 0; color: #64748b; font-size: 11px;">Representación impresa de la nota de venta generada por el sistema.</p>
+            </div>
+
           </div>
-
-        </div>
-      </div>
+        </body>
+      </html>
     `;
 
+    // GENERACIÓN DEL PDF EN MEMORIA CON PUPPETEER
+
+    const browser = await puppeteer.launch({ headless: "new" });
+    const page = await browser.newPage();
+
+    await page.setContent(htmlComprobante, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "30px", bottom: "30px", left: "30px", right: "30px" },
+    });
+
+    await browser.close();
+
+    // ENVÍO DE CORREO CON EL PDF ADJUNTO
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -628,22 +649,44 @@ const enviarTicketPorCorreo = async (req, res) => {
       },
     });
 
+    const cuerpoHtmlCorreo = `
+      <div style="font-family: Arial, sans-serif; color: #0f172a; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <h2 style="color: #0f172a; border-bottom: 2px solid #a3e635; padding-bottom: 10px;">¡Hola, ${cabecera.ClienteNombre || "Cliente"}!</h2>
+        <p>Agradecemos enormemente tu compra y confianza en <strong>Fox Gamers</strong>.</p>
+        <p>Adjunto a este correo electrónico encontrarás tu comprobante electrónico formal (<strong>Nota de Venta N° ${cabecera.NumeroDoc}</strong>) en formato PDF para tus registros personales.</p>
+        <p>Si tienes alguna consulta sobre tus productos o necesitas soporte técnico, nuestro equipo estará encantado de atenderte.</p>
+        <br>
+        <p style="margin: 0;">Saludos cordiales,</p>
+        <p style="margin: 5px 0 0 0; font-weight: bold; color: #0f172a;">El Equipo de Fox Gamers</p>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 20px;">
+        <p style="font-size: 11px; color: #94a3b8; text-align: center;">Por favor, no respondas directamente a este correo automático.</p>
+      </div>
+    `;
+
     await transporter.sendMail({
       from: `"Fox Gamers" <${process.env.EMAIL_USER}>`,
       to: correoDestino,
-      subject: `Comprobante Electrónico - ${cabecera.NumeroDoc}`,
-      html: htmlCorreo,
+      subject: `Comprobante Electrónico - ${cabecera.NumeroDoc} - Fox Gamers`,
+      html: cuerpoHtmlCorreo,
+      attachments: [
+        {
+          filename: `Nota_Venta_${cabecera.NumeroDoc}.pdf`,
+          content: pdfBuffer, // Inyecta el archivo binario directamente de la memoria
+          contentType: "application/pdf",
+        },
+      ],
     });
 
     res.json({
       success: true,
-      mensaje: "Comprobante enviado exitosamente por correo.",
+      mensaje: "Comprobante en PDF enviado exitosamente por correo.",
     });
   } catch (error) {
-    console.error("Error al enviar correo:", error);
-    res
-      .status(500)
-      .json({ success: false, mensaje: "Error al enviar el correo." });
+    console.error("Error al enviar correo con PDF:", error);
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al generar o enviar el comprobante.",
+    });
   }
 };
 
