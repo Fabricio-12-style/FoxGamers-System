@@ -44,9 +44,6 @@
       if (result.success) {
         const { kpis, graficos, alertasStock, listaAlertas } = result.data;
 
-        // ==========================================
-        // 1. INYECTAR KPIs SUPERIORES
-        // ==========================================
         document.getElementById("kpiGananciasHoy").textContent =
           `S/ ${kpis.hoy.toFixed(2)}`;
         document.getElementById("kpiGananciasMes").textContent =
@@ -58,7 +55,6 @@
         document.getElementById("kpiCantVentas").textContent =
           kpis.transaccionesHoy;
 
-        // Actualizar color y texto de crecimiento
         const labelCrecimiento =
           document.querySelector("#kpiGananciasHoy").nextElementSibling;
         if (kpis.crecimiento >= 0) {
@@ -69,9 +65,6 @@
           labelCrecimiento.className = "text-danger font-weight-bold";
         }
 
-        // ==========================================
-        // 2. ALERTAS Y TABLA
-        // ==========================================
         const lblStock = document.getElementById("kpiAlertasStock");
         if (lblStock) {
           lblStock.textContent = alertasStock;
@@ -87,38 +80,33 @@
           tablaAlertas.innerHTML = "";
           if (!listaAlertas || listaAlertas.length === 0) {
             tablaAlertas.innerHTML =
-              '<tr><td colspan="2" class="text-success py-4"><i class="fas fa-check-circle mr-2"></i>Inventario sano</td></tr>';
+              '<tr><td colspan="2" class="text-success py-4" style="font-size: 13px;"><i class="fas fa-check-circle mr-2"></i>Inventario sano</td></tr>';
           } else {
-            const topAlertas = listaAlertas.slice(0, 4);
-            topAlertas.forEach((item) => {
+            listaAlertas.slice(0, 4).forEach((item) => {
               tablaAlertas.innerHTML += `
-                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
-                                    <td class="text-left pl-3 py-2 text-dark" style="font-size: 0.8rem;">
-                                        <strong>${item.Nombre || item.Modelo}</strong><br>
-                                        <small class="text-muted">Min: ${item.StockMinimo}</small>
-                                    </td>
-                                    <td class="font-weight-bold text-danger align-middle">
-                                        <span class="badge" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444;">
-                                            ${item.StockActual} und
-                                        </span>
-                                    </td>
-                                </tr>
-                            `;
+                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    <td class="text-left pl-3 py-2 text-dark" style="font-size: 0.8rem;">
+                        <strong>${item.Nombre || item.Modelo}</strong><br>
+                        <small class="text-muted">Min: ${item.StockMinimo}</small>
+                    </td>
+                    <td class="font-weight-bold text-danger align-middle">
+                        <span class="badge" style="background-color: rgba(239, 68, 68, 0.08); color: var(--fox-red); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 6px !important;">
+                            ${item.StockActual} und
+                        </span>
+                    </td>
+                </tr>`;
             });
           }
         }
 
-        // ==========================================
-        // 3. DIBUJAR GRÁFICO DE LÍNEA (7 DÍAS)
-        // ==========================================
         const ctxLinea = document
           .getElementById("chartVentasLinea")
           .getContext("2d");
         let gradientCyan = ctxLinea.createLinearGradient(0, 0, 0, 300);
-        gradientCyan.addColorStop(0, "rgba(0, 210, 255, 0.3)");
+        gradientCyan.addColorStop(0, "rgba(0, 210, 255, 0.25)");
         gradientCyan.addColorStop(1, "rgba(0, 210, 255, 0.0)");
 
-        if (chartLinea) chartLinea.destroy(); // Destruye para redibujar
+        if (chartLinea) chartLinea.destroy();
         chartLinea = new Chart(ctxLinea, {
           type: "line",
           data: {
@@ -147,16 +135,13 @@
             scales: {
               y: {
                 beginAtZero: true,
-                grid: { color: "rgba(0, 0, 0, 0.05)", drawBorder: false },
+                grid: { color: "rgba(0, 0, 0, 0.04)", drawBorder: false },
               },
               x: { grid: { display: false, drawBorder: false } },
             },
           },
         });
 
-        // ==========================================
-        // 4. DIBUJAR GRÁFICO DONA (INVENTARIO)
-        // ==========================================
         const ctxDona = document
           .getElementById("chartStockDona")
           .getContext("2d");
@@ -181,21 +166,21 @@
             plugins: {
               legend: {
                 position: "bottom",
-                labels: { usePointStyle: true, padding: 15 },
+                labels: {
+                  usePointStyle: true,
+                  padding: 15,
+                  font: { size: 11 },
+                },
               },
             },
           },
         });
 
-        // ==========================================
-        // 5. DIBUJAR BARRAS HORIZONTALES (PRODUCTOS)
-        // ==========================================
         const ctxBarras = document
           .getElementById("chartProductosTop")
           .getContext("2d");
         if (chartBarras) chartBarras.destroy();
 
-        // Si no hay ventas, mostrar algo vacío
         if (graficos.topProductos.labels.length === 0) {
           graficos.topProductos.labels = ["Sin datos"];
           graficos.topProductos.data = [0];
@@ -207,11 +192,11 @@
             labels: graficos.topProductos.labels,
             datasets: [
               {
-                label: "Unidades Vendidas",
+                label: "Unidades",
                 data: graficos.topProductos.data,
-                backgroundColor: "#00d2ff",
-                borderRadius: 4,
-                barPercentage: 0.6,
+                backgroundColor: "#ea580c",
+                borderRadius: 6,
+                barPercentage: 0.55,
               },
             ],
           },
@@ -221,31 +206,27 @@
             indexAxis: "y",
             plugins: { legend: { display: false } },
             scales: {
-              x: { grid: { color: "rgba(0, 0, 0, 0.05)" } },
+              x: { grid: { color: "rgba(0, 0, 0, 0.04)" } },
               y: { grid: { display: false } },
             },
           },
         });
 
-        // ==========================================
-        // 6. INYECTAR TOP CLIENTES
-        // ==========================================
         const listaClientes = document.getElementById("listaTopClientes");
         if (graficos.topClientes.length === 0) {
           listaClientes.innerHTML =
-            '<li class="list-group-item bg-transparent text-muted px-0 text-center border-0">No hay clientes frecuentes aún.</li>';
+            '<li class="list-group-item bg-transparent text-muted px-0 text-center border-0" style="font-size: 13px;">No hay clientes frecuentes aún.</li>';
         } else {
           listaClientes.innerHTML = graficos.topClientes
             .map(
               (c, i) => `
-                        <li class="list-group-item bg-transparent px-0 py-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid rgba(0,0,0,0.05);">
-                            <div class="d-flex align-items-center">
-                                <span class="badge ${i === 0 ? "badge-warning" : i === 1 ? "badge-secondary" : i === 2 ? "badge-danger" : "badge-dark"} mr-3" style="width: 25px;">${i + 1}</span>
-                                <span class="text-dark font-weight-bold" style="font-size: 0.85rem; text-transform: uppercase;">${c.Nombre}</span>
-                            </div>
-                            <span class="font-weight-bold" style="color: var(--fox-cyan); font-size: 0.85rem;">S/ ${c.TotalComprado.toFixed(2)}</span>
-                        </li>
-                    `,
+                <li class="list-group-item bg-transparent px-0 py-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                    <div class="d-flex align-items-center">
+                        <span class="badge ${i === 0 ? "badge-warning" : i === 1 ? "badge-secondary" : i === 2 ? "badge-danger" : "badge-dark"} mr-3" style="width: 25px; border-radius: 4px !important;">${i + 1}</span>
+                        <span class="text-dark font-weight-bold" style="font-size: 0.8rem; text-transform: uppercase;">${c.Nombre}</span>
+                    </div>
+                    <span class="font-weight-bold" style="color: var(--fox-cyan); font-size: 0.85rem;">S/ ${c.TotalComprado.toFixed(2)}</span>
+                </li>`,
             )
             .join("");
         }

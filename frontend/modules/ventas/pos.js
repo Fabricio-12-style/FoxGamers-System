@@ -54,7 +54,7 @@
   }
 
   // =======================================================
-  // 2. BUSCADOR DE PRODUCTOS (APUNTANDO AL NUEVO ENDPOINT POS)
+  // 2. BUSCADOR DE PRODUCTOS
   // =======================================================
   async function cargarProductosPOS() {
     try {
@@ -269,7 +269,7 @@
   }
 
   // =======================================================
-  // 4. CÁLCULOS Y CONTROL FINANCIERO DE CAJA
+  // 4. CÁLCULOS Y CONTROL DE CAJA
   // =======================================================
   let totalActualVenta = 0;
 
@@ -597,7 +597,7 @@
   }
 
   // =======================================================
-  // 6. HISTORIAL DE VENTAS (OPTIMIZADO Y CON ROMPE-CACHÉ)
+  // 6. HISTORIAL DE VENTAS (🚀 CORREGIDO: LEYENDO HORA Y DESCUENTO)
   // =======================================================
   async function cargarHistorialVentas(terminoBusqueda = "") {
     const tabla = document.getElementById("tablaHistorialVentas");
@@ -609,7 +609,6 @@
         terminoBusqueda.trim() !== ""
           ? `${BASE_URL}/api/ventas?q=${encodeURIComponent(terminoBusqueda)}`
           : `${BASE_URL}/api/ventas`;
-
       const urlFresca =
         urlBase +
         (urlBase.includes("?") ? "&" : "?") +
@@ -644,17 +643,25 @@
           v.Estado === "ANULADA"
             ? '<span class="badge badge-danger">ANULADA</span>'
             : '<span class="badge badge-success">COMPLETADA</span>';
+
+        // Puntos de corrección financiera y de desgloses
         const totalFloat = parseFloat(v.Total);
-        const subtotalDesc = (totalFloat / 1.18).toFixed(2);
+        const descuentoFloat = parseFloat(v.TotalDescuento) || 0;
+
+        // El subtotal real de los ítems antes del descuento se calcula sumando el total y el descuento acumulado, dividido entre el IGV
+        const subtotalCalculado = (
+          (totalFloat + descuentoFloat) /
+          1.18
+        ).toFixed(2);
 
         tabla.innerHTML += `
             <tr>
                 <td class="font-weight-bold">${v.NumeroDoc}</td>
                 <td class="text-left dato-critico">${v.ClienteNombre || "CLIENTE GENERAL"}</td>
-                <td>${v.FechaVenta}</td>
+                <td class="font-weight-bold" style="color: #334155;">${v.FechaVenta}</td>
                 <td class="font-weight-bold" style="color: var(--fox-text-gray);">${v.MetodoPago || "N/A"}</td>
-                <td>S/ ${subtotalDesc}</td>
-                <td>S/ 0.00</td>
+                <td>S/ ${subtotalCalculado}</td>
+                <td class="${descuentoFloat > 0 ? "text-danger font-weight-bold" : ""}">S/ ${descuentoFloat.toFixed(2)}</td>
                 <td class="dato-critico text-fox-orange">S/ ${totalFloat.toFixed(2)}</td>
                 <td>${estadoBadge}</td>
                 <td>
@@ -824,12 +831,14 @@
 
       if (data.success) {
         const { cabecera, detalles, pagos } = data;
-        const sumaDescuentosGral = detalles.reduce(
+        const bombDescuentosGral = detalles.reduce(
           (acc, item) => acc + (parseFloat(item.Descuento) || 0),
           0,
         );
-        const fechaLimpia = cabecera.FechaVenta.includes("T")
-          ? cabecera.FechaVenta.split("T")[0]
+
+        // 🚀 Ajustado para renderizar la fecha y hora sin romper por splits erróneos
+        const fechaVisualCompleta = cabecera.FechaVenta.includes("T")
+          ? cabecera.FechaVenta.replace("T", " ").substring(0, 16)
           : cabecera.FechaVenta;
 
         document.getElementById("visorNumero").textContent = cabecera.NumeroDoc;
@@ -837,7 +846,7 @@
           cabecera.ClienteNombre || "PÚBLICO GENERAL";
         document.getElementById("visorDocCliente").textContent =
           cabecera.ClienteDoc || "Sin Documento";
-        document.getElementById("visorFecha").textContent = fechaLimpia;
+        document.getElementById("visorFecha").textContent = fechaVisualCompleta;
         document.getElementById("visorMetodo").textContent =
           cabecera.MetodoPago;
         document.getElementById("visorVendedor").textContent =
@@ -856,24 +865,20 @@
           const contenedorTextos = visorLogo.nextElementSibling;
           if (contenedorTextos) {
             contenedorTextos.innerHTML = `
-                    <h1 style="margin: 0; font-size: 28px; font-weight: 900; color: #0A192F; letter-spacing: -0.5px; text-transform: uppercase;">${emp.NombreComercial}</h1>
-                    <p style="margin: 5px 0; font-size: 12px; font-weight: 600; color: #475569;">${emp.Direccion}</p>
-                    <p style="margin: 0; font-size: 12px; color: #475569;">Tel: ${emp.Telefono} | Web: ${emp.Correo}</p>
-                `;
+                <h1 style="margin: 0; font-size: 28px; font-weight: 900; color: #0A192F; letter-spacing: -0.5px; text-transform: uppercase;">${emp.NombreComercial}</h1>
+                <p style="margin: 5px 0; font-size: 12px; font-weight: 600; color: #475569;">${emp.Direccion}</p>
+                <p style="margin: 0; font-size: 12px; color: #475569;">Tel: ${emp.Telefono} | Web: ${emp.Correo}</p>`;
           }
         }
 
         const rucHeaderElement = document.querySelector(
           "#modalVistaPreviaA4 h3",
         );
-        if (rucHeaderElement) {
+        if (rucHeaderElement)
           rucHeaderElement.textContent = `R.U.C. ${emp.RUC}`;
-        }
 
         const tkLogo = document.getElementById("tkLogo");
-        if (visorLogo && tkLogo && tkLogo.src) {
-          visorLogo.src = tkLogo.src;
-        }
+        if (visorLogo && tkLogo && tkLogo.src) visorLogo.src = tkLogo.src;
 
         const visorPagosLista = document.getElementById("visorPagosLista");
         if (pagos.length > 0) {
@@ -918,8 +923,8 @@
         document.getElementById("visorSubtotal").textContent =
           `S/ ${parseFloat(cabecera.Subtotal).toFixed(2)}`;
         document.getElementById("visorDescuento").textContent =
-          sumaDescuentosGral > 0
-            ? `-S/ ${sumaDescuentosGral.toFixed(2)}`
+          bombDescuentosGral > 0
+            ? `-S/ ${bombDescuentosGral.toFixed(2)}`
             : `S/ 0.00`;
         document.getElementById("visorTotal").textContent =
           `S/ ${parseFloat(cabecera.Total).toFixed(2)}`;
@@ -956,14 +961,13 @@
         document.getElementById("detVendedor").textContent =
           cabecera.UsuarioNombre || "Cajero Default";
 
-        const fechaLimpia = cabecera.FechaVenta.includes("T")
-          ? cabecera.FechaVenta.split("T")[0]
-          : cabecera.FechaVenta;
-        const horaLimpia = cabecera.FechaVenta.includes("T")
-          ? cabecera.FechaVenta.split("T")[1].substring(0, 5)
-          : "";
-        document.getElementById("detFecha").textContent =
-          `${fechaLimpia} ${horaLimpia}`;
+        // 🚀 Safe processing para el formateado de strings de fecha
+        let fechaVisual = cabecera.FechaVenta;
+        if (cabecera.FechaVenta.includes("T")) {
+          const splitData = cabecera.FechaVenta.split("T");
+          fechaVisual = `${splitData[0]} ${splitData[1].substring(0, 5)}`;
+        }
+        document.getElementById("detFecha").textContent = fechaVisual;
         document.getElementById("detMetodo").textContent = cabecera.MetodoPago;
 
         let htmlItems = "";
@@ -1029,7 +1033,7 @@
           cabecera.ClienteNombre || "Público General";
         document.getElementById("visorDocCliente").textContent =
           cabecera.ClienteDoc || "Sin Documento";
-        document.getElementById("visorFecha").textContent = fechaLimpia;
+        document.getElementById("visorFecha").textContent = fechaVisual;
         document.getElementById("visorMetodo").textContent =
           cabecera.MetodoPago;
         document.getElementById("visorVendedor").textContent =
@@ -1095,14 +1099,6 @@
             : `S/ 0.00`;
         document.getElementById("visorTotal").textContent =
           `S/ ${parseFloat(cabecera.Total).toFixed(2)}`;
-
-        // document.getElementById("btnReimprimirA4").onclick = () => {
-        //   if (document.activeElement) document.activeElement.blur();
-        //   $("#modalDetalleVenta").modal("hide");
-        //   setTimeout(() => {
-        //     $("#modalVistaPreviaA4").modal("show");
-        //   }, 400);
-        // };
 
         document.getElementById("btnImprimirA4Final").onclick = () => {
           document.body.classList.add("print-a4");
@@ -1259,7 +1255,6 @@
         );
 
         const result = await res.json();
-
         if (result.success) {
           Swal.fire("¡Enviado!", result.mensaje, "success");
         } else {

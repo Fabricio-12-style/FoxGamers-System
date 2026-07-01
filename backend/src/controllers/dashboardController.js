@@ -4,7 +4,6 @@ const getResumenKPIs = async (req, res) => {
   try {
     const pool = await getConnection();
 
-    // 1. ESTADO GLOBAL DEL STOCK (Dona)
     const qStock = await pool.request().query(`
         SELECT 
             ISNULL(SUM(CASE WHEN StockActual > StockMinimo THEN 1 ELSE 0 END), 0) as Optimo,
@@ -14,7 +13,6 @@ const getResumenKPIs = async (req, res) => {
     `);
     const stockStats = qStock.recordset[0];
 
-    // 2. LISTA DE ALERTAS (Agotados y Bajos)
     const qAlertas = await pool.request().query(`
         SELECT TOP 10 Nombre, Codigo, StockActual, StockMinimo 
         FROM Inventario 
@@ -22,7 +20,6 @@ const getResumenKPIs = async (req, res) => {
         ORDER BY StockActual ASC
     `);
 
-    // 3. KPIs FINANCIEROS (Hoy vs Ayer y Mes)
     const qKpis = await pool.request().query(`
         DECLARE @Hoy DATE = CAST(GETDATE() AS DATE);
         DECLARE @Ayer DATE = DATEADD(day, -1, @Hoy);
@@ -38,7 +35,6 @@ const getResumenKPIs = async (req, res) => {
     `);
     const kpis = qKpis.recordset[0];
 
-    // 4. TOP 5 PRODUCTOS (Barras)
     const qTopProd = await pool.request().query(`
         SELECT TOP 5 i.Nombre, ISNULL(SUM(dv.Cantidad), 0) as CantidadVentas
         FROM DetalleVenta dv
@@ -49,7 +45,6 @@ const getResumenKPIs = async (req, res) => {
         ORDER BY CantidadVentas DESC
     `);
 
-    // 5. TOP 5 CLIENTES (Ranking)
     const qTopCli = await pool.request().query(`
         SELECT TOP 5 c.NombreRazonSocial as Nombre, ISNULL(SUM(v.Total), 0) as TotalComprado
         FROM Venta v
@@ -59,19 +54,16 @@ const getResumenKPIs = async (req, res) => {
         ORDER BY TotalComprado DESC
     `);
 
-    // 6. VENTAS DE LOS ÚLTIMOS 7 DÍAS (Línea)
     const q7Dias = await pool.request().query(`
-        SELECT CAST(FechaVenta AS DATE) as Fecha, ISNULL(SUM(Total), 0) as Total
+        SELECT CONVERT(VARCHAR(10), FechaVenta, 120) as FechaStr, ISNULL(SUM(Total), 0) as Total
         FROM Venta
         WHERE FechaVenta >= DATEADD(day, -6, CAST(GETDATE() AS DATE)) AND Estado = 'COMPLETADA'
-        GROUP BY CAST(FechaVenta AS DATE)
+        GROUP BY CONVERT(VARCHAR(10), FechaVenta, 120)
     `);
 
-    // Procesar fechas de 7 días exactos en Node.js (Para evitar huecos si un día no se vendió)
     const ventas7DiasMap = {};
     q7Dias.recordset.forEach((row) => {
-      const dStr = `${row.Fecha.getFullYear()}-${String(row.Fecha.getMonth() + 1).padStart(2, "0")}-${String(row.Fecha.getDate()).padStart(2, "0")}`;
-      ventas7DiasMap[dStr] = row.Total;
+      ventas7DiasMap[row.FechaStr] = row.Total;
     });
 
     const labels7Dias = [];
@@ -81,25 +73,28 @@ const getResumenKPIs = async (req, res) => {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const dStr = `${year}-${month}-${day}`;
+
       labels7Dias.push(diasSemana[d.getDay()]);
-      data7Dias.push(ventas7DiasMap[dStr] || 0); // Si no hay venta ese día, pone 0
+      data7Dias.push(ventas7DiasMap[dStr] || 0);
     }
 
-    // Calcular Porcentaje de Crecimiento vs Ayer
     let porcentajeCrecimiento = 0;
     if (kpis.GananciaAyer > 0) {
       porcentajeCrecimiento =
         ((kpis.GananciaHoy - kpis.GananciaAyer) / kpis.GananciaAyer) * 100;
     } else if (kpis.GananciaHoy > 0) {
-      porcentajeCrecimiento = 100; // Si ayer fue 0 y hoy vendió, es 100% ganancia
+      porcentajeCrecimiento = 100;
     }
 
-    // Respuesta Maestra JSON al Frontend
     res.json({
       success: true,
       data: {
-        alertasStock: stockStats.Agotado, // Tarjeta roja principal
+        alertasStock: stockStats.Agotado,
         listaAlertas: qAlertas.recordset,
         kpis: {
           hoy: kpis.GananciaHoy,

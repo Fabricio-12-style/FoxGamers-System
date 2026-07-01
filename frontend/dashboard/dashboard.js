@@ -108,12 +108,31 @@
       `Hola, ${usuario.Nombre || "Usuario"}`;
     document.getElementById("userRole").textContent = rolMayuscula;
 
+    (async () => {
+      try {
+        const res = await fetch("http://localhost:3000/api/config-web/publica");
+        const datos = await res.json();
+        const logoActivo = datos?.logos?.find(
+          (l) => l.Activo == 1 || l.Activo === true,
+        );
+        if (logoActivo) {
+          const BASE_URL = "http://localhost:3000";
+          const urlFavicon = logoActivo.ImagenURL.startsWith("http")
+            ? logoActivo.ImagenURL
+            : `${BASE_URL}${logoActivo.ImagenURL}`;
+          const sysFavicon = document.getElementById("sysFavicon");
+          if (sysFavicon) sysFavicon.href = urlFavicon;
+        }
+      } catch (e) {
+        console.error("Error cargando favicon del sistema:", e);
+      }
+    })();
+
     const sidebar = document.querySelector(".nav-sidebar");
     sidebar.innerHTML = "";
     const permisosUsuario = usuario.permisos || [];
 
     menuDefinicion.forEach((item) => {
-      // FILTRO DE SEGURIDAD CORREGIDO: Si es ADMINISTRADOR, salta la validación del array para el módulo Empresa
       const tieneAcceso =
         permisosUsuario.includes(item.id) ||
         (rolMayuscula === "ADMINISTRADOR" && item.id === "empresa") ||
@@ -145,7 +164,6 @@
   });
 })();
 
-// MOTOR SPA
 async function cargarModulo(urlHtml, urlJs = null) {
   const contenedor = document.getElementById("app-content");
   try {
