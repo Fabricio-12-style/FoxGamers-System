@@ -1,70 +1,518 @@
-:root {
-    --web-accent-cyan: #0ea5e9;
-    --web-bg: #f1f5f9;
-    --web-card-bg: #ffffff;
+/* =========================================================================
+   1. PALETAS DE COLORES (MODO OSCURO Y MODO CLARO)
+   ========================================================================= */
+
+/* 🌙 MODO OSCURO */
+:root,
+[data-theme="dark"] {
+    --fox-bg-page: #090d16;
+    --fox-surface: #111827;
+    --fox-surface-glass: rgba(17, 24, 39, 0.4);
+    --fox-text-main: #f9fafb;
+    --fox-text-muted: #9ca3af;
+
+    --fox-nav-bg: rgba(9, 13, 22, 0.8);
+    --fox-nav-border: rgba(59, 130, 246, 0.2);
+    --fox-nav-link: #ffffff;
+
+    --fox-accent: #3b82f6;
+    --fox-accent-glow: rgba(59, 130, 246, 0.3);
+    --fox-orange: #ff5500;
+    --fox-orange-glow: rgba(255, 85, 0, 0.2);
+
+    --fox-search-bg: #1e293b;
+    --fox-search-text: #f8fafc;
+    --fox-search-placeholder: #64748b;
+    --fox-search-btn-bg: var(--fox-accent);
+    --fox-search-btn-text: #ffffff;
+    --fox-search-shadow: rgba(0, 0, 0, 0.4);
+
+    --fox-card-img-bg: #ffffff;
+    --fox-card-body-bg: #1f2937;
+    --fox-card-border: rgba(255, 255, 255, 0.05);
+    --fox-card-title: #f8fafc;
+    --fox-card-sku: #9ca3af;
+
+    --fox-price-main: #f8fafc;
+    --fox-price-old: #6b7280;
+
+    --fox-btn-disabled-bg: #374151;
+    --fox-btn-disabled-text: #9ca3af;
+
+    --fox-footer-bg: #060a12;
+    --fox-footer-border: var(--fox-accent);
+    --fox-map-border: rgba(255, 255, 255, 0.05);
+    --fox-rs-bg: #131926;
+    --fox-payment-icons: rgba(255, 255, 255, 0.5);
 }
 
-.web-card {
-    border-radius: 12px !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid #e2e8f0 !important;
-    background-color: var(--web-card-bg);
+/* ☀️ MODO CLARO */
+[data-theme="light"] {
+    --fox-bg-page: #f8fafc;
+    --fox-surface: #ffffff;
+    --fox-surface-glass: rgba(255, 255, 255, 0.7);
+    --fox-text-main: #0f172a;
+    --fox-text-muted: #475569;
+
+    --fox-nav-bg: rgba(255, 255, 255, 0.95);
+    --fox-nav-border: rgba(0, 0, 0, 0.1);
+    --fox-nav-link: #0f172a;
+
+    --fox-accent: #2563eb;
+    --fox-accent-glow: rgba(37, 99, 235, 0.2);
+    --fox-orange: #ea580c;
+    --fox-orange-glow: rgba(234, 88, 12, 0.2);
+
+    --fox-search-bg: #f8fafc;
+    --fox-search-text: #0f172a;
+    --fox-search-placeholder: #94a3b8;
+    --fox-search-btn-bg: var(--fox-accent);
+    --fox-search-btn-text: #ffffff;
+    --fox-search-shadow: rgba(0, 0, 0, 0.05);
+
+    --fox-card-img-bg: #ffffff;
+    --fox-card-body-bg: #ffffff;
+    --fox-card-border: #e2e8f0;
+    --fox-card-title: #0f172a;
+    --fox-card-sku: #64748b;
+
+    --fox-price-main: #0f172a;
+    --fox-price-old: #94a3b8;
+
+    --fox-btn-disabled-bg: #e2e8f0;
+    --fox-btn-disabled-text: #64748b;
+
+    --fox-footer-bg: #f1f5f9;
+    --fox-footer-border: #cbd5e1;
+    --fox-map-border: #cbd5e1;
+    --fox-rs-bg: #e2e8f0;
+    --fox-payment-icons: #94a3b8;
+}
+
+/* =========================================================================
+   2. APLICACIÓN DE VARIABLES Y ESTRUCTURA BASE
+   ========================================================================= */
+
+body {
+    font-family: 'Quicksand', sans-serif !important;
+    background-color: var(--fox-bg-page) !important;
+    color: var(--fox-text-main) !important;
+    overflow-x: hidden;
+    transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+[data-theme="dark"] body {
+    background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(255, 85, 0, 0.02) 0px, transparent 50%);
+}
+
+.fox-title {
+    color: var(--fox-text-main) !important;
+}
+
+.fox-subtitle {
+    color: var(--fox-text-main) !important;
+}
+
+section#promociones,
+section#catalogo,
+header#inicio {
+    background-color: var(--fox-bg-page) !important;
+    transition: background-color 0.4s ease;
+}
+
+/* =========================================================================
+   3. NAVEGACIÓN, BUSCADOR Y SLIDER HERO
+   ========================================================================= */
+
+.navbar-fox-custom {
+    background-color: var(--fox-nav-bg) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--fox-nav-border) !important;
+    transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+.navbar-fox-custom .nav-link {
+    color: var(--fox-nav-link) !important;
+    transition: color 0.4s ease;
+}
+
+.search-bar-container {
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--fox-nav-border);
+    box-shadow: 0 4px 15px var(--fox-search-shadow);
+    transition: all 0.3s ease;
+}
+
+.search-bar-container:focus-within {
+    box-shadow: 0 0 0 2px var(--fox-accent), 0 4px 20px var(--fox-search-shadow);
+    border-color: var(--fox-accent);
+}
+
+.search-input {
+    background-color: var(--fox-search-bg) !important;
+    color: var(--fox-search-text) !important;
+    height: 44px;
+    font-size: 0.95rem;
+    box-shadow: none !important;
+}
+
+.search-input::placeholder {
+    color: var(--fox-search-placeholder);
+    opacity: 1;
+}
+
+.btn-search {
+    background-color: var(--fox-search-btn-bg) !important;
+    color: var(--fox-search-btn-text) !important;
+    width: 60px;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-search:hover {
+    filter: brightness(1.1);
+}
+
+.hero-slider-full {
+    width: 100%;
+    overflow: hidden;
+    border-bottom: 1px solid var(--fox-nav-border);
+}
+
+.hero-slider-full .carousel-inner .carousel-item img {
+    width: 100% !important;
+    height: 480px !important;
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+.custom-indicators {
+    bottom: 10px;
+}
+
+.custom-indicators li {
+    width: 30px;
+    height: 6px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.4);
+    border: none;
+    margin: 0 4px;
+    transition: all 0.3s ease;
+}
+
+.custom-indicators .active {
+    background-color: var(--fox-accent);
+    width: 45px;
+}
+
+/* =========================================================================
+   4. MEDIA QUERIES PARA MOBILE (MENÚ MÓVIL Y SLIDER)
+   ========================================================================= */
+
+@media (min-width: 992px) {
+
+    /* Mantiene el buscador matemáticamente centrado en Desktop */
+    .desktop-logo-wrapper {
+        flex: 1;
+    }
+
+    .desktop-search-wrapper {
+        flex: 2;
+    }
+
+    .desktop-menu-wrapper {
+        flex: 1;
+    }
+}
+
+@media (max-width: 991px) {
+    #navbarNav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background-color: var(--fox-surface);
+        border-top: 1px solid var(--fox-nav-border);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        z-index: 1050;
+        padding: 0;
+    }
+
+    .mobile-full-menu {
+        padding: 0 !important;
+        margin: 0 !important;
+        gap: 0 !important;
+    }
+
+    .mobile-full-menu .nav-item {
+        border-bottom: 1px solid var(--fox-nav-border);
+        width: 100%;
+    }
+
+    .mobile-full-menu .nav-link {
+        padding: 16px 24px !important;
+        text-align: left !important;
+        color: var(--fox-text-main) !important;
+        font-size: 1rem;
+        display: block;
+        width: 100%;
+    }
+
+    .mobile-full-menu .mobile-btn-wrapper {
+        padding: 20px 24px !important;
+        border-bottom: none;
+        background-color: var(--fox-surface);
+    }
+
+    #contenedorBannersWeb {
+        min-height: auto !important;
+    }
+
+    .hero-slider-full .carousel-inner .carousel-item img {
+        height: auto !important;
+        object-fit: contain !important;
+    }
+
+    .custom-indicators {
+        bottom: 0px;
+    }
+}
+
+/* =========================================================================
+   5. PANEL DE CATEGORÍAS (Responsivo Grid)
+   ========================================================================= */
+
+#contenedorCategoriasWeb {
+    display: flex;
+    flex-wrap: wrap !important;
+    justify-content: center;
+    gap: 8px;
+    padding-bottom: 15px;
+    margin-bottom: 2rem;
+}
+
+.btn-categoria {
+    background: var(--fox-surface-glass);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(150, 150, 150, 0.1) !important;
+    color: var(--fox-text-muted) !important;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    border-radius: 6px !important;
+    padding: 8px 16px;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.btn-categoria:hover {
+    color: var(--fox-text-main) !important;
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.btn-categoria.active {
+    background: linear-gradient(135deg, var(--fox-accent) 0%, #2563eb 100%) !important;
+    border-color: var(--fox-accent) !important;
+    color: #ffffff !important;
+    font-weight: 800;
+    box-shadow: 0 8px 20px var(--fox-accent-glow);
+}
+
+@media (min-width: 768px) {
+    .btn-categoria {
+        flex-grow: 0;
+        font-size: 0.8rem;
+        padding: 10px 24px;
+    }
+}
+
+/* =========================================================================
+   6. TARJETAS DE PRODUCTO
+   ========================================================================= */
+
+.web-card {
+    background: var(--fox-card-body-bg) !important;
+    border: 1px solid var(--fox-card-border) !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 .web-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-}
-
-.web-card .card-title {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1rem;
-    font-weight: 800;
-    color: #0f172a;
-    line-height: 1.3;
-    margin-bottom: 0.5rem;
+    transform: translateY(-5px);
+    border-color: var(--fox-accent) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 0 15px var(--fox-accent-glow) !important;
 }
 
 .img-container {
-    height: 180px;
-    background: #ffffff;
-    padding: 10px;
+    height: 220px;
+    background: var(--fox-card-img-bg) !important;
+    padding: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-bottom: 1px solid #f1f5f9;
+    position: relative;
+    border-radius: 12px 12px 0 0;
+    border-bottom: 1px solid var(--fox-card-border);
+}
+
+.web-card .card-body {
+    background: var(--fox-card-body-bg) !important;
+    padding: 1.25rem !important;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    transition: background-color 0.3s ease;
+}
+
+.web-card h6 {
+    color: var(--fox-card-title) !important;
+    font-weight: 800 !important;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    height: 2.8em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 0.5rem;
 }
 
 .price-tag {
     font-family: 'Archivo Black', sans-serif;
-    font-size: 1.25rem;
-    color: #0f172a;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+    color: var(--fox-price-main) !important;
+    text-shadow: none;
 }
 
-.badge-stock {
-    background-color: #e0f2fe;
-    color: #0284c7;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 700;
+/* =========================================================================
+   7. BOTONES GLOBALES Y BADGES
+   ========================================================================= */
+
+.btn-fox {
+    background: linear-gradient(135deg, var(--fox-orange) 0%, #ff2200 100%) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 12px var(--fox-orange-glow);
+    transition: all 0.3s ease;
 }
 
-.badge-soldout {
-    background-color: #f1f5f9;
-    color: #475569;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: 700;
+.btn-fox:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 85, 0, 0.4);
 }
 
-@media (max-width: 576px) {
-    .web-card {
-        margin-bottom: 15px;
-    }
+.badge {
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
 
-    .img-container {
-        height: 150px;
-    }
+/* =========================================================================
+   8. FOOTER, ENLACES Y MAPA
+   ========================================================================= */
+
+footer#contacto {
+    background-color: var(--fox-footer-bg) !important;
+    border-top: 3px solid var(--fox-footer-border) !important;
+    transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+footer#contacto h6,
+footer#contacto .reclamaciones-title {
+    color: var(--fox-text-main) !important;
+}
+
+.footer-link {
+    transition: color 0.3s ease, transform 0.3s ease;
+    display: inline-block;
+}
+
+.footer-link:hover {
+    color: var(--fox-text-main) !important;
+    transform: translateX(5px);
+}
+
+.rs-link {
+    background: var(--fox-rs-bg) !important;
+    color: var(--fox-text-muted) !important;
+    width: 38px;
+    height: 38px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.rs-link:hover {
+    background: var(--fox-accent) !important;
+    color: #ffffff !important;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px var(--fox-accent-glow);
+}
+
+.reclamaciones-card {
+    background: var(--fox-surface);
+    border: 1px solid var(--fox-nav-border);
+}
+
+.reclamaciones-card:hover {
+    border-color: var(--fox-accent) !important;
+    background-color: rgba(59, 130, 246, 0.05) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.1);
+}
+
+.reclamaciones-card:hover .reclamaciones-title {
+    color: var(--fox-accent) !important;
+}
+
+.map-container {
+    height: 160px;
+    background: var(--fox-surface);
+    border: 1px solid var(--fox-map-border);
+}
+
+footer iframe {
+    transition: opacity 0.3s ease;
+    opacity: 0.85;
+}
+
+footer iframe:hover {
+    opacity: 1;
+}
+
+.payment-icons i {
+    color: var(--fox-payment-icons);
+}
+
+/* =========================================================================
+   9. SOMBRA DE LOGOTIPOS Y LIMPIEZA
+   ========================================================================= */
+
+.webLogoImg,
+#footerLogo {
+    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.2));
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .webLogoImg,
+[data-theme="dark"] #footerLogo {
+    filter: drop-shadow(0 0 8px var(--fox-accent-glow));
 }

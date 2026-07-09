@@ -23,5 +23,6 @@ router.post("/ajuste", productoController.ajustarStock);
 router.get("/kardex/:id", productoController.getKardex);
 router.delete("/:id", productoController.deleteProducto);
 router.get("/pos", productoController.getProductosPOS);
+router.get("/publicos", productoController.getProductosWebPublica);
 
 module.exports = router;

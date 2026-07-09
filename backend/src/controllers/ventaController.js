@@ -242,7 +242,7 @@ const finalizarVenta = async (req, res) => {
 };
 
 // =======================================================
-// 8. OBTENER HISTORIAL DE VENTAS (OPTIMIZADO TOP-5 / BÚSQUEDA)
+// 8. OBTENER HISTORIAL DE VENTAS
 // =======================================================
 const getVentas = async (req, res) => {
   const { q } = req.query;
@@ -258,14 +258,15 @@ const getVentas = async (req, res) => {
             v.VentaID, 
             v.NumeroDoc, 
             c.NombreRazonSocial AS ClienteNombre, 
-            FORMAT(v.FechaVenta, 'yyyy-MM-dd HH:mm') AS FechaVenta, 
+            FORMAT(v.FechaVenta, 'dd/MM/yyyy HH:mm') AS FechaVenta, 
             v.MetodoPago, 
+            ISNULL((SELECT SUM(dv.Descuento) FROM DetalleVenta dv WHERE dv.VentaID = v.VentaID), 0) AS TotalDescuento,
             v.Total, 
             v.Estado
         FROM Venta v
         LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID
         WHERE v.NumeroDoc LIKE @search OR c.NombreRazonSocial LIKE @search
-        ORDER BY v.FechaVenta DESC
+        ORDER BY v.VentaID DESC
       `;
     } else {
       query = `
@@ -273,13 +274,14 @@ const getVentas = async (req, res) => {
             v.VentaID, 
             v.NumeroDoc, 
             c.NombreRazonSocial AS ClienteNombre, 
-            FORMAT(v.FechaVenta, 'yyyy-MM-dd HH:mm') AS FechaVenta, 
+            FORMAT(v.FechaVenta, 'dd/MM/yyyy HH:mm') AS FechaVenta, 
             v.MetodoPago, 
+            ISNULL((SELECT SUM(dv.Descuento) FROM DetalleVenta dv WHERE dv.VentaID = v.VentaID), 0) AS TotalDescuento,
             v.Total, 
             v.Estado
         FROM Venta v
         LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID
-        ORDER BY v.FechaVenta DESC
+        ORDER BY v.VentaID DESC
       `;
     }
 

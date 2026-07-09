@@ -66,28 +66,22 @@ const createProducto = async (req, res) => {
     : null;
 
   if (!Codigo || !ModeloBase || !CategoriaID) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Código, Modelo y Categoría son obligatorios.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Código, Modelo y Categoría son obligatorios.",
+    });
   }
   if (parseFloat(PrecioCompra) < 0 || parseFloat(PrecioVenta) < 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Los precios no pueden ser negativos.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Los precios no pueden ser negativos.",
+    });
   }
   if (parseInt(StockMinimo) < 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "El stock mínimo no puede ser negativo.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "El stock mínimo no puede ser negativo.",
+    });
   }
 
   try {
@@ -122,12 +116,10 @@ const createProducto = async (req, res) => {
     res.json({ success: true, mensaje: "Producto creado y catalogado." });
   } catch (error) {
     console.error("Error al crear:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        mensaje: "Error al registrar producto. Verifique duplicidad de código.",
-      });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al registrar producto. Verifique duplicidad de código.",
+    });
   }
 };
 
@@ -136,13 +128,11 @@ const createProducto = async (req, res) => {
 // =======================================================
 const updateProducto = async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje:
-          "No se recibieron datos. Asegúrate de enviar FormData y no JSON.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje:
+        "No se recibieron datos. Asegúrate de enviar FormData y no JSON.",
+    });
   }
   const { id } = req.params;
   const {
@@ -163,28 +153,22 @@ const updateProducto = async (req, res) => {
     : ImagenURL || null;
 
   if (!Codigo || !ModeloBase || !CategoriaID) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Código, Modelo y Categoría son obligatorios.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Código, Modelo y Categoría son obligatorios.",
+    });
   }
   if (parseFloat(PrecioCompra) < 0 || parseFloat(PrecioVenta) < 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Los precios no pueden ser negativos.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "Los precios no pueden ser negativos.",
+    });
   }
   if (parseInt(StockMinimo) < 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "El stock mínimo no puede ser negativo.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "El stock mínimo no puede ser negativo.",
+    });
   }
 
   try {
@@ -229,6 +213,7 @@ const updateProducto = async (req, res) => {
 // =======================================================
 // 4. CAMBIAR ESTADO DE VISIBILIDAD
 // =======================================================
+
 const cambiarEstadoProducto = async (req, res) => {
   const { id } = req.params;
   const { nuevoEstado } = req.body;
@@ -256,12 +241,10 @@ const ajustarStock = async (req, res) => {
   const cantAjuste = parseInt(cantidad);
 
   if (cantAjuste <= 0) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "La cantidad a ajustar debe ser mayor a 0.",
-      });
+    return res.status(400).json({
+      success: false,
+      mensaje: "La cantidad a ajustar debe ser mayor a 0.",
+    });
   }
 
   try {
@@ -311,23 +294,19 @@ const ajustarStock = async (req, res) => {
     } catch (errTransaccion) {
       await transaction.rollback();
       if (errTransaccion.message === "INSUFFICIENT_STOCK") {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            mensaje: "Stock insuficiente para realizar esta salida.",
-          });
+        return res.status(400).json({
+          success: false,
+          mensaje: "Stock insuficiente para realizar esta salida.",
+        });
       }
       throw errTransaccion;
     }
   } catch (error) {
     console.error("Error crítico en transacción:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        mensaje: "Error al procesar el ajuste de almacén.",
-      });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al procesar el ajuste de almacén.",
+    });
   }
 };
 
@@ -377,20 +356,16 @@ const deleteProducto = async (req, res) => {
     res.json({ success: true, mensaje: "Producto eliminado definitivamente." });
   } catch (error) {
     if (error.number === 547) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          mensaje:
-            "No se puede eliminar porque existen movimientos en el Kardex. Desactívelo en su lugar.",
-        });
-    }
-    res
-      .status(500)
-      .json({
+      return res.status(400).json({
         success: false,
-        mensaje: "Error interno al eliminar el producto.",
+        mensaje:
+          "No se puede eliminar porque existen movimientos en el Kardex. Desactívelo en su lugar.",
       });
+    }
+    res.status(500).json({
+      success: false,
+      mensaje: "Error interno al eliminar el producto.",
+    });
   }
 };
 
@@ -407,7 +382,34 @@ const getProductosPOS = async (req, res) => {
     `);
     res.json(result.recordset);
   } catch (error) {
-    res.status(500).json({ success: false, mensaje: "Error al cargar catálogo POS." });
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error al cargar catálogo POS." });
+  }
+};
+
+// =======================================================
+// 9. CATÁLOGO COMPLETO EXCLUSIVO PARA LA WEB PÚBLICA
+// =======================================================
+const getProductosWebPublica = async (req, res) => {
+  try {
+    const pool = await getConnection();
+    const result = await pool.request().query(`
+        SELECT 
+          p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo,
+          p.StockActual, p.PrecioVenta, p.Activo, p.ImagenURL, p.Descripcion,
+          c.Nombre AS CategoriaNombre, p.CategoriaID
+        FROM Inventario p
+        INNER JOIN Categoria c ON p.CategoriaID = c.CategoriaID
+        WHERE p.Activo = 1
+        ORDER BY p.ProductoID DESC
+    `);
+    res.json(result.recordset);
+  } catch (error) {
+    console.error("Error en getProductosWebPublica:", error);
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error al cargar catálogo web." });
   }
 };
 
@@ -420,4 +422,5 @@ module.exports = {
   ajustarStock,
   getKardex,
   deleteProducto,
+  getProductosWebPublica, 
 };
