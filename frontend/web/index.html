@@ -13,100 +13,141 @@
     <link rel="stylesheet" href="../shared/css/fox-style.css">
     <link rel="stylesheet" href="../shared/css/fox-web.css">
 
-    <link rel="icon" type="image/png" id="webFavicon" href="../shared/img/logo-placeholder.png">
+    <link rel="icon" type="image/png" id="webFavicon">
 </head>
 
 <body>
 
-    <nav class="navbar navbar-expand-lg sticky-top px-4 shadow-sm navbar-fox-custom">
-        <div class="container-fluid p-0 d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center">
-                <button class="navbar-toggler border-0 mr-3" type="button" data-toggle="collapse"
-                    data-target="#navbarNav">
-                    <i class="fas fa-bars text-white"></i>
+    <div class="top-bar py-1 py-md-2"
+        style="background-color: #060a12; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.03); letter-spacing: 0.5px;">
+        <div
+            class="container-fluid px-3 d-flex flex-column flex-md-row justify-content-between align-items-center text-center">
+            <div class="text-muted mb-1 mb-md-0 d-flex flex-wrap justify-content-center align-items-center">
+                <span class="mr-2"><i class="fas fa-map-marker-alt text-info mr-1"></i> Chiclayo, Perú</span>
+                <span class="d-none d-md-inline mx-2" style="opacity: 0.2;">|</span>
+                <span><i class="fab fa-whatsapp text-success mr-1"></i> +51 961 460 326</span>
+            </div>
+            <div class="text-white-50 font-weight-bold" style="font-size: 10px;">
+                <i class="fas fa-bolt text-warning mr-1"></i> ¡Arma tu setup gaming con nosotros!
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg sticky-top px-3 px-md-4 shadow-sm navbar-fox-custom">
+        <div
+            class="container-fluid p-0 d-flex flex-wrap align-items-center justify-content-between w-100 position-relative">
+
+            <div class="d-flex align-items-center justify-content-between w-100 d-lg-none mb-2 order-1">
+                <div class="d-flex align-items-center">
+                    <button class="navbar-toggler border-0 mr-2 p-1" type="button" data-toggle="collapse"
+                        data-target="#navbarNav" style="background: rgba(150,150,150,0.1); border-radius: 6px;">
+                        <i class="fas fa-bars" style="color: var(--fox-text-main); font-size: 20px;"></i>
+                    </button>
+                    <a class="navbar-brand m-0 p-0" href="#">
+                        <img class="webLogoImg" alt="FOX GAMERS"
+                            style="height: 40px; object-fit: contain; filter: drop-shadow(0 0 8px var(--fox-accent-glow));">
+                    </a>
+                </div>
+                <button
+                    class="btn border-0 shadow-none d-flex align-items-center justify-content-center theme-toggle-btn"
+                    style="width: 32px; height: 32px; border-radius: 50%; background: rgba(150, 150, 150, 0.1); color: #facc15;"
+                    title="Cambiar Tema">
+                    <i class="fas fa-sun"></i>
                 </button>
-                <a class="navbar-brand d-flex align-items-center m-0 p-0" href="#">
-                    <img id="webLogoNav" src="../shared/img/logo-placeholder.png" alt="FOX GAMERS"
-                        class="rounded-circle"
-                        style="width: 70px; height: 70px; object-fit: cover; border: 2px solid var(--fox-cyan); box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);">
+            </div>
+
+            <div class="d-none d-lg-flex align-items-center desktop-logo-wrapper order-lg-1" style="flex: 1;">
+                <a class="navbar-brand m-0 p-0" href="#">
+                    <img class="webLogoImg" alt="FOX GAMERS"
+                        style="height: 55px; width: auto; max-width: 180px; object-fit: contain; filter: drop-shadow(0 0 8px var(--fox-accent-glow)); transition: transform 0.3s ease;">
                 </a>
             </div>
 
-            <div class="flex-grow-1 mx-4 mx-md-5 d-none d-sm-block" style="max-width: 550px;">
-                <div class="position-relative">
-                    <input type="text" id="busquedaWeb" class="form-control pl-4 login-input"
-                        placeholder="¿Qué estás buscando hoy?" style="border-radius: 25px; height: 46px;">
-                    <i class="fas fa-search position-absolute"
-                        style="right: 20px; top: 15px; color: var(--fox-cyan);"></i>
+            <div class="w-100 d-lg-flex justify-content-center px-0 px-lg-3 order-3 order-lg-2 mt-2 mt-lg-0 desktop-search-wrapper"
+                style="flex: 2;">
+                <div class="input-group search-bar-container w-100" style="max-width: 650px;">
+                    <input type="text" id="busquedaWeb" class="form-control border-0 search-input"
+                        placeholder="¿Qué hardware o periférico estás buscando hoy?">
+                    <div class="input-group-append">
+                        <button class="btn btn-search px-3 px-md-4 border-0" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto font-weight-bold text-uppercase"
-                    style="font-size: 0.95rem; letter-spacing: 1px;">
-                    <li class="nav-item active"><a class="nav-link text-white" href="#inicio">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="#catalogo">Catálogo</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="#promociones">Promociones</a></li>
-                    <li class="nav-item"><a class="nav-link text-white" href="#contacto">Contacto</a></li>
+            <div class="collapse navbar-collapse justify-content-end order-4 order-lg-3 desktop-menu-wrapper"
+                id="navbarNav" style="flex: 1;">
+                <ul class="navbar-nav font-weight-bold text-uppercase align-items-lg-center mobile-full-menu w-100 w-lg-auto"
+                    style="font-size: 0.85rem; letter-spacing: 1px; gap: 5px;">
+                    <li class="nav-item active w-100 w-lg-auto"><a class="nav-link px-3" href="#inicio">Inicio</a></li>
+                    <li class="nav-item w-100 w-lg-auto"><a class="nav-link px-3" href="#catalogo">Catálogo</a></li>
+
+                    <li class="nav-item ml-lg-3 mr-lg-1 d-none d-lg-flex align-items-center justify-content-center">
+                        <button
+                            class="btn border-0 shadow-none d-flex align-items-center justify-content-center theme-toggle-btn"
+                            style="width: 38px; height: 38px; border-radius: 50%; background: rgba(150, 150, 150, 0.1); color: #facc15; transition: all 0.3s ease;"
+                            title="Cambiar Tema">
+                            <i class="fas fa-sun"></i>
+                        </button>
+                    </li>
+
+                    <li class="nav-item mobile-btn-wrapper ml-lg-2 w-100 w-lg-auto">
+                        <a class="btn btn-success font-weight-bold d-flex align-items-center justify-content-center px-3 text-white w-100"
+                            href="https://wa.me/51961460326" target="_blank"
+                            style="border-radius: 6px; font-size: 12px; height: 38px; background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); border: none;">
+                            <i class="fab fa-whatsapp mr-2 fa-lg"></i> ASESORÍA
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <header id="inicio" class="py-5 d-flex align-items-center"
-        style="min-height: 45vh; background: linear-gradient(180deg, var(--fox-bg-dark) 0%, var(--fox-surface) 100%);">
-        <div class="container text-center py-4">
-            <h1 class="display-4 mb-3 text-uppercase font-weight-bold"
-                style="font-family: 'Archivo Black', sans-serif; color: var(--fox-text-light);">
-                Eleva tu <span style="color: var(--fox-cyan);">Nivel</span>
-            </h1>
-            <p class="lead mx-auto mb-4"
-                style="max-width: 600px; font-size: 1.1rem; color: var(--fox-text-light); opacity: 0.8;">
-                Tu vitrina de hardware exclusivo y periféricos de alta gama para competencia y rendimiento extremo.
-            </p>
-            <a href="#catalogo" class="btn btn-fox px-5" style="border-radius: 30px; padding: 12px 0; font-size: 1rem;">
-                VER CATÁLOGO <i class="fas fa-chevron-right ml-2"></i>
-            </a>
-        </div>
-    </header>
-
-    <section id="promociones" class="py-5" style="background-color: var(--fox-bg-dark);">
-        <div class="container">
-            <h2 class="text-center mb-4"
-                style="font-family: 'Archivo Black', sans-serif; color: var(--fox-text-light);">
-                PROMO <span style="color: #facc15;">FLASH</span>
-            </h2>
-            <div id="sliderPromociones" class="carousel slide shadow-lg" data-ride="carousel" data-interval="4000"
-                style="border-radius: 16px; overflow: hidden; border: 1px solid #1e293b;">
-                <ol class="carousel-indicators" id="indicadoresBanners"></ol>
-                <div class="carousel-inner" id="contenedorBannersWeb">
-                    <div class="carousel-item active text-center py-5" style="background-color: var(--fox-surface);">
-                        <div class="spinner-border" style="color: var(--fox-cyan);" role="status"></div>
-                        <p class="mt-3 font-weight-bold" style="color: var(--fox-text-light); opacity: 0.6;">Cargando
-                            promociones...</p>
+    <section id="inicio" class="pb-5">
+        <div class="container-fluid p-0">
+            <div id="sliderPromociones" class="carousel slide hero-slider-full shadow-sm" data-ride="carousel"
+                data-interval="4500">
+                <ol class="carousel-indicators custom-indicators" id="indicadoresBanners"></ol>
+                <div class="carousel-inner" id="contenedorBannersWeb"
+                    style="background-color: var(--fox-surface); min-height: 300px;">
+                    <div class="carousel-item active text-center py-5 d-flex flex-column align-items-center justify-content-center"
+                        style="height: 100%;">
+                        <div class="spinner-border" style="color: var(--fox-accent);" role="status"></div>
+                        <p class="mt-3 font-weight-bold text-muted" style="font-size: 13px;">Cargando campañas...</p>
                     </div>
                 </div>
+                <a class="carousel-control-prev" href="#sliderPromociones" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon shadow" aria-hidden="true"
+                        style="background-color: var(--fox-nav-bg); border-radius: 50%; padding: 20px; border: 1px solid var(--fox-nav-border);"></span>
+                    <span class="sr-only">Anterior</span>
+                </a>
+                <a class="carousel-control-next" href="#sliderPromociones" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon shadow" aria-hidden="true"
+                        style="background-color: var(--fox-nav-bg); border-radius: 50%; padding: 20px; border: 1px solid var(--fox-nav-border);"></span>
+                    <span class="sr-only">Siguiente</span>
+                </a>
             </div>
         </div>
     </section>
 
-    <section id="catalogo" class="py-5" style="background-color: var(--fox-bg-dark);">
-        <div class="container py-4">
+    <section id="catalogo" class="py-5" style="border-top: 1px solid var(--fox-nav-border);">
+        <div class="container py-2">
 
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
-                <h2 class="m-0 mb-3 mb-md-0"
-                    style="font-family: 'Archivo Black', sans-serif; color: var(--fox-text-light);">
-                    PRODUCTOS <span style="color: var(--fox-cyan);">DESTACADOS</span>
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap" style="gap: 15px;">
+                <h2 class="m-0 fox-title" style="font-family: 'Archivo Black', sans-serif; font-size: 1.6rem;">
+                    PRODUCTOS <span style="color: var(--fox-accent);">DESTACADOS</span>
                 </h2>
-                <span class="badge badge-info px-3 py-2">
+                <span class="badge px-3 py-2"
+                    style="background-color: var(--fox-accent-glow); color: var(--fox-accent); border: 1px solid var(--fox-accent-glow); border-radius: 6px;">
                     <i class="fas fa-sync-alt fa-spin mr-2"></i> STOCK EN TIEMPO REAL
                 </span>
             </div>
 
             <div class="row mb-4">
                 <div class="col-12">
-                    <div id="contenedorCategoriasWeb">
-                        <!-- Cargado dinámicamente desde web.js -->
+                    <div id="contenedorCategoriasWeb" class="d-flex flex-wrap style-categories-strip" style="gap: 8px;">
+                        <!-- Cargado dinámicamente -->
                     </div>
                 </div>
             </div>
@@ -115,11 +156,108 @@
         </div>
     </section>
 
-    <footer id="contacto" class="py-4"
-        style="background-color: var(--fox-surface); border-top: 2px solid var(--fox-cyan);">
-        <div class="container text-center">
-            <p class="mb-2 font-weight-bold" style="color: var(--fox-text-light);">© 2026 <span
-                    style="color: var(--fox-cyan);">FOX GAMERS</span> - Todos los derechos reservados.</p>
+    <footer id="contacto" class="pt-5 pb-3">
+        <div class="container-fluid px-4 px-xl-5">
+            <div class="row mb-4">
+
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0 pr-lg-5 text-center text-md-left">
+                    <img id="footerLogo" alt="Fox Gamers"
+                        style="height: 85px; width: auto; max-width: 250px; object-fit: contain; margin-bottom: 20px; filter: drop-shadow(0 0 8px var(--fox-accent-glow));">
+                    <ul class="list-unstyled text-muted small text-left" style="line-height: 1.8; font-size: 13px;">
+                        <li class="mb-2 d-flex"><i class="fas fa-map-marker-alt mt-1 mr-3"
+                                style="color: var(--fox-accent); font-size: 16px;"></i> <span
+                                id="footerDireccion">Cargando dirección...</span></li>
+                        <li class="mb-2 d-flex"><i class="fas fa-phone-alt mt-1 mr-3"
+                                style="color: var(--fox-accent); font-size: 16px;"></i> <span
+                                id="footerTelefono">Cargando teléfono...</span></li>
+                        <li class="mb-2 d-flex"><i class="fas fa-envelope mt-1 mr-3"
+                                style="color: var(--fox-accent); font-size: 16px;"></i> <span id="footerCorreo">Cargando
+                                correo...</span></li>
+                    </ul>
+                    <div class="d-flex mt-4 justify-content-center justify-content-md-start" style="gap: 12px;">
+                        <a href="#" class="rs-link d-flex align-items-center justify-content-center rounded"><i
+                                class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="rs-link d-flex align-items-center justify-content-center rounded"><i
+                                class="fab fa-instagram"></i></a>
+                        <a href="#" class="rs-link d-flex align-items-center justify-content-center rounded"><i
+                                class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0 text-center text-md-left">
+                    <h6 class="font-weight-bold mb-4 text-uppercase" style="letter-spacing: 1px; font-size: 14px;">
+                        Navegación</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-3"><a href="#inicio" class="text-muted text-decoration-none footer-link"><i
+                                    class="fas fa-chevron-right mr-2"
+                                    style="font-size: 10px; color: var(--fox-accent);"></i>Inicio</a></li>
+                        <li class="mb-3"><a href="#catalogo" class="text-muted text-decoration-none footer-link"><i
+                                    class="fas fa-chevron-right mr-2"
+                                    style="font-size: 10px; color: var(--fox-accent);"></i>Catálogo</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0 pr-lg-4 text-center text-md-left">
+                    <h6 class="font-weight-bold mb-4 text-uppercase" style="letter-spacing: 1px; font-size: 14px;">
+                        Políticas y Soporte</h6>
+                    <ul class="list-unstyled small mb-4">
+                        <li class="mb-3"><a href="#" class="text-muted text-decoration-none footer-link"><i
+                                    class="fas fa-chevron-right mr-2"
+                                    style="font-size: 10px; color: var(--fox-accent);"></i>Términos y Condiciones</a>
+                        </li>
+                        <li class="mb-3"><a href="#" class="text-muted text-decoration-none footer-link"><i
+                                    class="fas fa-chevron-right mr-2"
+                                    style="font-size: 10px; color: var(--fox-accent);"></i>Políticas de Garantía</a>
+                        </li>
+                    </ul>
+
+                    <a href="./reclamaciones.html"
+                        class="d-block reclamaciones-card p-3 rounded text-decoration-none text-left"
+                        style="transition: all 0.3s ease;">
+                        <div class="d-flex align-items-center">
+                            <div class="p-2 rounded mr-3"
+                                style="background: rgba(59, 130, 246, 0.1); color: var(--fox-accent);">
+                                <i class="fas fa-book-open fa-lg"></i>
+                            </div>
+                            <div>
+                                <span class="d-block font-weight-bold reclamaciones-title"
+                                    style="font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase;">Libro
+                                    de</span>
+                                <span class="d-block text-muted" style="font-size: 11px;">Reclamaciones Virtual</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-lg-3 col-md-12">
+                    <h6 class="font-weight-bold mb-4 text-uppercase text-center text-md-left"
+                        style="letter-spacing: 1px; font-size: 14px;">Nuestra Tienda</h6>
+                    <div class="w-100 rounded overflow-hidden shadow-sm map-container">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3962.15582875151!2d-79.84157778467475!3d-6.776632495096593!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x904cef380d96d93b%3A0x63351a0293d4cb80!2sAv.%20Francisco%20Bolognesi%20536%2C%20Chiclayo%2014001!5e0!3m2!1ses!2spe!4v1715000000000!5m2!1ses!2spe"
+                            width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-top: 1px solid var(--fox-nav-border); margin: 30px 0 20px 0;">
+
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-left mb-3 mb-md-0">
+                    <p class="mb-0 text-muted" style="font-size: 12px;">© <span id="footerYear">2026</span> <span
+                            style="color: var(--fox-accent); font-weight: 800; letter-spacing: 0.5px;"
+                            id="footerNombreEmpresa">FOX GAMERS</span>. Todos los derechos reservados.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-right">
+                    <div class="d-inline-flex gap-2 payment-icons">
+                        <i class="fab fa-cc-visa mx-1" style="font-size: 28px;"></i>
+                        <i class="fab fa-cc-mastercard mx-1" style="font-size: 28px;"></i>
+                        <i class="fab fa-cc-paypal mx-1" style="font-size: 28px;"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </footer>
 
