@@ -11,12 +11,9 @@ if (!fs.existsSync(dirProductos)) {
 // 2. Configuración de almacenamiento
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Le decimos a Multer dónde guardar las fotos de los productos
     cb(null, dirProductos);
   },
   filename: function (req, file, cb) {
-    // Generamos un nombre único para evitar que se sobrescriban archivos con el mismo nombre
-    // Ejemplo: producto-16850239021-987452.jpg
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, "producto-" + uniqueSuffix + path.extname(file.originalname));
   },
@@ -43,7 +40,7 @@ const fileFilter = (req, file, cb) => {
 // 4. Exportar el middleware configurado (Límite de peso: 5MB)
 const uploadProducto = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB de límite
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: fileFilter,
 });
 

@@ -1,34 +1,46 @@
 (() => {
   // =======================================================
-  // 1. REFERENCIAS AL DOM Y VARIABLES GLOBALES
+  // 1. CONFIGURACIÓN GENERAL Y CONEXIONES DOM
   // =======================================================
+  const BASE_URL = "http://localhost:3000";
+
+  // Contenedores del DOM
   const cboTipoReporte = document.getElementById("cboTipoReporte");
   const zonaFiltros = document.getElementById("zonaFiltrosDinamicos");
+  const estadoVacio = document.getElementById("estadoVacio");
+  const contenedorReporte = document.getElementById("contenedorReporte");
 
+  // Botones del Módulo
   const btnGenerar = document.getElementById("btnGenerarReporte");
   const btnPdf = document.getElementById("btnExportarPDF");
   const btnExcel = document.getElementById("btnExportarExcel");
 
-  const estadoVacio = document.getElementById("estadoVacio");
-  const contenedorReporte = document.getElementById("contenedorReporte");
+  // Zonas de Inyección de Data
+  const zonaKPIs = document.getElementById("zonaKPIs");
+  const cabeceraTabla = document.getElementById("cabeceraTabla");
+  const cuerpoTabla = document.getElementById("cuerpoTabla");
+  const txtTotalRegistros = document.getElementById("txtTotalRegistros");
+  const txtUltimaConsulta = document.getElementById("txtUltimaConsulta");
 
-  const BASE_URL = "http://localhost:3000";
+  // Persistencia Temporal en Memoria
   let datosReporteActual = null;
+  let tipoReporteSeleccionado = null;
 
   // =======================================================
-  // 2. MUTACIÓN Y RECOPILACIÓN DE FILTROS (UX)
+  // 2. LOGICA Y MUTACIÓN DE FILTROS DINÁMICOS
   // =======================================================
   cboTipoReporte.addEventListener("change", (e) => {
-    const reporteSeleccionado = e.target.value;
-    renderizarFiltros(reporteSeleccionado);
-    resetearLienzo();
+    tipoReporteSeleccionado = e.target.value;
+    renderizarFiltros(tipoReporteSeleccionado);
+    limpiarPantalla();
     btnGenerar.disabled = false;
-    btnPdf.disabled = true;
     btnExcel.disabled = true;
+    btnPdf.disabled = true;
   });
 
   function renderizarFiltros(tipo) {
     zonaFiltros.innerHTML = "";
+
     const hoy = new Date().toISOString().split("T")[0];
     const inicioMes = new Date(
       new Date().getFullYear(),
@@ -38,62 +50,63 @@
       .toISOString()
       .split("T")[0];
 
-    const htmlFechas = `
-            <div class="col-sm-6 mb-3 mb-md-0 px-2">
-                <label class="small font-weight-bold text-uppercase text-muted">Desde</label>
-                <input type="date" id="filtroFechaInicio" class="form-control" value="${inicioMes}">
+    const htmlRangoFechas = `
+            <div class="w-50 pr-2">
+                <label class="small font-weight-bold text-muted mb-1">Desde</label>
+                <input type="date" id="filtroFechaInicio" class="form-control form-control-sm" value="${inicioMes}">
             </div>
-            <div class="col-sm-6 px-2">
-                <label class="small font-weight-bold text-uppercase text-muted">Hasta</label>
-                <input type="date" id="filtroFechaFin" class="form-control" value="${hoy}">
+            <div class="w-50 pl-2">
+                <label class="small font-weight-bold text-muted mb-1">Hasta</label>
+                <input type="date" id="filtroFechaFin" class="form-control form-control-sm" value="${hoy}">
             </div>
         `;
 
     const htmlFechaUnica = `
-            <div class="col-sm-6 px-2">
-                <label class="small font-weight-bold text-uppercase text-muted">Día de Operación</label>
-                <input type="date" id="filtroFechaUnica" class="form-control" value="${hoy}">
+            <div class="w-100 pr-2">
+                <label class="small font-weight-bold text-muted mb-1">Día de Operación</label>
+                <input type="date" id="filtroFechaUnica" class="form-control form-control-sm" value="${hoy}">
             </div>
         `;
 
-    const htmlCategorias = `
-            <div class="col-sm-6 px-2">
-                <label class="small font-weight-bold text-uppercase text-muted">Categoría</label>
-                <select id="filtroCategoria" class="form-control">
+    const htmlCategoria = `
+            <div class="w-100 pr-2">
+                <label class="small font-weight-bold text-muted mb-1">Categoría</label>
+                <select id="filtroCategoria" class="form-control form-control-sm">
                     <option value="ALL">Todas las categorías</option>
-                    </select>
+                </select>
             </div>
         `;
 
-    if (
-      [
-        "ventas_periodo",
-        "productos_top",
-        "ventas_vendedor",
-        "kardex_global",
-      ].includes(tipo)
-    ) {
-      zonaFiltros.innerHTML = htmlFechas;
+    const reportesConRango = [
+      "ventas_periodo",
+      "productos_top",
+      "ventas_vendedor",
+      "kardex_global",
+      "totalizado_ventas",
+    ];
+
+    if (reportesConRango.includes(tipo)) {
+      zonaFiltros.innerHTML = htmlRangoFechas;
     } else if (tipo === "cuadre_caja") {
       zonaFiltros.innerHTML = htmlFechaUnica;
     } else if (tipo === "inventario_actual") {
-      zonaFiltros.innerHTML = htmlCategorias;
+      zonaFiltros.innerHTML = htmlCategoria;
     } else if (tipo === "directorio_clientes") {
-      // No necesita filtros, muestra todos los activos
-      zonaFiltros.innerHTML = `<div class="col-12 px-2"><p class="text-muted small m-0 mt-2"><i class="fas fa-info-circle"></i> Este reporte incluye toda la base de datos de clientes activos.</p></div>`;
+      zonaFiltros.innerHTML = `<div class="w-100 pt-4"><span class="small text-muted font-italic"><i class="fas fa-info-circle"></i> Catálogo sin restricciones de filtrado.</span></div>`;
     }
   }
 
-  function recopilarFiltros(tipo) {
+  function extraerFiltros(tipo) {
     let filtros = {};
-    if (
-      [
-        "ventas_periodo",
-        "productos_top",
-        "ventas_vendedor",
-        "kardex_global",
-      ].includes(tipo)
-    ) {
+    const reportesConRango = [
+      "ventas_periodo",
+      "productos_top",
+      "ventas_vendedor",
+      "kardex_global",
+      "totalizado_ventas",
+    ];
+
+    if (reportesConRango.includes(tipo)) {
       filtros.fechaInicio = document.getElementById("filtroFechaInicio").value;
       filtros.fechaFin = document.getElementById("filtroFechaFin").value;
     } else if (tipo === "cuadre_caja") {
@@ -104,28 +117,28 @@
     return filtros;
   }
 
-  function resetearLienzo() {
+  function limpiarPantalla() {
     estadoVacio.classList.remove("d-none");
     contenedorReporte.classList.add("d-none");
-    document.getElementById("zonaKPIs").innerHTML = "";
-    document.getElementById("zonaTabla").innerHTML = "";
+    cabeceraTabla.innerHTML = "";
+    cuerpoTabla.innerHTML = "";
+    zonaKPIs.innerHTML = "";
+    txtTotalRegistros.innerText = "Total: 0 registros";
     datosReporteActual = null;
   }
 
   // =======================================================
-  // 3. GENERAR REPORTE (CONEXIÓN AL BACKEND)
+  // 3. PROCESAMIENTO Y DIBUJO DE INTERFAZ (JSON)
   // =======================================================
   btnGenerar.addEventListener("click", async () => {
-    const tipo = cboTipoReporte.value;
-    if (!tipo) return;
+    if (!tipoReporteSeleccionado) return;
 
-    btnGenerar.innerHTML =
-      '<i class="fas fa-spinner fa-spin mr-1"></i> Cargando...';
+    btnGenerar.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     btnGenerar.disabled = true;
 
     const payload = {
-      tipoReporte: tipo,
-      filtros: recopilarFiltros(tipo),
+      tipoReporte: tipoReporteSeleccionado,
+      filtros: extraerFiltros(tipoReporteSeleccionado),
     };
 
     try {
@@ -137,163 +150,186 @@
       const result = await res.json();
 
       if (result.success) {
-        datosReporteActual = result.data; // Guardamos en memoria
-        dibujarReporte(datosReporteActual);
+        datosReporteActual = result.data; // Almacenamos respuesta en memoria
+
+        dibujarTabla(datosReporteActual.reporteTabla);
+        dibujarKPIs(datosReporteActual.resumenKPIs);
+
+        txtUltimaConsulta.innerText = `Actualizado: ${new Date().toLocaleTimeString()}`;
 
         estadoVacio.classList.add("d-none");
         contenedorReporte.classList.remove("d-none");
-        btnPdf.disabled = false;
         btnExcel.disabled = false;
+        btnPdf.disabled = false;
       } else {
-        Swal.fire("Atención", result.mensaje, "warning");
-        resetearLienzo();
+        alert("Alerta: " + result.mensaje);
+        limpiarPantalla();
       }
     } catch (error) {
-      Swal.fire(
-        "Error Crítico",
-        "No se pudo conectar con el servidor de reportes.",
-        "error",
-      );
-      resetearLienzo();
+      console.error("Error al consultar API:", error);
+      alert("Error crítico al enlazar con el servidor central.");
     } finally {
-      btnGenerar.innerHTML = '<i class="fas fa-search mr-1"></i> Generar';
+      btnGenerar.innerHTML = '<i class="fas fa-search"></i> Consultar';
       btnGenerar.disabled = false;
     }
   });
 
-  // =======================================================
-  // 4. DIBUJAR EN EL LIENZO (UI)
-  // =======================================================
-  function dibujarReporte(data) {
-    // A. Dibujar Tarjetas KPI
-    const zonaKPIs = document.getElementById("zonaKPIs");
-    let htmlKPIs = "";
-    data.resumenKPIs.forEach((kpi) => {
-      const valorFormateado =
+  function dibujarTabla(tablaData) {
+    let htmlCabecera = "<tr>";
+    tablaData.columnas.forEach((col) => {
+      htmlCabecera += `<th class="align-middle">${col}</th>`;
+    });
+    htmlCabecera += "</tr>";
+    cabeceraTabla.innerHTML = htmlCabecera;
+
+    let htmlCuerpo = "";
+    if (tablaData.filas.length === 0) {
+      htmlCuerpo = `<tr><td colspan="${tablaData.columnas.length}" class="py-4 text-muted font-italic">Sin datos registrados en el margen seleccionado.</td></tr>`;
+    } else {
+      tablaData.filas.forEach((fila) => {
+        htmlCuerpo += "<tr>";
+        fila.forEach((celda) => {
+          const esNumeroFuerte =
+            !isNaN(celda) && celda !== "" && Number(celda) % 1 !== 0;
+          const valorVista = esNumeroFuerte
+            ? `S/ ${parseFloat(celda).toFixed(2)}`
+            : celda;
+          const claseAlineacion = esNumeroFuerte
+            ? "text-right pr-3 font-weight-bold"
+            : "align-middle";
+
+          htmlCuerpo += `<td class="${claseAlineacion}">${valorVista}</td>`;
+        });
+        htmlCuerpo += "</tr>";
+      });
+    }
+    cuerpoTabla.innerHTML = htmlCuerpo;
+    txtTotalRegistros.innerText = `Total: ${tablaData.filas.length} registros`;
+  }
+
+  function dibujarKPIs(kpis) {
+    zonaKPIs.innerHTML = "";
+    if (!kpis || kpis.length === 0) return;
+
+    let html = "";
+    kpis.forEach((kpi) => {
+      const valor =
         kpi.formato === "MONEDA"
           ? `S/ ${parseFloat(kpi.value).toFixed(2)}`
           : kpi.value;
-
-      htmlKPIs += `
-                <div class="col-md-4 mb-3">
-                    <div class="card shadow-sm border-0 bg-white" style="border-left: 4px solid #0ea5e9; border-radius: 8px;">
-                        <div class="card-body py-3">
-                            <p class="text-uppercase text-muted font-weight-bold small mb-1">${kpi.label}</p>
-                            <h3 class="m-0 font-weight-bold" style="color: #0f172a;">${valorFormateado}</h3>
-                        </div>
+      html += `
+                <div class="col px-2 mb-2">
+                    <div class="p-2 rounded shadow-sm" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #3b82f6;">
+                        <span class="d-block small text-muted font-weight-bold text-uppercase" style="font-size: 0.65rem;">${kpi.label}</span>
+                        <span class="d-block font-weight-bold text-dark" style="font-size: 1.1rem;">${valor}</span>
                     </div>
                 </div>
             `;
     });
-    zonaKPIs.innerHTML = htmlKPIs;
-
-    // B. Dibujar Tabla HTML
-    const zonaTabla = document.getElementById("zonaTabla");
-    let htmlTabla = `
-            <table class="table table-hover table-bordered bg-white shadow-sm" style="border-radius: 8px; overflow: hidden;">
-                <thead style="background-color: #0f172a; color: white;">
-                    <tr>
-                        ${data.reporteTabla.columnas.map((col) => `<th>${col}</th>`).join("")}
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-    if (data.reporteTabla.filas.length === 0) {
-      htmlTabla += `<tr><td colspan="${data.reporteTabla.columnas.length}" class="text-center py-4 text-muted">No se encontraron datos en este período.</td></tr>`;
-    } else {
-      data.reporteTabla.filas.forEach((fila) => {
-        htmlTabla += "<tr>";
-        fila.forEach((celda, index) => {
-          // Si es la última columna (Total), formateamos como moneda para la vista
-          const esUltima = index === fila.length - 1;
-          const valorVista =
-            esUltima && !isNaN(celda)
-              ? `S/ ${parseFloat(celda).toFixed(2)}`
-              : celda;
-          htmlTabla += `<td ${esUltima ? 'class="font-weight-bold text-right"' : ""}>${valorVista}</td>`;
-        });
-        htmlTabla += "</tr>";
-      });
-    }
-
-    htmlTabla += "</tbody></table>";
-    zonaTabla.innerHTML = htmlTabla;
+    zonaKPIs.innerHTML = html;
   }
 
   // =======================================================
-  // 5. MOTORES DE EXPORTACIÓN (EXCEL Y PDF)
+  // 4. MOTOR DE EXPORTACIÓN EXCEL (LLAMADO AL BACKEND)
   // =======================================================
-
-  // EXPORTAR A EXCEL
   btnExcel.addEventListener("click", () => {
-    if (!datosReporteActual) return;
+    if (!datosReporteActual || !tipoReporteSeleccionado) return;
 
-    // 1. Unimos las columnas y las filas en un solo arreglo bidimensional
-    const datosExcel = [
-      datosReporteActual.reporteTabla.columnas,
-      ...datosReporteActual.reporteTabla.filas,
-    ];
+    btnExcel.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btnExcel.disabled = true;
 
-    // 2. Creamos el libro y la hoja con SheetJS
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.aoa_to_sheet(datosExcel);
+    const f = extraerFiltros(tipoReporteSeleccionado);
+    let url = `${BASE_URL}/api/reportes/exportar-excel?tipoReporte=${tipoReporteSeleccionado}`;
 
-    // 3. Agregamos la hoja al libro y descargamos
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte");
-    XLSX.writeFile(
-      workbook,
-      `${datosReporteActual.metadata.reporteTipo}_${Date.now()}.xlsx`,
-    );
+    if (f.fechaInicio)
+      url += `&fechaInicio=${f.fechaInicio}&fechaFin=${f.fechaFin}`;
+    if (f.fechaUnica) url += `&fechaUnica=${f.fechaUnica}`;
+    if (f.categoria) url += `&categoria=${f.categoria}`;
+
+    window.location.href = url;
+
+    setTimeout(() => {
+      btnExcel.innerHTML = '<i class="far fa-file-excel"></i> Excel';
+      btnExcel.disabled = false;
+    }, 1500);
   });
 
-  // EXPORTAR A PDF
+  // =======================================================
+  // 5. MOTOR DE EXPORTACIÓN PDF HORIZONTAL (FRONTEND)
+  // =======================================================
   btnPdf.addEventListener("click", () => {
     if (!datosReporteActual) return;
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF(); // Orientación vertical por defecto
+    btnPdf.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btnPdf.disabled = true;
 
-    // Cabecera formal del PDF
-    doc.setFontSize(18);
-    doc.setTextColor(15, 23, 42); // Color oscuro
-    doc.text("FOX GAMERS", 14, 20);
+    setTimeout(() => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("landscape");
 
-    doc.setFontSize(12);
-    doc.setTextColor(100);
-    doc.text(datosReporteActual.metadata.titulo, 14, 28);
+      // Estilos de Membrete Corporativo
+      doc.setFontSize(20);
+      doc.setTextColor(15, 23, 42);
+      doc.setFont("helvetica", "bold");
+      doc.text("FOX GAMERS", 14, 20);
 
-    doc.setFontSize(9);
-    doc.text(datosReporteActual.metadata.filtrosAplicados, 14, 34);
-    doc.text(
-      `Generado: ${datosReporteActual.metadata.fechaGeneracion}`,
-      14,
-      39,
-    );
+      doc.setFontSize(11);
+      doc.setTextColor(71, 85, 105);
+      doc.text(datosReporteActual.metadata.titulo, 14, 27);
 
-    // Generamos la tabla usando AutoTable
-    doc.autoTable({
-      startY: 45,
-      head: [datosReporteActual.reporteTabla.columnas],
-      body: datosReporteActual.reporteTabla.filas,
-      theme: "grid",
-      headStyles: { fillColor: [15, 23, 42] }, // Cabecera oscura
-      styles: { fontSize: 8 },
-      didParseCell: function (data) {
-        // Alineamos los números a la derecha (asumiendo que la última columna son totales)
-        if (
-          data.column.index ===
-            datosReporteActual.reporteTabla.columnas.length - 1 &&
-          data.section === "body"
-        ) {
-          data.cell.styles.halign = "right";
-          // Le agregamos el "S/" al PDF
-          if (!isNaN(data.cell.raw))
-            data.cell.text = `S/ ${parseFloat(data.cell.raw).toFixed(2)}`;
-        }
-      },
-    });
+      doc.setFontSize(8.5);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Filtros: ${datosReporteActual.metadata.filtrosAplicados}`,
+        14,
+        33,
+      );
+      doc.text(
+        `Fecha Impresión: ${new Date().toLocaleString("es-PE")}`,
+        14,
+        38,
+      );
 
-    doc.save(`${datosReporteActual.metadata.reporteTipo}_${Date.now()}.pdf`);
+      // Renderizado de tabla estructurada con autoTable
+      doc.autoTable({
+        startY: 43,
+        head: [datosReporteActual.reporteTabla.columnas],
+        body: datosReporteActual.reporteTabla.filas,
+        theme: "grid",
+        headStyles: {
+          fillColor: [15, 23, 42],
+          textColor: 255,
+          fontStyle: "bold",
+        },
+        styles: {
+          fontSize: 8,
+          cellPadding: 2.5,
+          halign: "center",
+          valign: "middle",
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        didParseCell: function (data) {
+          if (data.section === "body") {
+            const rawVal = data.cell.raw;
+            const esMoneda =
+              !isNaN(rawVal) && rawVal !== "" && Number(rawVal) % 1 !== 0;
+
+            if (esMoneda) {
+              data.cell.styles.halign = "right";
+              data.cell.text = `S/ ${parseFloat(rawVal).toFixed(2)}`;
+            } else if (!isNaN(rawVal) && rawVal !== "") {
+              data.cell.styles.halign = "center";
+            } else {
+              data.cell.styles.halign = "left";
+            }
+          }
+        },
+      });
+
+      doc.save(`FoxGamers_${tipoReporteSeleccionado}_${Date.now()}.pdf`);
+
+      btnPdf.innerHTML = '<i class="far fa-file-pdf"></i> PDF';
+      btnPdf.disabled = false;
+    }, 400);
   });
 })();
