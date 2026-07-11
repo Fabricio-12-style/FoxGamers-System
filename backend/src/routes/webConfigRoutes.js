@@ -14,6 +14,7 @@ const {
   eliminarSlider,
 } = require("../controllers/webConfigController");
 
+const { verificarToken, soloAdministradores } = require("../middlewares/authMiddleware");
 const dir = "./uploads/web";
 if (!fs.existsSync(dir)) {
   fs.mkdirSync(dir, { recursive: true });
@@ -35,9 +36,9 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(
       new Error(
-        "Formato denegado. El servidor solo admite archivos de imagen válidos (JPG o PNG).",
+        "Formato denegado. El servidor solo admite archivos de imagen válidos (JPG o PNG)."
       ),
-      false,
+      false
     );
   }
 };
@@ -45,11 +46,12 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter });
 
 router.get("/publica", getConfigPublica);
-router.post("/logo", upload.single("logo"), actualizarLogo);
-router.put("/logo/activo/:id", establecerLogoPrincipal);
-router.delete("/logo/:id", eliminarLogo);
-router.post("/slider", upload.single("slider"), actualizarBanner);
-router.put("/slider/estado/:id", toggleSliderEstado);
-router.delete("/slider/:id", eliminarSlider);
+router.post("/logo", verificarToken, soloAdministradores, upload.single("logo"), actualizarLogo);
+router.put("/logo/activo/:id", verificarToken, soloAdministradores, establecerLogoPrincipal);
+router.delete("/logo/:id", verificarToken, soloAdministradores, eliminarLogo);
+
+router.post("/slider", verificarToken, soloAdministradores, upload.single("slider"), actualizarBanner);
+router.put("/slider/estado/:id", verificarToken, soloAdministradores, toggleSliderEstado);
+router.delete("/slider/:id", verificarToken, soloAdministradores, eliminarSlider);
 
 module.exports = router;

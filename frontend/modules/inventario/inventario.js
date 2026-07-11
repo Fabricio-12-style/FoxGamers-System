@@ -4,6 +4,14 @@
   const placeholderImg = "https://placehold.co/50x50/f8fafc/1e293b?text=Fox";
   const BASE_URL = "http://localhost:3000";
 
+  // INYECCIÓN DE SEGURIDAD
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
+
   // =======================================================
   // 1. OBTENER LISTADO (CON ROMPE-CACHÉ)
   // =======================================================
@@ -22,7 +30,7 @@
         new Date().getTime();
 
       const res = await fetch(urlFresca, {
-        headers: { "Cache-Control": "no-cache" },
+        headers: { ...authHeaders, "Cache-Control": "no-cache" },
       });
       listaInventarioGlobal = await res.json();
 
@@ -193,7 +201,7 @@
       try {
         const res = await fetch(`${BASE_URL}/api/productos/ajuste`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify(data),
         });
         const result = await res.json();
@@ -220,7 +228,7 @@
       }
     });
   }
-  
+
   // =======================================================
   // 5. CONSULTA DE MOVIMIENTOS KARDEX (CON ROMPE-CACHÉ)
   // =======================================================
@@ -238,7 +246,7 @@
     try {
       const urlKardex = `${BASE_URL}/api/productos/kardex/${id}?t=${new Date().getTime()}`;
       const res = await fetch(urlKardex, {
-        headers: { "Cache-Control": "no-cache" },
+        headers: { ...authHeaders, "Cache-Control": "no-cache" },
       });
 
       const movimientos = await res.json();
@@ -273,7 +281,7 @@
   };
 
   // =======================================================
-  // 6. MOTOR DE ESCUDO DEBOUNCE (HOSTING PROTECTOR)
+  // 6. MOTOR DE ESCUDO DEBOUNCE
   // =======================================================
   const inputBuscar = document.getElementById("buscarInventario");
   if (inputBuscar) {
@@ -312,7 +320,9 @@
 
   async function cargarProveedoresParaAjuste() {
     try {
-      const res = await fetch(`${BASE_URL}/api/proveedores`);
+      const res = await fetch(`${BASE_URL}/api/proveedores`, {
+        headers: authHeaders,
+      });
       const proveedores = await res.json();
       if (!ajusteProveedorSelect) return;
       ajusteProveedorSelect.innerHTML =

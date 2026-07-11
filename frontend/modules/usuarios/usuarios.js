@@ -2,7 +2,14 @@
   let listaUsuariosGlobal = [];
   let usuarioEditandoId = null;
 
-  // 1. Verificación de Seguridad y Sesión
+  // CONFIGURACIÓN DE SEGURIDAD Y TOKEN
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
+
   const usuarioString = localStorage.getItem("usuarioFoxGamers");
   if (!usuarioString) return (window.location.href = "../../login/login.html");
 
@@ -17,7 +24,9 @@
     if (!select) return;
 
     try {
-      const res = await fetch("http://localhost:3000/api/perfiles");
+      const res = await fetch("http://localhost:3000/api/perfiles", {
+        headers: authHeaders,
+      });
       const perfiles = await res.json();
 
       select.innerHTML =
@@ -35,7 +44,6 @@
     }
   }
 
-  // 3. Configurar botón de "Nuevo Usuario"
   const btnAbrirCrear = document.getElementById("btnAbrirModalUsuario");
   if (btnAbrirCrear) {
     btnAbrirCrear.addEventListener("click", async () => {
@@ -53,7 +61,9 @@
       '<tr><td colspan="7" class="py-4" style="color: var(--fox-text-gray);"><i class="fas fa-spinner fa-spin mr-2"></i> Cargando usuarios...</td></tr>';
 
     try {
-      const res = await fetch("http://localhost:3000/api/usuarios");
+      const res = await fetch("http://localhost:3000/api/usuarios", {
+        headers: authHeaders,
+      });
       listaUsuariosGlobal = await res.json();
       renderizarTablaUsuarios(listaUsuariosGlobal);
     } catch (e) {
@@ -62,7 +72,6 @@
     }
   }
 
-  // 4.1. Renderizador aislado para compatibilidad con el Buscador
   function renderizarTablaUsuarios(lista) {
     const tabla = document.getElementById("tablaUsuarios");
     if (!tabla) return;
@@ -86,7 +95,6 @@
       const bloquearBorrado = soyYo || esAdminRaiz;
       const bloquearEstado = soyYo || esAdminRaiz;
 
-      // Nuevos botones
       const btnToggleClass = isActivo ? "btn-secondary" : "btn-fox-cyan";
       const iconToggle = isActivo ? "fa-user-slash" : "fa-user-check";
 
@@ -218,7 +226,7 @@
       try {
         const res = await fetch(url, {
           method: method,
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify(userData),
         });
         const data = await res.json();
@@ -263,7 +271,7 @@
 
     const btn = document.getElementById("btnGuardarUsuario");
     btn.innerHTML = '<i class="fas fa-save mr-2"></i> Actualizar Cambios';
-    btn.className = "btn btn-fox px-4 shadow"; // Mantenemos nuestra clase maestra
+    btn.className = "btn btn-fox px-4 shadow";
 
     $("#modalUsuario").modal("show");
   };
@@ -294,7 +302,7 @@
           `http://localhost:3000/api/usuarios/bloquear/${id}`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeadersJson,
             body: JSON.stringify({ estado: nuevoEstado }),
           },
         );
@@ -329,6 +337,7 @@
       try {
         const res = await fetch(`http://localhost:3000/api/usuarios/${id}`, {
           method: "DELETE",
+          headers: authHeaders,
         });
         const data = await res.json();
 
@@ -344,7 +353,6 @@
     }
   };
 
-  // 9. Limpiar Formulario para Creación
   function limpiarFormularioUsuario() {
     formUsuario.reset();
     usuarioEditandoId = null;
@@ -356,7 +364,6 @@
     btn.className = "btn btn-fox px-4 shadow";
   }
 
-  // 10. Buscador de Usuarios
   const inputBusq = document.getElementById("busquedaUsuario");
   if (inputBusq) {
     inputBusq.addEventListener("input", (e) => {
@@ -372,7 +379,6 @@
     });
   }
 
-  // 11. Bloqueo en tiempo real de caracteres especiales y NÚMEROS para el campo Usuario
   const inputUsuarioLogin = document.getElementById("usuLogin");
   if (inputUsuarioLogin) {
     inputUsuarioLogin.addEventListener("input", function () {

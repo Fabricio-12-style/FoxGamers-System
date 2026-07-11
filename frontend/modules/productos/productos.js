@@ -6,6 +6,15 @@
   let archivoImagen = null;
   let debounceTimeoutProductos = null;
 
+  // INYECCIÓN DE SEGURIDAD Y ROLES
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+
+  const usuarioLocal = JSON.parse(
+    localStorage.getItem("usuarioFoxGamers") || "{}",
+  );
+  const esAdmin = (usuarioLocal.Rol || "").toUpperCase() === "ADMINISTRADOR";
+
   const placeholderImg =
     "https://placehold.co/400x400/f8fafc/1e293b?text=Subir+Imagen";
   const placeholderIcon = "https://placehold.co/50x50/f8fafc/1e293b?text=Img";
@@ -18,6 +27,13 @@
     if (!localStorage.getItem("usuarioFoxGamers")) {
       return (window.location.href = "../../login/login.html");
     }
+
+    // Ocultar botón de Nuevo Producto si NO es Admin
+    const btnNuevo = document.getElementById("btnNuevoProducto");
+    if (btnNuevo && !esAdmin) {
+      btnNuevo.style.display = "none";
+    }
+
     await cargarFamilias();
     listarProductos();
   })();
@@ -27,7 +43,9 @@
   // =======================================================
   async function cargarFamilias() {
     try {
-      const res = await fetch(`${BASE_URL}/api/categorias`);
+      const res = await fetch(`${BASE_URL}/api/categorias`, {
+        headers: authHeaders,
+      });
       const data = await res.json();
       const select = document.getElementById("prodCategoria");
 
@@ -89,7 +107,6 @@
         }
 
         archivoImagen = file;
-
         const reader = new FileReader();
         reader.onload = (event) => {
           document.getElementById("imgPreview").src = event.target.result;
@@ -102,7 +119,7 @@
   }
 
   // =======================================================
-  // 5. OBTENER PRODUCTOS DEL HOSTING (HÍBRIDO TOP-5 / SEARCH)
+  // 5. OBTENER PRODUCTOS DEL HOSTING
   // =======================================================
   async function listarProductos(terminoBusqueda = "") {
     const lblModo = document.getElementById("lblModoCargaProductos");
@@ -112,7 +129,7 @@
           ? `${BASE_URL}/api/productos?q=${encodeURIComponent(terminoBusqueda)}`
           : `${BASE_URL}/api/productos`;
 
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders });
       listaProductosGlobal = await res.json();
 
       if (lblModo) {
@@ -159,40 +176,51 @@
         ? `${BASE_URL}${p.ImagenURL}`
         : placeholderIcon;
 
+      // Restricción Visual de Botones: Si no es Admin, el botón simplemente se pinta en gris y deshabilitado.
+      const btnEditarHTML = esAdmin
+        ? `<button onclick="prepararEdicionProd(${p.ProductoID})" class="btn btn-sm btn-fox mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Editar" ${!p.Activo ? "disabled" : ""}><i class="fas fa-pencil-alt"></i></button>`
+        : `<button class="btn btn-sm btn-light mx-1" style="border-radius: 4px; width: 34px; height: 34px; color:#cbd5e1" disabled><i class="fas fa-pencil-alt"></i></button>`;
+
+      const btnVisibilidadHTML = esAdmin
+        ? `<button onclick="toggleEstadoProducto(${p.ProductoID}, ${p.Activo ? 0 : 1})" class="btn btn-sm ${btnClass} mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="${titleToggle}">${iconVisibilidad}</button>`
+        : `<button class="btn btn-sm btn-light mx-1" style="border-radius: 4px; width: 34px; height: 34px; color:#cbd5e1" disabled>${iconVisibilidad}</button>`;
+
+      const btnEliminarHTML = esAdmin
+        ? `<button onclick="eliminarProductoFisico(${p.ProductoID})" class="btn btn-sm btn-fox-danger mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Eliminar" ${!p.Activo ? "disabled" : ""}><i class="fas fa-trash"></i></button>`
+        : `<button class="btn btn-sm btn-light mx-1" style="border-radius: 4px; width: 34px; height: 34px; color:#cbd5e1" disabled><i class="fas fa-trash"></i></button>`;
+
       tabla.innerHTML += `
         <tr style="${rowStyle}">
             <td class="font-weight-bold" style="color: var(--fox-text-gray);">${p.ProductoID}</td>
-            <td>
-                <img src="${urlImagen}" onerror="this.src='${placeholderIcon}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; background-color: #fff;">
-            </td>
+            <td><img src="${urlImagen}" onerror="this.src='${placeholderIcon}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; background-color: #fff;"></td>
             <td class="text-left dato-critico">${p.Nombre}</td>
             <td><span class="badge badge-dark">${p.Codigo}</span></td>
             <td class="dato-critico">S/ ${p.PrecioVenta.toFixed(2)}</td>
             <td>
                 <div class="btn-group">
-                    <button onclick="prepararEdicionProd(${p.ProductoID})" class="btn btn-sm btn-fox mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Editar" ${!p.Activo ? "disabled" : ""}>
-                        <i class="fas fa-pencil-alt"></i>
-                    </button>
-                    <button onclick="toggleEstadoProducto(${p.ProductoID}, ${p.Activo ? 0 : 1})" class="btn btn-sm ${btnClass} mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="${titleToggle}">
-                        ${iconVisibilidad}
-                    </button>
-                    <button onclick="eliminarProductoFisico(${p.ProductoID})" class="btn btn-sm btn-fox-danger mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Eliminar" ${!p.Activo ? "disabled" : ""}>
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    ${btnEditarHTML}
+                    ${btnVisibilidadHTML}
+                    ${btnEliminarHTML}
                 </div>
             </td>
-        </tr>
-      `;
+        </tr>`;
     });
   }
 
   // =======================================================
-  // 7. INSERCIÓN / EDICIÓN TRANSACCIONAL (FORM DATA MULTIPART)
+  // 7. INSERCIÓN / EDICIÓN TRANSACCIONAL
   // =======================================================
   const formProd = document.getElementById("formProducto");
   if (formProd) {
     formProd.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      if (!esAdmin)
+        return Swal.fire(
+          "Acceso Denegado",
+          "Solo los administradores pueden alterar los catálogos",
+          "error",
+        );
 
       const costoVal = parseFloat(document.getElementById("prodCosto").value);
       const precioVal = parseFloat(document.getElementById("prodPrecio").value);
@@ -243,11 +271,8 @@
       formData.append("StockMinimo", minimoVal);
       formData.append("Activo", estadoActual);
 
-      if (archivoImagen) {
-        formData.append("imagen", archivoImagen);
-      } else if (imagenBase64) {
-        formData.append("ImagenURL", imagenBase64);
-      }
+      if (archivoImagen) formData.append("imagen", archivoImagen);
+      else if (imagenBase64) formData.append("ImagenURL", imagenBase64);
 
       const url = productoEditandoId
         ? `${BASE_URL}/api/productos/${productoEditandoId}`
@@ -255,7 +280,11 @@
       const metodo = productoEditandoId ? "PUT" : "POST";
 
       try {
-        const res = await fetch(url, { method: metodo, body: formData });
+        const res = await fetch(url, {
+          method: metodo,
+          headers: authHeaders,
+          body: formData,
+        });
         const resData = await res.json();
 
         if (resData.success) {
@@ -282,6 +311,7 @@
   // 8. APERTURA DE FORMULARIO EN MODO EDICIÓN
   // =======================================================
   window.prepararEdicionProd = (id) => {
+    if (!esAdmin) return;
     const p = listaProductosGlobal.find((item) => item.ProductoID === id);
     if (p) {
       productoEditandoId = id;
@@ -309,13 +339,14 @@
   };
 
   // =======================================================
-  // 9. OPERACIONES DE INTERFAZ (ELIMINAR / VISIBILIDAD)
+  // 9. OPERACIONES DE INTERFAZ
   // =======================================================
   window.toggleEstadoProducto = async (id, nuevoEstado) => {
+    if (!esAdmin) return;
     try {
       const res = await fetch(`${BASE_URL}/api/productos/estado/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ nuevoEstado }),
       });
       const result = await res.json();
@@ -335,6 +366,7 @@
   };
 
   window.eliminarProductoFisico = async (id) => {
+    if (!esAdmin) return;
     const p = listaProductosGlobal.find((item) => item.ProductoID === id);
     const conf = await Swal.fire({
       title: "¿Eliminar Producto?",
@@ -342,13 +374,14 @@
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#ef4444",
-      confirmButtonText: "Sí, borrar definitivamente",
+      confirmButtonText: "Sí, borrar",
     });
 
     if (conf.isConfirmed) {
       try {
         const res = await fetch(`${BASE_URL}/api/productos/${id}`, {
           method: "DELETE",
+          headers: authHeaders,
         });
         const resData = await res.json();
         if (resData.success) {
@@ -364,7 +397,7 @@
   };
 
   // =======================================================
-  // 10. ESCUDO DE DEBOUNCE PARA MITIGACIÓN DE CARGA (HOSTING)
+  // 10. DEBOUNCE SEARCH
   // =======================================================
   const inputBusqueda = document.getElementById("buscarProducto");
   if (inputBusqueda) {
@@ -380,9 +413,10 @@
   // =======================================================
   // 11. GATILLO DE REGISTRO NUEVO
   // =======================================================
-  const btnNuevo = document.getElementById("btnNuevoProducto");
-  if (btnNuevo) {
-    btnNuevo.addEventListener("click", () => {
+  const btnNuevoProd = document.getElementById("btnNuevoProducto");
+  if (btnNuevoProd) {
+    btnNuevoProd.addEventListener("click", () => {
+      if (!esAdmin) return;
       productoEditandoId = null;
       imagenBase64 = null;
       archivoImagen = null;

@@ -9,8 +9,16 @@
   let datosEmpresaGlobal = null;
   let debounceTimeoutHistorial = null;
 
-  const IGV_RATE = 0.18;
+  // 🚀 LÓGICA SIN IGV: Eliminamos la constante IGV_RATE
   const BASE_URL = "http://localhost:3000";
+
+  // INYECCIÓN DE SEGURIDAD: Función global para obtener el token en cada petición
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
 
   const getUrl = (path) => {
     if (!path) return null;
@@ -22,7 +30,8 @@
   // =======================================================
   (async function init() {
     const usuarioInfo = localStorage.getItem("usuarioFoxGamers");
-    if (!usuarioInfo) {
+    const tokenInfo = localStorage.getItem("tokenFoxGamers");
+    if (!usuarioInfo || !tokenInfo) {
       return (window.location.href = "../../login/login.html");
     }
 
@@ -48,8 +57,27 @@
         if (pTicketPie)
           pTicketPie.innerHTML = `${datosEmpresaGlobal.NombreComercial}<br>Tel: ${datosEmpresaGlobal.Telefono}`;
       }
+      const resWeb = await fetch(`${BASE_URL}/api/config-web/publica`);
+      const webJson = await resWeb.json();
+      const logoActivo = webJson?.logos?.find(
+        (l) => l.Activo == 1 || l.Activo === true,
+      );
+
+      if (logoActivo) {
+        const urlLogo = logoActivo.ImagenURL.startsWith("http")
+          ? logoActivo.ImagenURL
+          : `${BASE_URL}${logoActivo.ImagenURL}`;
+        const tkLogo = document.getElementById("tkLogo");
+        const visorLogo = document.getElementById("visorLogo");
+
+        if (tkLogo) tkLogo.src = urlLogo;
+        if (visorLogo) visorLogo.src = urlLogo;
+      }
     } catch (e) {
-      console.error("Error al sincronizar datos maestros de la empresa:", e);
+      console.error(
+        "Error al sincronizar datos maestros de la empresa o el logo:",
+        e,
+      );
     }
   }
 
@@ -61,10 +89,10 @@
       const timestamp = new Date().getTime();
       const [resProductos, resDescuentos] = await Promise.all([
         fetch(`${BASE_URL}/api/productos/pos?t=${timestamp}`, {
-          headers: { "Cache-Control": "no-cache" },
+          headers: { ...authHeaders, "Cache-Control": "no-cache" },
         }),
         fetch(`${BASE_URL}/api/descuentos/vigentes?t=${timestamp}`, {
-          headers: { "Cache-Control": "no-cache" },
+          headers: { ...authHeaders, "Cache-Control": "no-cache" },
         }),
       ]);
       const productos = await resProductos.json();
@@ -294,12 +322,17 @@
     const totalFinal = total - totalDescuento;
     totalActualVenta = totalFinal;
 
-    const subtotal = totalFinal / (1 + IGV_RATE);
-    const igv = totalFinal - subtotal;
+    // 🚀 LÓGICA SIN IGV: El Subtotal es igual al TotalFinal neto.
+    const subtotal = totalFinal;
+    const igv = 0;
 
     document.getElementById("posSubtotal").textContent =
       `S/ ${subtotal.toFixed(2)}`;
-    document.getElementById("posIGV").textContent = `S/ ${igv.toFixed(2)}`;
+
+    // Ocultamos visualmente la fila del IGV si existe en tu HTML
+    const filaIGV = document.getElementById("posIGV")?.parentElement;
+    if (filaIGV) filaIGV.style.display = "none";
+
     document.getElementById("posTotal").textContent =
       `S/ ${totalFinal.toFixed(2)}`;
 
@@ -539,7 +572,7 @@
       try {
         const res = await fetch("http://localhost:3000/api/ventas/finalizar", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify(dataVenta),
         });
         const result = await res.json();
@@ -597,7 +630,7 @@
   }
 
   // =======================================================
-  // 6. HISTORIAL DE VENTAS (🚀 CORREGIDO: LEYENDO HORA Y DESCUENTO)
+  // 6. HISTORIAL DE VENTAS
   // =======================================================
   async function cargarHistorialVentas(terminoBusqueda = "") {
     const tabla = document.getElementById("tablaHistorialVentas");
@@ -616,7 +649,7 @@
         new Date().getTime();
 
       const res = await fetch(urlFresca, {
-        headers: { "Cache-Control": "no-cache" },
+        headers: { ...authHeaders, "Cache-Control": "no-cache" },
       });
       const ventas = await res.json();
       tabla.innerHTML = "";
@@ -644,15 +677,11 @@
             ? '<span class="badge badge-danger">ANULADA</span>'
             : '<span class="badge badge-success">COMPLETADA</span>';
 
-        // Puntos de corrección financiera y de desgloses
         const totalFloat = parseFloat(v.Total);
         const descuentoFloat = parseFloat(v.TotalDescuento) || 0;
 
-        // El subtotal real de los ítems antes del descuento se calcula sumando el total y el descuento acumulado, dividido entre el IGV
-        const subtotalCalculado = (
-          (totalFloat + descuentoFloat) /
-          1.18
-        ).toFixed(2);
+        // 🚀 LÓGICA SIN IGV: El subtotal bruto es la suma del total pagado más el descuento
+        const subtotalCalculado = (totalFloat + descuentoFloat).toFixed(2);
 
         tabla.innerHTML += `
             <tr>
@@ -703,6 +732,7 @@
         try {
           const res = await fetch(
             `http://localhost:3000/api/clientes/buscar?q=${query}`,
+            { headers: authHeaders },
           );
           const data = await res.json();
           const tbody = document.getElementById("listaResultadosClientes");
@@ -747,6 +777,7 @@
               try {
                 const resExt = await fetch(
                   `http://localhost:3000/api/clientes/consultar/${tipoDoc}/${query}`,
+                  { headers: authHeaders },
                 );
                 const dataExt = await resExt.json();
 
@@ -826,7 +857,9 @@
     try {
       if (document.activeElement) document.activeElement.blur();
 
-      const res = await fetch(`http://localhost:3000/api/ventas/${idVenta}`);
+      const res = await fetch(`http://localhost:3000/api/ventas/${idVenta}`, {
+        headers: authHeaders,
+      });
       const data = await res.json();
 
       if (data.success) {
@@ -836,7 +869,6 @@
           0,
         );
 
-        // 🚀 Ajustado para renderizar la fecha y hora sin romper por splits erróneos
         const fechaVisualCompleta = cabecera.FechaVenta.includes("T")
           ? cabecera.FechaVenta.replace("T", " ").substring(0, 16)
           : cabecera.FechaVenta;
@@ -920,6 +952,7 @@
         });
         document.getElementById("visorTablaItems").innerHTML = a4Html;
 
+        // 🚀 LÓGICA SIN IGV: Mostramos el total directo que manda el backend en cabecera
         document.getElementById("visorSubtotal").textContent =
           `S/ ${parseFloat(cabecera.Subtotal).toFixed(2)}`;
         document.getElementById("visorDescuento").textContent =
@@ -943,7 +976,9 @@
 
   window.verDetalleVenta = async (idVenta) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/ventas/${idVenta}`);
+      const res = await fetch(`http://localhost:3000/api/ventas/${idVenta}`, {
+        headers: authHeaders,
+      });
       const data = await res.json();
 
       if (data.success) {
@@ -961,7 +996,6 @@
         document.getElementById("detVendedor").textContent =
           cabecera.UsuarioNombre || "Cajero Default";
 
-        // 🚀 Safe processing para el formateado de strings de fecha
         let fechaVisual = cabecera.FechaVenta;
         if (cabecera.FechaVenta.includes("T")) {
           const splitData = cabecera.FechaVenta.split("T");
@@ -990,6 +1024,8 @@
             </tr>`;
         });
         document.getElementById("detTablaItems").innerHTML = htmlItems;
+
+        // 🚀 LÓGICA SIN IGV
         document.getElementById("detSubtotal").textContent =
           `S/ ${parseFloat(cabecera.Subtotal).toFixed(2)}`;
         document.getElementById("detTotal").textContent =
@@ -1028,78 +1064,6 @@
           panelPagos.classList.add("d-none");
         }
 
-        document.getElementById("visorNumero").textContent = cabecera.NumeroDoc;
-        document.getElementById("visorCliente").textContent =
-          cabecera.ClienteNombre || "Público General";
-        document.getElementById("visorDocCliente").textContent =
-          cabecera.ClienteDoc || "Sin Documento";
-        document.getElementById("visorFecha").textContent = fechaVisual;
-        document.getElementById("visorMetodo").textContent =
-          cabecera.MetodoPago;
-        document.getElementById("visorVendedor").textContent =
-          cabecera.UsuarioNombre || "Cajero";
-
-        const navBrandImg =
-          document.querySelector(".brand-link img") ||
-          document.querySelector("img");
-        const visorLogo = document.getElementById("visorLogo");
-        if (visorLogo && navBrandImg) visorLogo.src = navBrandImg.src;
-
-        const visorPagosLista = document.getElementById("visorPagosLista");
-        if (pagos.length > 0) {
-          visorPagosLista.innerHTML = pagos
-            .map(
-              (p) => `
-                <div style="display: flex; justify-content: space-between; gap: 15px;">
-                    <span>• ${p.Metodo}:</span>
-                    <span>S/ ${parseFloat(p.MontoRecibido).toFixed(2)}</span>
-                </div>
-                ${
-                  p.Metodo === "EFECTIVO" && parseFloat(p.Vuelto) > 0
-                    ? `
-                <div style="display: flex; justify-content: space-between; color: #ef4444; padding-left: 10px; font-size: 11px;">
-                    <span>Vuelto entregado:</span>
-                    <span>-S/ ${parseFloat(p.Vuelto).toFixed(2)}</span>
-                </div>`
-                    : ""
-                }`,
-            )
-            .join("");
-        } else {
-          visorPagosLista.innerHTML = `<div style="display: flex; justify-content: space-between;"><span>• ${cabecera.MetodoPago}:</span><span>S/ ${parseFloat(cabecera.Total).toFixed(2)}</span></div>`;
-        }
-
-        let a4Html = "";
-        detalles.forEach((item) => {
-          const etiquetaDesc =
-            parseFloat(item.Descuento) > 0
-              ? `<br><span style="color: #ef4444; font-size: 10px; font-weight: 600;">(Aplica: ${item.DescuentoNombre || "Promoción"})</span>`
-              : "";
-
-          a4Html += `
-            <tr style="border-bottom: 1px solid #cbd5e1;">
-                <td style="padding: 10px; text-align: center; font-weight: bold;">${parseFloat(item.Cantidad).toFixed(2)}</td>
-                <td style="padding: 10px; text-align: center; color: #64748b;">UND</td>
-                <td style="padding: 10px; text-align: left;">
-                    <strong>${item.ProductoNombre}</strong><br>
-                    <small style="color: #64748b;">${item.ProductoCodigo || "N/A"}</small>
-                    ${etiquetaDesc}
-                </td>
-                <td style="padding: 10px; text-align: center;">S/ ${parseFloat(item.PrecioUnitario).toFixed(2)}</td>
-                <td style="padding: 10px; text-align: right; font-weight: 700; color: #0A192F;">S/ ${parseFloat(item.Subtotal).toFixed(2)}</td>
-            </tr>`;
-        });
-        document.getElementById("visorTablaItems").innerHTML = a4Html;
-
-        document.getElementById("visorSubtotal").textContent =
-          `S/ ${parseFloat(cabecera.Subtotal).toFixed(2)}`;
-        document.getElementById("visorDescuento").textContent =
-          sumaDescuentosGral > 0
-            ? `-S/ ${sumaDescuentosGral.toFixed(2)}`
-            : `S/ 0.00`;
-        document.getElementById("visorTotal").textContent =
-          `S/ ${parseFloat(cabecera.Total).toFixed(2)}`;
-
         document.getElementById("btnImprimirA4Final").onclick = () => {
           document.body.classList.add("print-a4");
           window.print();
@@ -1137,7 +1101,7 @@
           `http://localhost:3000/api/ventas/anular/${idVenta}`,
           {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeadersJson,
             body: JSON.stringify({
               UsuarioID: usuario.UsuarioID || usuario.id,
             }),
@@ -1147,6 +1111,8 @@
         if (result.success) {
           Swal.fire("¡Anulado!", result.mensaje, "success");
           cargarHistorialVentas();
+        } else {
+          Swal.fire("Error", result.mensaje, "error");
         }
       } catch (e) {
         console.error(e);
@@ -1249,7 +1215,7 @@
           `${BASE_URL}/api/ventas/enviar-ticket/${idVenta}`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeadersJson,
             body: JSON.stringify({ correoDestino: email }),
           },
         );

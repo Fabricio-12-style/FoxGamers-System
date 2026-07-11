@@ -8,6 +8,14 @@
   const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const BASE_URL = "http://localhost:3000";
 
+  // INYECCIÓN DE SEGURIDAD
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
+
   // =======================================================
   // 1. VERIFICACIÓN DE SESIÓN Y CARGA INICIAL
   // =======================================================
@@ -27,7 +35,7 @@
           ? `${BASE_URL}/api/clientes?q=${encodeURIComponent(terminoBusqueda)}`
           : `${BASE_URL}/api/clientes`;
 
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders });
       listaClientesGlobal = await res.json();
 
       if (lblModo) {
@@ -88,13 +96,9 @@
             <td class="small font-weight-bold" style="color: var(--fox-text-gray);">${c.FechaCreacion || "---"}</td>
             <td style="min-width: 150px;">
                 <div class="btn-group">
-                    <button onclick="prepararEdicionCli(${c.ClienteID})" class="btn btn-sm btn-fox mx-1" style="width: 34px; height: 34px;" title="Editar" ${!c.Activo ? "disabled" : ""}>
-                        <i class="fas fa-pencil-alt"></i>
-                    </button>
+                    <button onclick="prepararEdicionCli(${c.ClienteID})" class="btn btn-sm btn-fox mx-1" style="width: 34px; height: 34px;" title="Editar" ${!c.Activo ? "disabled" : ""}><i class="fas fa-pencil-alt"></i></button>
                     ${btnToggle}
-                    <button onclick="eliminarClienteFisico(${c.ClienteID})" class="btn btn-sm btn-fox-danger mx-1" style="width: 34px; height: 34px;" title="Eliminar Permanentemente" ${!c.Activo ? "disabled" : ""}>
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button onclick="eliminarClienteFisico(${c.ClienteID})" class="btn btn-sm btn-fox-danger mx-1" style="width: 34px; height: 34px;" title="Eliminar Permanentemente" ${!c.Activo ? "disabled" : ""}><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -133,7 +137,7 @@
       try {
         const res = await fetch(`${BASE_URL}/api/clientes/estado/${id}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify({ nuevoEstado }),
         });
         const data = await res.json();
@@ -170,6 +174,7 @@
       try {
         const res = await fetch(`${BASE_URL}/api/clientes/${id}`, {
           method: "DELETE",
+          headers: authHeaders,
         });
         const data = await res.json();
         if (data.success) {
@@ -215,6 +220,7 @@
       try {
         const res = await fetch(
           `${BASE_URL}/api/clientes/consulta/${tipo.toLowerCase()}/${documento}`,
+          { headers: authHeaders },
         );
         const apiResponse = await res.json();
         if (apiResponse.success) {
@@ -261,7 +267,7 @@
       if (tipoDoc === "RUC" && !regexRUC.test(doc)) {
         return Swal.fire(
           "Documento Inválido",
-          "El RUC debe contener exactamente 11 números.",
+          "El RUC debe contener exactly 11 números.",
           "error",
         );
       }
@@ -290,7 +296,7 @@
       try {
         const res = await fetch(url, {
           method: method,
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify(clienteData),
         });
         const data = await res.json();
@@ -298,7 +304,7 @@
         if (data.success) {
           $("#modalCliente").modal("hide");
           listarClientes(document.getElementById("buscarCliente").value);
-          Swal.fire("Éxito", data.mensaje, "success");
+          Swal.fire("¡Éxito!", data.mensaje, "success");
         } else {
           Swal.fire("Error", data.mensaje, "error");
         }

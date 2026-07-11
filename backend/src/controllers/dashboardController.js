@@ -20,6 +20,7 @@ const getResumenKPIs = async (req, res) => {
         ORDER BY StockActual ASC
     `);
 
+    // 🚀 KPIs basados en el Total Neto de la venta
     const qKpis = await pool.request().query(`
         DECLARE @Hoy DATE = CAST(GETDATE() AS DATE);
         DECLARE @Ayer DATE = DATEADD(day, -1, @Hoy);

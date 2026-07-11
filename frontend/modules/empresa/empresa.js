@@ -6,11 +6,17 @@
   const btnEditarToggle = document.getElementById("btnEditarToggle");
   const inputRuc = document.getElementById("empRuc");
 
-  // Almacenamiento local para deshacer cambios
+  // INYECCIÓN DE SEGURIDAD
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
+
   let datosEmpresaCache = null;
   let enModoEdicion = false;
 
-  // Lista de inputs que se bloquearán/desbloquearán dinámicamente
   const camposFormulario = [
     "empRuc",
     "empRazonSocial",
@@ -28,30 +34,23 @@
     enModoEdicion = activarEdicion;
 
     if (enModoEdicion) {
-      // MODO EDICIÓN ACTIVO
       camposFormulario.forEach(
         (id) => (document.getElementById(id).disabled = false),
       );
       btnConsultar.disabled = false;
-
-      // Mostrar botón Guardar y transformar Editar en Cancelar
       btnGuardar.classList.remove("d-none");
-      btnEditarToggle.style.backgroundColor = "#64748b"; // Gris oscuro
+      btnEditarToggle.style.backgroundColor = "#64748b";
       btnEditarToggle.innerHTML =
         '<i class="fas fa-times-circle mr-2"></i> Cancelar';
     } else {
-      // MODO LECTURA ESTÁTICO
       camposFormulario.forEach(
         (id) => (document.getElementById(id).disabled = true),
       );
       btnConsultar.disabled = true;
-
-      // Ocultar Guardar y restaurar botón Editar original
       btnGuardar.classList.add("d-none");
-      btnEditarToggle.style.backgroundColor = "#eab308"; // Amarillo corporativo
+      btnEditarToggle.style.backgroundColor = "#eab308";
       btnEditarToggle.innerHTML = '<i class="fas fa-edit mr-2"></i> Editar';
 
-      // Si canceló, revertimos los inputs al estado de la última caché limpia
       if (datosEmpresaCache) rellenarFormulario(datosEmpresaCache);
     }
   };
@@ -67,7 +66,6 @@
     document.getElementById("empWeb").value = data.Web || "";
   };
 
-  // Evento del botón de alternancia
   if (btnEditarToggle) {
     btnEditarToggle.addEventListener("click", () => {
       alternarModoInterfaz(!enModoEdicion);
@@ -75,13 +73,15 @@
   }
 
   // =======================================================
-  // 2. CARGA INICIAL INMEDIATA (CORREGIDO PARA SPA)
+  // 2. CARGA INICIAL INMEDIATA
   // =======================================================
   const iniciarModuloEmpresa = async () => {
     if (!form) return;
 
     try {
-      const res = await fetch(`${BASE_URL}/api/empresa/publica`);
+      const res = await fetch(`${BASE_URL}/api/empresa/publica`, {
+        headers: authHeaders,
+      });
       const resJson = await res.json();
 
       if (resJson.success && resJson.data) {
@@ -101,7 +101,6 @@
     }
   };
 
-  // Ejecutamos la función de arranque inmediatamente al inyectar el script
   iniciarModuloEmpresa();
 
   // =======================================================
@@ -143,7 +142,9 @@
     });
 
     try {
-      const res = await fetch(`${BASE_URL}/api/clientes/consultar/ruc/${ruc}`);
+      const res = await fetch(`${BASE_URL}/api/clientes/consultar/ruc/${ruc}`, {
+        headers: authHeaders,
+      });
       const result = await res.json();
 
       if (result.success && result.data) {
@@ -237,7 +238,7 @@
       try {
         const res = await fetch(`${BASE_URL}/api/empresa/guardar`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify(datosEmpresa),
         });
         const result = await res.json();
@@ -250,7 +251,6 @@
             timer: 1800,
             showConfirmButton: false,
           });
-
           datosEmpresaCache = datosEmpresa;
           alternarModoInterfaz(false);
 

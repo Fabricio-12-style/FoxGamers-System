@@ -6,7 +6,6 @@ if (togglePassword && passwordInput) {
     const type =
       passwordInput.getAttribute("type") === "password" ? "text" : "password";
     passwordInput.setAttribute("type", type);
-
     togglePassword.classList.toggle("bi-eye");
     togglePassword.classList.toggle("bi-eye-slash");
 
@@ -45,6 +44,7 @@ if (btnIngresar) {
 
       if (data.success) {
         localStorage.setItem("usuarioFoxGamers", JSON.stringify(data.user));
+        localStorage.setItem("tokenFoxGamers", data.token);
 
         Swal.fire({
           title: data.mensaje,

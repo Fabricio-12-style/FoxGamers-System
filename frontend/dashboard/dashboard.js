@@ -95,8 +95,10 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     const usuarioString = localStorage.getItem("usuarioFoxGamers");
+    const token = localStorage.getItem("tokenFoxGamers");
 
-    if (!usuarioString) {
+    if (!usuarioString || !token) {
+      localStorage.clear();
       window.location.replace("../login/login.html");
       return;
     }
@@ -131,14 +133,14 @@
     const sidebar = document.querySelector(".nav-sidebar");
     sidebar.innerHTML = "";
     const permisosUsuario = usuario.permisos || [];
+    const menuPermitidos = [];
 
     menuDefinicion.forEach((item) => {
       const tieneAcceso =
-        permisosUsuario.includes(item.id) ||
-        (rolMayuscula === "ADMINISTRADOR" && item.id === "empresa") ||
-        item.id === "reportes";
+        permisosUsuario.includes(item.id) || rolMayuscula === "ADMINISTRADOR";
 
       if (tieneAcceso) {
+        menuPermitidos.push(item);
         sidebar.innerHTML += `
           <li class="nav-item">
               <a href="#" onclick="cargarModulo('${item.vista}', '${item.js}')" class="nav-link" id="nav-${item.id}">
@@ -152,15 +154,24 @@
     const btnCerrarSesion = document.getElementById("btnCerrarSesion");
     if (btnCerrarSesion) {
       btnCerrarSesion.addEventListener("click", () => {
-        localStorage.removeItem("usuarioFoxGamers");
+        localStorage.clear();
         window.location.href = "/frontend/login/login.html";
       });
     }
 
-    cargarModulo(
-      "../modules/inicio/inicio_vista.html",
-      "../modules/inicio/inicio.js",
-    );
+    const moduloInicial =
+      menuPermitidos.find((m) => m.id === "dashboard") || menuPermitidos[0];
+
+    if (moduloInicial) {
+      cargarModulo(moduloInicial.vista, moduloInicial.js);
+    } else {
+      document.getElementById("app-content").innerHTML = `
+        <div class="alert alert-warning m-4 p-4 text-center">
+          <i class="fas fa-exclamation-triangle style="font-size: 2rem;"></i>
+          <h4 class="mt-2 font-weight-bold">Sin Accesos Asignados</h4>
+          <p class="mb-0">Su perfil actual no cuenta con módulos asignados en el sistema. Contacte a un administrador.</p>
+        </div>`;
+    }
   });
 })();
 

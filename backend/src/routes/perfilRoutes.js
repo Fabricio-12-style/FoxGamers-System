@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const perfilController = require("../controllers/perfilController");
+const { verificarToken, soloAdministradores } = require('../middlewares/authMiddleware');
 
-router.get("/", perfilController.getPerfiles);
-router.put("/bloquear/:id", perfilController.toggleBlockPerfil);
-router.delete("/:id", perfilController.deletePerfil);
-router.put("/:id", perfilController.updatePerfil);
-router.get("/:id", perfilController.getPermisosPerfil);
-router.post("/guardar", perfilController.guardarPermisosPerfil);
-router.put("/bloquear/:id", perfilController.toggleBlockPerfil);
-router.post('/', perfilController.createPerfil);
+router.get("/", verificarToken, soloAdministradores, perfilController.getPerfiles);
+router.get("/:id", verificarToken, soloAdministradores, perfilController.getPermisosPerfil);
+router.post('/', verificarToken, soloAdministradores, perfilController.createPerfil);
+router.put("/:id", verificarToken, soloAdministradores, perfilController.updatePerfil);
+router.put("/bloquear/:id", verificarToken, soloAdministradores, perfilController.toggleBlockPerfil);
+router.delete("/:id", verificarToken, soloAdministradores, perfilController.deletePerfil);
+router.post("/guardar", verificarToken, soloAdministradores, perfilController.guardarPermisosPerfil);
 
 module.exports = router;

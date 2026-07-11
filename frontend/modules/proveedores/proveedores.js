@@ -2,15 +2,22 @@
   let listaProveedoresGlobal = [];
   const API_URL = "http://localhost:3000/api/proveedores";
 
-  // 1. Expresiones Regulares de Seguridad
   const regexRUC = /^\d{11}$/;
   const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // INYECCIÓN DE SEGURIDAD
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
 
   listarProveedores();
 
   async function listarProveedores() {
     try {
-      const res = await fetch(API_URL);
+      const res = await fetch(API_URL, { headers: authHeaders });
       listaProveedoresGlobal = await res.json();
       renderizarTabla(listaProveedoresGlobal);
     } catch (e) {
@@ -70,19 +77,12 @@
             <td class="small font-weight-bold" style="color: var(--fox-text-gray);">${fechaFormateada}</td>
             <td>
                 <div class="btn-group">
-                    <button onclick="abrirModalEditar(${p.ProveedorID})" class="btn btn-sm btn-fox mx-1" style="border-radius: 4px; width: 32px; height: 32px;" title="Editar" ${!p.Activo ? "disabled" : ""}>
-                        <i class="fas fa-pen"></i>
-                    </button>
-                    <button onclick="cambiarEstado(${p.ProveedorID}, ${p.Activo})" class="btn btn-sm ${btnClassToggle} mx-1 shadow-sm" style="border-radius: 4px; width: 32px; height: 32px;" title="${titleEye}">
-                        <i class="fas ${iconEye}"></i>
-                    </button>
-                    <button onclick="eliminarProveedor(${p.ProveedorID})" class="btn btn-sm btn-fox-danger mx-1" style="border-radius: 4px; width: 32px; height: 32px;" title="Eliminar" ${!p.Activo ? "disabled" : ""}>
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button onclick="abrirModalEditar(${p.ProveedorID})" class="btn btn-sm btn-fox mx-1" style="border-radius: 4px; width: 32px; height: 32px;" title="Editar" ${!p.Activo ? "disabled" : ""}><i class="fas fa-pen"></i></button>
+                    <button onclick="cambiarEstado(${p.ProveedorID}, ${p.Activo})" class="btn btn-sm ${btnClassToggle} mx-1 shadow-sm" style="border-radius: 4px; width: 32px; height: 32px;" title="${titleEye}"><i class="fas ${iconEye}"></i></button>
+                    <button onclick="eliminarProveedor(${p.ProveedorID})" class="btn btn-sm btn-fox-danger mx-1" style="border-radius: 4px; width: 32px; height: 32px;" title="Eliminar" ${!p.Activo ? "disabled" : ""}><i class="fas fa-trash"></i></button>
                 </div>
             </td>
-        </tr>
-      `;
+        </tr>`;
     });
   }
 
@@ -118,7 +118,7 @@
 
         try {
           const url = `http://localhost:3000/api/proveedores/consulta/${ruc}`;
-          const res = await fetch(url);
+          const res = await fetch(url, { headers: authHeaders });
           const result = await res.json();
 
           if (result.success && result.data) {
@@ -182,7 +182,7 @@
     $("#modalProveedor").modal("show");
   };
 
-  // 3. GUARDAR PROVEEDOR (BLINDADO)
+  // 3. GUARDAR PROVEEDOR
   const formProveedor = document.getElementById("formProveedor");
   if (formProveedor) {
     formProveedor.addEventListener("submit", async (e) => {
@@ -224,7 +224,7 @@
       try {
         const res = await fetch(url, {
           method: method,
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify(data),
         });
 
@@ -258,7 +258,7 @@
     try {
       const res = await fetch(`${API_URL}/estado/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeadersJson,
         body: JSON.stringify({ nuevoEstado }),
       });
       const result = await res.json();
@@ -282,7 +282,10 @@
 
     if (result.isConfirmed) {
       try {
-        const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        const res = await fetch(`${API_URL}/${id}`, {
+          method: "DELETE",
+          headers: authHeaders,
+        });
         const data = await res.json();
 
         if (data.success) {

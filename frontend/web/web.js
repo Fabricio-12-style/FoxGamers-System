@@ -94,7 +94,6 @@
       if (logoActivo) {
         const urlImagenReal = getUrl(logoActivo.ImagenURL);
 
-        // Actualiza TODOS los logos del Navbar (Móvil y PC)
         const logosNav = document.querySelectorAll(".webLogoImg");
         logosNav.forEach((img) => (img.src = urlImagenReal));
 
@@ -161,8 +160,11 @@
         fetch(`${BASE_URL}/api/descuentos/vigentes`),
       ]);
 
-      cacheProductos = await resProductos.json();
-      cacheDescuentos = await resDescuentos.json();
+      const dataProductos = await resProductos.json();
+      const dataDescuentos = await resDescuentos.json();
+
+      cacheProductos = Array.isArray(dataProductos) ? dataProductos : [];
+      cacheDescuentos = Array.isArray(dataDescuentos) ? dataDescuentos : [];
 
       renderizarBotoneraCategorias();
       filtrarYRenderizarProductos();

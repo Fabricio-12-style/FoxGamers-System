@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
-
 const proveedorController = require('../controllers/proveedorController');
+const { verificarToken, soloAdministradores } = require('../middlewares/authMiddleware');
 
-router.get('/', proveedorController.getProveedores);
-router.post('/', proveedorController.createProveedor);
-router.put('/:id', proveedorController.updateProveedor);
-router.patch('/estado/:id', proveedorController.cambiarEstadoProveedor);
-router.delete('/:id', proveedorController.eliminarProveedor);
-router.get('/consulta/:ruc', proveedorController.consultarRUC);
+router.get('/', verificarToken, proveedorController.getProveedores);
+router.get('/consulta/:ruc', verificarToken, proveedorController.consultarRUC);
+
+router.post('/', verificarToken, soloAdministradores, proveedorController.createProveedor);
+router.put('/:id', verificarToken, soloAdministradores, proveedorController.updateProveedor);
+router.patch('/estado/:id', verificarToken, soloAdministradores, proveedorController.cambiarEstadoProveedor);
+router.delete('/:id', verificarToken, soloAdministradores, proveedorController.eliminarProveedor);
 
 module.exports = router;

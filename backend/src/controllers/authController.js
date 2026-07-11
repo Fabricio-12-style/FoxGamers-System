@@ -1,5 +1,7 @@
 const { getConnection, sql } = require("../config/db");
-const bcrypt = require("bcryptjs"); 
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 const login = async (req, res) => {
   const { usuario, password } = req.body;
   if (!usuario || !usuario.trim() || !password) {
@@ -34,7 +36,6 @@ const login = async (req, res) => {
 
     const user = result.recordset[0];
 
-    // --- VALIDACIONES DE BLOQUEO TEMPORAL ---
     if (user.MinutosRestantes > 0) {
       return res.status(403).json({
         success: false,
@@ -42,7 +43,6 @@ const login = async (req, res) => {
       });
     }
 
-    // // --- EL PUENTE DE ENCRIPTACIÓN ---
     const passwordValido = await bcrypt.compare(password, user.Contrasena);
 
     if (!passwordValido) {
@@ -52,8 +52,8 @@ const login = async (req, res) => {
         .input("UsuarioID", sql.Int, user.UsuarioID)
         .input("Intentos", sql.Int, nuevosIntentos >= 4 ? 4 : nuevosIntentos)
         .query(`UPDATE Usuario SET IntentosFallidos = @Intentos, 
-                        BloqueadoHasta = CASE WHEN @Intentos >= 4 THEN DATEADD(MINUTE, 15, GETDATE()) ELSE NULL END 
-                        WHERE UsuarioID = @UsuarioID`);
+                    BloqueadoHasta = CASE WHEN @Intentos >= 4 THEN DATEADD(MINUTE, 15, GETDATE()) ELSE NULL END 
+                    WHERE UsuarioID = @UsuarioID`);
 
       return res.status(401).json({
         success: false,
@@ -64,7 +64,6 @@ const login = async (req, res) => {
       });
     }
 
-    // --- VALIDACIÓN DE ESTADO OPERATIVO ---
     if (!user.UsuarioActivo || !user.PerfilActivo) {
       return res.status(401).json({
         success: false,
@@ -72,7 +71,6 @@ const login = async (req, res) => {
       });
     }
 
-    // --- CARGA DE PERMISOS DINÁMICOS ---
     const permisosRes = await pool
       .request()
       .input("PerfilID", sql.Int, user.PerfilID)
@@ -81,15 +79,31 @@ const login = async (req, res) => {
       );
 
     const listaPermisos = permisosRes.recordset.map((p) => p.ModuloNombre);
+
     await pool
       .request()
       .input("UsuarioID", sql.Int, user.UsuarioID)
       .query(
         `UPDATE Usuario SET IntentosFallidos = 0, BloqueadoHasta = NULL, UltimoAcceso = GETDATE() WHERE UsuarioID = @UsuarioID`,
       );
+
+    // =======================================================
+    // NUEVO: GENERACIÓN DEL TOKEN DE SEGURIDAD (JWT)
+    // =======================================================
+    const token = jwt.sign(
+      {
+        id: user.UsuarioID,
+        usuario: user.NombreUsuario,
+        rol: user.Rol,
+        permisos: listaPermisos,
+      },
+      process.env.JWT_SECRET || "ClaveSecretaInviolableFoxGamers2026",
+      { expiresIn: "8h" },
+    );
     res.json({
       success: true,
       mensaje: `Bienvenido al sistema, ${user.NombreCompleto}`,
+      token,
       user: {
         id: user.UsuarioID,
         Nombre: user.NombreCompleto,

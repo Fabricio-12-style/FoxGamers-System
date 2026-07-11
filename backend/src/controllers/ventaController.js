@@ -124,10 +124,10 @@ const finalizarVenta = async (req, res) => {
     }
 
     // =======================================================
-    // 4. CÁLCULO FINANCIERO EXACTO (IGV 18%)
+    // 4. CÁLCULO FINANCIERO NETO (SIN IGV)
     // =======================================================
-    const realSubtotal = realTotal / 1.18;
-    const realIGV = realTotal - realSubtotal;
+    const realSubtotal = realTotal;
+    const realIGV = 0;
 
     // =======================================================
     // 5. REGISTRO DE CABECERA DE VENTA (N-SECUENCIAL)
@@ -141,7 +141,7 @@ const finalizarVenta = async (req, res) => {
 
     let nuevoCorrelativo = "N-000001";
     if (lastDocReq.recordset.length > 0) {
-      const ultimoDoc = lastDocReq.recordset[0].NumeroDoc; // Ej: "N-000015"
+      const ultimoDoc = lastDocReq.recordset[0].NumeroDoc;
       const numeroInt = parseInt(ultimoDoc.replace("N-", ""), 10);
       if (!isNaN(numeroInt)) {
         nuevoCorrelativo = "N-" + (numeroInt + 1).toString().padStart(6, "0");
@@ -214,7 +214,7 @@ const finalizarVenta = async (req, res) => {
         .input("pId", sql.Int, item.ProductoID)
         .input("uId", sql.Int, UsuarioID)
         .input("cant", sql.Int, item.Cantidad)
-        .input("motivo", sql.VarChar, `Venta POS #${NumeroDoc}`).query(`
+        .input("motivo", sql.VarChar, `Venta POS #${nuevoCorrelativo}`).query(`
             INSERT INTO HistorialInventario (ProductoID, UsuarioID, TipoMovimiento, Cantidad, Motivo, FechaMovimiento)
             VALUES (@pId, @uId, 'SALIDA', @cant, @motivo, GETDATE())
         `);
@@ -223,20 +223,18 @@ const finalizarVenta = async (req, res) => {
     await transaction.commit();
     res.json({
       success: true,
-      mensaje: "Venta processed with success",
+      mensaje: "Venta procesada con éxito",
       ventaID,
       NumeroDoc: nuevoCorrelativo,
     });
   } catch (error) {
     if (transaction) await transaction.rollback();
-
     console.error("🚨 ERROR SQL EN FINALIZAR VENTA:", error);
     const mensajeError =
       error.message.includes("Stock insuficiente") ||
       error.message.includes("no existe")
         ? error.message
         : "Error al procesar la transacción de venta en la base de datos.";
-
     res.status(400).json({ success: false, mensaje: mensajeError });
   }
 };
@@ -393,8 +391,9 @@ const anularVenta = async (req, res) => {
         .input("uId", sql.Int, UsuarioID)
         .input("cant", sql.Int, item.Cantidad)
         .input("motivo", sql.VarChar, `Anulación de Venta #${numDoc}`)
-        .query(`INSERT INTO HistorialInventario (ProductoID, UsuarioID, TipoMovimiento, Cantidad, Motivo, FechaMovimiento)
-                VALUES (@pId, @uId, 'ENTRADA', @cant, @motivo, GETDATE())`);
+        .query(
+          `INSERT INTO HistorialInventario (ProductoID, UsuarioID, TipoMovimiento, Cantidad, Motivo, FechaMovimiento) VALUES (@pId, @uId, 'ENTRADA', @cant, @motivo, GETDATE())`,
+        );
     }
 
     await transaction.commit();
@@ -627,8 +626,6 @@ const enviarTicketPorCorreo = async (req, res) => {
       </html>
     `;
 
-    // GENERACIÓN DEL PDF EN MEMORIA CON PUPPETEER
-
     const browser = await puppeteer.launch({ headless: "new" });
     const page = await browser.newPage();
 
@@ -642,7 +639,6 @@ const enviarTicketPorCorreo = async (req, res) => {
 
     await browser.close();
 
-    // ENVÍO DE CORREO CON EL PDF ADJUNTO
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -673,7 +669,7 @@ const enviarTicketPorCorreo = async (req, res) => {
       attachments: [
         {
           filename: `Nota_Venta_${cabecera.NumeroDoc}.pdf`,
-          content: pdfBuffer, // Inyecta el archivo binario directamente de la memoria
+          content: pdfBuffer,
           contentType: "application/pdf",
         },
       ],

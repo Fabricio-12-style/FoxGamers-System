@@ -330,7 +330,7 @@ const generarReporte = async (req, res) => {
             {
               label: "Total Salidas (Unds)",
               value: salidas,
-              fontmat: "NUMERO",
+              formato: "NUMERO",
             },
           ],
           reporteTabla: {
@@ -396,23 +396,24 @@ const generarReporte = async (req, res) => {
       });
     } else if (tipoReporte === "totalizado_ventas") {
       const { fechaInicio, fechaFin } = filtros;
+
+      // 🚀 LÓGICA SIN IGV
       const result = await pool
         .request()
         .input("inicio", sql.Date, fechaInicio)
         .input("fin", sql.Date, fechaFin).query(`
           WITH PagosAgrupados AS (
               SELECT VentaID, 
-                  SUM(CASE WHEN Metodo = 'Efectivo' THEN MontoNeto ELSE 0 END) AS Total_Efectivo,
-                  SUM(CASE WHEN Metodo IN ('Yape', 'Plin') THEN MontoNeto ELSE 0 END) AS Total_Billeteras,
-                  SUM(CASE WHEN Metodo LIKE '%Tarjeta%' OR Metodo LIKE '%Visa%' OR Metodo LIKE '%Mastercard%' THEN MontoNeto ELSE 0 END) AS Total_Tarjetas
+                  SUM(CASE WHEN Metodo = 'Efectivo' THEN MontoRecibido - Vuelto ELSE 0 END) AS Total_Efectivo,
+                  SUM(CASE WHEN Metodo IN ('Yape', 'Plin') THEN MontoRecibido ELSE 0 END) AS Total_Billeteras,
+                  SUM(CASE WHEN Metodo LIKE '%Tarjeta%' OR Metodo LIKE '%Visa%' OR Metodo LIKE '%Mastercard%' THEN MontoRecibido ELSE 0 END) AS Total_Tarjetas
               FROM dbo.VentaPago GROUP BY VentaID
           )
           SELECT 
               FORMAT(v.FechaVenta, 'yyyy-MM-dd') AS Fecha,
-              u.NombreCompleto AS Vendedor,
+              u.NombreUsuario AS Vendedor,
               COUNT(v.VentaID) AS Cantidad_Transacciones,
               ISNULL(SUM(v.Subtotal), 0) AS Subtotal_Neto,
-              ISNULL(SUM(v.IGV), 0) AS Total_IGV,
               ISNULL(SUM(p.Total_Efectivo), 0) AS Total_Efectivo,
               ISNULL(SUM(p.Total_Billeteras), 0) AS Total_Billeteras,
               ISNULL(SUM(p.Total_Tarjetas), 0) AS Total_Tarjetas,
@@ -421,7 +422,7 @@ const generarReporte = async (req, res) => {
           INNER JOIN dbo.Usuario u ON v.UsuarioID = u.UsuarioID
           LEFT JOIN PagosAgrupados p ON v.VentaID = p.VentaID
           WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin
-          GROUP BY FORMAT(v.FechaVenta, 'yyyy-MM-dd'), u.UsuarioID, u.NombreCompleto
+          GROUP BY FORMAT(v.FechaVenta, 'yyyy-MM-dd'), u.UsuarioID, u.NombreUsuario
           ORDER BY Fecha DESC, Vendedor ASC;
         `);
 
@@ -461,8 +462,6 @@ const generarReporte = async (req, res) => {
               "Fecha",
               "Vendedor",
               "Transacciones",
-              "Subtotal",
-              "IGV",
               "Efectivo",
               "Billeteras",
               "Tarjetas",
@@ -472,8 +471,6 @@ const generarReporte = async (req, res) => {
               r.Fecha,
               r.Vendedor,
               r.Cantidad_Transacciones,
-              r.Subtotal_Neto,
-              r.Total_IGV,
               r.Total_Efectivo,
               r.Total_Billeteras,
               r.Total_Tarjetas,
@@ -489,12 +486,10 @@ const generarReporte = async (req, res) => {
     }
   } catch (error) {
     console.error("Error al generar reporte:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        mensaje: "Error interno al procesar el reporte.",
-      });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error interno al procesar el reporte.",
+    });
   }
 };
 
@@ -674,6 +669,7 @@ const exportarExcelReporte = async (req, res) => {
         fecha: r.FechaRegistro,
       }));
     } else if (tipoReporte === "totalizado_ventas") {
+      // 🚀 LÓGICA SIN IGV
       nombreHoja = "Totalizado Ventas";
       tituloReporte = "REPORTE TOTALIZADO DE INGRESOS Y EGRESOS";
       const result = await pool
@@ -681,16 +677,14 @@ const exportarExcelReporte = async (req, res) => {
         .input("inicio", sql.Date, fechaInicio)
         .input("fin", sql.Date, fechaFin).query(`
           WITH PagosAgrupados AS (
-              SELECT VentaID, SUM(CASE WHEN Metodo = 'Efectivo' THEN MontoNeto ELSE 0 END) AS Total_Efectivo, SUM(CASE WHEN Metodo IN ('Yape', 'Plin') THEN MontoNeto ELSE 0 END) AS Total_Billeteras, SUM(CASE WHEN Metodo LIKE '%Tarjeta%' OR Metodo LIKE '%Visa%' OR Metodo LIKE '%Mastercard%' THEN MontoNeto ELSE 0 END) AS Total_Tarjetas FROM dbo.VentaPago GROUP BY VentaID
+              SELECT VentaID, SUM(CASE WHEN Metodo = 'Efectivo' THEN MontoRecibido - Vuelto ELSE 0 END) AS Total_Efectivo, SUM(CASE WHEN Metodo IN ('Yape', 'Plin') THEN MontoRecibido ELSE 0 END) AS Total_Billeteras, SUM(CASE WHEN Metodo LIKE '%Tarjeta%' OR Metodo LIKE '%Visa%' OR Metodo LIKE '%Mastercard%' THEN MontoRecibido ELSE 0 END) AS Total_Tarjetas FROM dbo.VentaPago GROUP BY VentaID
           )
-          SELECT FORMAT(v.FechaVenta, 'yyyy-MM-dd') AS Fecha, u.NombreCompleto AS Vendedor, COUNT(v.VentaID) AS Cantidad_Transacciones, ISNULL(SUM(v.Subtotal), 0) AS Subtotal_Neto, ISNULL(SUM(v.IGV), 0) AS Total_IGV, ISNULL(SUM(p.Total_Efectivo), 0) AS Total_Efectivo, ISNULL(SUM(p.Total_Billeteras), 0) AS Total_Billeteras, ISNULL(SUM(p.Total_Tarjetas), 0) AS Total_Tarjetas, ISNULL(SUM(v.Total), 0) AS Total_Recaudado FROM dbo.Venta v INNER JOIN dbo.Usuario u ON v.UsuarioID = u.UsuarioID LEFT JOIN PagosAgrupados p ON v.VentaID = p.VentaID WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin GROUP BY FORMAT(v.FechaVenta, 'yyyy-MM-dd'), u.UsuarioID, u.NombreCompleto ORDER BY Fecha DESC, Vendedor ASC;
+          SELECT FORMAT(v.FechaVenta, 'yyyy-MM-dd') AS Fecha, u.NombreUsuario AS Vendedor, COUNT(v.VentaID) AS Cantidad_Transacciones, ISNULL(SUM(v.Subtotal), 0) AS Subtotal_Neto, ISNULL(SUM(p.Total_Efectivo), 0) AS Total_Efectivo, ISNULL(SUM(p.Total_Billeteras), 0) AS Total_Billeteras, ISNULL(SUM(p.Total_Tarjetas), 0) AS Total_Tarjetas, ISNULL(SUM(v.Total), 0) AS Total_Recaudado FROM dbo.Venta v INNER JOIN dbo.Usuario u ON v.UsuarioID = u.UsuarioID LEFT JOIN PagosAgrupados p ON v.VentaID = p.VentaID WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin GROUP BY FORMAT(v.FechaVenta, 'yyyy-MM-dd'), u.UsuarioID, u.NombreUsuario ORDER BY Fecha DESC, Vendedor ASC;
         `);
       columnasConfig = [
         { header: "Fecha", key: "fecha", width: 15 },
         { header: "Vendedor", key: "vendedor", width: 35 },
         { header: "Transacciones", key: "trans", width: 16, esNumero: true },
-        { header: "Subtotal", key: "sub", width: 18, esMoneda: true },
-        { header: "IGV", key: "igv", width: 15, esMoneda: true },
         { header: "Efectivo", key: "efec", width: 18, esMoneda: true },
         { header: "Billeteras", key: "bille", width: 18, esMoneda: true },
         { header: "Tarjetas", key: "tarj", width: 18, esMoneda: true },
@@ -700,20 +694,16 @@ const exportarExcelReporte = async (req, res) => {
         fecha: r.Fecha,
         vendedor: r.Vendedor,
         trans: r.Cantidad_Transacciones,
-        sub: r.Subtotal_Neto,
-        igv: r.Total_IGV,
         efec: r.Total_Efectivo,
         bille: r.Total_Billeteras,
         tarj: r.Total_Tarjetas,
         total: r.Total_Recaudado,
       }));
     } else {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          mensaje: "Tipo de reporte no soportado para exportación.",
-        });
+      return res.status(400).json({
+        success: false,
+        mensaje: "Tipo de reporte no soportado para exportación.",
+      });
     }
 
     const workbook = new ExcelJS.Workbook();

@@ -5,6 +5,14 @@
 
     const extensionesPermitidas = /(\.jpg|\.jpeg|\.png)$/i;
 
+    // INYECCIÓN DE SEGURIDAD
+    const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+    const authHeaders = { Authorization: `Bearer ${getToken()}` };
+    const authHeadersJson = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    };
+
     // --- 1. COMPONENTES DEL LOGO ---
     const btnSeleccionarArchivo = document.getElementById(
       "btnSeleccionarArchivo",
@@ -97,7 +105,6 @@
     };
 
     // --- 4. RENDERIZADO DE LOGOS ---
-
     function renderizarGaleriaLogos(logos) {
       if (!galeriaLogos) return;
       galeriaLogos.innerHTML = "";
@@ -127,7 +134,6 @@
     }
 
     // --- 5. RENDERIZADO DE SLIDERS ---
-
     function renderizarGaleriaSliders(sliders) {
       if (!galeriaSliders) return;
       galeriaSliders.innerHTML = "";
@@ -142,7 +148,6 @@
           esActivo && tieneImagen
             ? "border: 3px solid var(--fox-cyan);"
             : "border: 1px solid #cbd5e1; opacity: 0.6;";
-
         const btnToggleStyle =
           esActivo && tieneImagen ? "btn-fox-success" : "btn-secondary";
         const iconToggle = esActivo && tieneImagen ? "fa-eye" : "fa-eye-slash";
@@ -175,7 +180,6 @@
     cargarConfiguracion();
 
     // --- 6. EVENTOS DE CONTROL: SUBIR LOGO ---
-
     if (btnSeleccionarArchivo && inputFileLogo && btnSubirLogo) {
       btnSeleccionarArchivo.addEventListener("click", () =>
         inputFileLogo.click(),
@@ -185,7 +189,6 @@
         const file = e.target.files[0];
         if (!file) return;
 
-        // VALIDACIÓN: Rebotar TXT u otros formatos en Logos
         if (!extensionesPermitidas.exec(file.name)) {
           Swal.fire(
             "Formato Inválido",
@@ -224,6 +227,7 @@
 
           const res = await fetch("http://localhost:3000/api/config-web/logo", {
             method: "POST",
+            headers: authHeaders, // Pasamos cabecera de seguridad (FormData calcula su propio Content-Type)
             body: formData,
           });
           const result = await res.json();
@@ -254,7 +258,6 @@
     }
 
     // --- 7. EVENTOS DE CONTROL: SUBIR SLIDERS ---
-
     if (btnSeleccionarSlider && inputFileSlider) {
       btnSeleccionarSlider.addEventListener("click", () =>
         inputFileSlider.click(),
@@ -318,7 +321,11 @@
 
           const res = await fetch(
             "http://localhost:3000/api/config-web/slider",
-            { method: "POST", body: formData },
+            {
+              method: "POST",
+              headers: authHeaders,
+              body: formData,
+            },
           );
           const result = await res.json();
 
@@ -352,7 +359,7 @@
       try {
         const res = await fetch(
           `http://localhost:3000/api/config-web/logo/activo/${id}`,
-          { method: "PUT" },
+          { method: "PUT", headers: authHeaders },
         );
         const result = await res.json();
         if (result.success) {
@@ -394,7 +401,7 @@
         try {
           const res = await fetch(
             `http://localhost:3000/api/config-web/logo/${id}`,
-            { method: "DELETE" },
+            { method: "DELETE", headers: authHeaders },
           );
           if ((await res.json()).success) cargarConfiguracion();
         } catch (e) {
@@ -424,7 +431,7 @@
           `http://localhost:3000/api/config-web/slider/estado/${id}`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeadersJson,
             body: JSON.stringify({ estado: nuevoEstado }),
           },
         );
@@ -460,7 +467,7 @@
         try {
           const res = await fetch(
             `http://localhost:3000/api/config-web/slider/${id}`,
-            { method: "DELETE" },
+            { method: "DELETE", headers: authHeaders },
           );
           if ((await res.json()).success) cargarConfiguracion();
         } catch (e) {

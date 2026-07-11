@@ -10,6 +10,10 @@
   let chartDona = null;
   let chartBarras = null;
 
+  // INYECCIÓN DE SEGURIDAD
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+
   cargarCabecera();
   cargarDashboardReal();
 
@@ -38,7 +42,9 @@
 
   async function cargarDashboardReal() {
     try {
-      const res = await fetch("http://localhost:3000/api/dashboard/resumen");
+      const res = await fetch("http://localhost:3000/api/dashboard/resumen", {
+        headers: authHeaders,
+      });
       const result = await res.json();
 
       if (result.success) {

@@ -3,7 +3,14 @@
   let perfilEditandoId = null;
   let perfilSeleccionadoParaPermisos = null;
 
-  // 1. Listado de módulos para los checkboxes
+  // CONFIGURACIÓN DE ACCESOS Y TOKEN
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
+
   const modulosSistema = [
     { id: "dashboard", nombre: "Dashboard", icono: "fa-tachometer-alt" },
     { id: "pos", nombre: "Punto de Venta", icono: "fa-cash-register" },
@@ -18,7 +25,6 @@
     { id: "reportes", nombre: "Reportes y Analítica", icono: "fa-chart-pie" },
   ];
 
-  // 2. Verificación de rango Administrador
   const usuarioString = localStorage.getItem("usuarioFoxGamers");
   const usuarioLogueado = JSON.parse(usuarioString || "{}");
   if ((usuarioLogueado.Rol || "").toUpperCase() !== "ADMINISTRADOR") {
@@ -41,7 +47,9 @@
     const tabla = document.getElementById("tablaPerfiles");
     if (!tabla) return;
     try {
-      const res = await fetch("http://localhost:3000/api/perfiles");
+      const res = await fetch("http://localhost:3000/api/perfiles", {
+        headers: authHeaders,
+      });
       listaPerfilesGlobal = await res.json();
       renderizarTabla(listaPerfilesGlobal);
     } catch (error) {
@@ -51,7 +59,6 @@
     }
   }
 
-  // Función auxiliar para renderizar filas de la tabla
   function renderizarTabla(lista) {
     const tabla = document.getElementById("tablaPerfiles");
     if (!tabla) return;
@@ -81,9 +88,7 @@
 
       const btnBloquear = esAdmin
         ? `<button class="btn btn-sm btn-secondary mx-1 shadow-sm" style="width: 32px; height: 32px;" disabled><i class="fas fa-ban"></i></button>`
-        : `<button onclick="bloquearPerfil(${p.PerfilID}, ${isActivo ? 0 : 1})" class="btn btn-sm ${btnBloquearClass} mx-1 shadow-sm" style="width: 32px; height: 32px;" title="${isActivo ? "Desactivar Perfil" : "Activar Perfil"}">
-                <i class="fas ${iconBloquear}"></i>
-           </button>`;
+        : `<button onclick="bloquearPerfil(${p.PerfilID}, ${isActivo ? 0 : 1})" class="btn btn-sm ${btnBloquearClass} mx-1 shadow-sm" style="width: 32px; height: 32px;" title="${isActivo ? "Desactivar Perfil" : "Activar Perfil"}"><i class="fas ${iconBloquear}"></i></button>`;
 
       tabla.innerHTML += `
         <tr style="${rowStyle}">
@@ -94,23 +99,16 @@
             <td class="font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.85rem;">${new Date(p.FechaCreacion).toLocaleString("es-PE")}</td>
             <td>
                 <div class="btn-group">
-                    <button onclick="verPermisos(${p.PerfilID})" class="btn btn-sm btn-fox-cyan mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Permisos">
-                        <i class="fas fa-key"></i>
-                    </button>
-                    <button onclick="editarPerfil(${p.PerfilID})" class="btn btn-sm btn-fox mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Editar" ${esAdmin ? "disabled" : ""}>
-                        <i class="fas fa-pencil-alt"></i>
-                    </button>
+                    <button onclick="verPermisos(${p.PerfilID})" class="btn btn-sm btn-fox-cyan mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Permisos"><i class="fas fa-key"></i></button>
+                    <button onclick="editarPerfil(${p.PerfilID})" class="btn btn-sm btn-fox mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Editar" ${esAdmin ? "disabled" : ""}><i class="fas fa-pencil-alt"></i></button>
                     ${btnBloquear}
-                    <button onclick="eliminarPerfil(${p.PerfilID})" class="btn btn-sm btn-fox-danger mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Eliminar" ${esAdmin ? "disabled" : ""}>
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button onclick="eliminarPerfil(${p.PerfilID})" class="btn btn-sm btn-fox-danger mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Eliminar" ${esAdmin ? "disabled" : ""}><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
     });
   }
 
-  // Filtro dinámico del buscador
   const buscador = document.getElementById("busquedaPerfil");
   if (buscador) {
     buscador.addEventListener("input", (e) => {
@@ -142,7 +140,9 @@
       '<div class="col-12 text-center py-4" style="color: var(--fox-text-gray);"><i class="fas fa-spinner fa-spin mr-2"></i> Cargando accesos...</div>';
 
     try {
-      const res = await fetch(`http://localhost:3000/api/permisos/${id}`);
+      const res = await fetch(`http://localhost:3000/api/permisos/${id}`, {
+        headers: authHeaders,
+      });
       const permisosActuales = await res.json();
 
       contenedor.innerHTML = "";
@@ -207,7 +207,7 @@
       try {
         const res = await fetch("http://localhost:3000/api/permisos/guardar", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify({
             perfilId: perfilSeleccionadoParaPermisos,
             modulos: marcados,
@@ -288,7 +288,7 @@
           `http://localhost:3000/api/perfiles/${perfilEditandoId}`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeadersJson,
             body: JSON.stringify(data),
           },
         );
@@ -339,7 +339,7 @@
           `http://localhost:3000/api/perfiles/bloquear/${id}`,
           {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeadersJson,
             body: JSON.stringify({ estado: nuevoEstado }),
           },
         );
@@ -410,7 +410,7 @@
       try {
         const res = await fetch("http://localhost:3000/api/perfiles", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify(data),
         });
 
@@ -461,6 +461,7 @@
       try {
         const res = await fetch(`http://localhost:3000/api/perfiles/${id}`, {
           method: "DELETE",
+          headers: authHeaders,
         });
         const data = await res.json();
 

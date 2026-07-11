@@ -4,25 +4,28 @@
   // =======================================================
   const BASE_URL = "http://localhost:3000";
 
-  // Contenedores del DOM
+  // INYECCIÓN DE SEGURIDAD
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
+
   const cboTipoReporte = document.getElementById("cboTipoReporte");
   const zonaFiltros = document.getElementById("zonaFiltrosDinamicos");
   const estadoVacio = document.getElementById("estadoVacio");
   const contenedorReporte = document.getElementById("contenedorReporte");
 
-  // Botones del Módulo
   const btnGenerar = document.getElementById("btnGenerarReporte");
   const btnPdf = document.getElementById("btnExportarPDF");
   const btnExcel = document.getElementById("btnExportarExcel");
 
-  // Zonas de Inyección de Data
   const zonaKPIs = document.getElementById("zonaKPIs");
   const cabeceraTabla = document.getElementById("cabeceraTabla");
   const cuerpoTabla = document.getElementById("cuerpoTabla");
   const txtTotalRegistros = document.getElementById("txtTotalRegistros");
   const txtUltimaConsulta = document.getElementById("txtUltimaConsulta");
 
-  // Persistencia Temporal en Memoria
   let datosReporteActual = null;
   let tipoReporteSeleccionado = null;
 
@@ -58,15 +61,13 @@
             <div class="w-50 pl-2">
                 <label class="small font-weight-bold text-muted mb-1">Hasta</label>
                 <input type="date" id="filtroFechaFin" class="form-control form-control-sm" value="${hoy}">
-            </div>
-        `;
+            </div>`;
 
     const htmlFechaUnica = `
             <div class="w-100 pr-2">
                 <label class="small font-weight-bold text-muted mb-1">Día de Operación</label>
                 <input type="date" id="filtroFechaUnica" class="form-control form-control-sm" value="${hoy}">
-            </div>
-        `;
+            </div>`;
 
     const htmlCategoria = `
             <div class="w-100 pr-2">
@@ -74,8 +75,7 @@
                 <select id="filtroCategoria" class="form-control form-control-sm">
                     <option value="ALL">Todas las categorías</option>
                 </select>
-            </div>
-        `;
+            </div>`;
 
     const reportesConRango = [
       "ventas_periodo",
@@ -144,13 +144,13 @@
     try {
       const res = await fetch(`${BASE_URL}/api/reportes/generar`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeadersJson,
         body: JSON.stringify(payload),
       });
       const result = await res.json();
 
       if (result.success) {
-        datosReporteActual = result.data; // Almacenamos respuesta en memoria
+        datosReporteActual = result.data;
 
         dibujarTabla(datosReporteActual.reporteTabla);
         dibujarKPIs(datosReporteActual.resumenKPIs);
@@ -197,7 +197,6 @@
           const claseAlineacion = esNumeroFuerte
             ? "text-right pr-3 font-weight-bold"
             : "align-middle";
-
           htmlCuerpo += `<td class="${claseAlineacion}">${valorVista}</td>`;
         });
         htmlCuerpo += "</tr>";
@@ -218,13 +217,12 @@
           ? `S/ ${parseFloat(kpi.value).toFixed(2)}`
           : kpi.value;
       html += `
-                <div class="col px-2 mb-2">
-                    <div class="p-2 rounded shadow-sm" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #3b82f6;">
-                        <span class="d-block small text-muted font-weight-bold text-uppercase" style="font-size: 0.65rem;">${kpi.label}</span>
-                        <span class="d-block font-weight-bold text-dark" style="font-size: 1.1rem;">${valor}</span>
-                    </div>
-                </div>
-            `;
+        <div class="col px-2 mb-2">
+            <div class="p-2 rounded shadow-sm" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #3b82f6;">
+                <span class="d-block small text-muted font-weight-bold text-uppercase" style="font-size: 0.65rem;">${kpi.label}</span>
+                <span class="d-block font-weight-bold text-dark" style="font-size: 1.1rem;">${valor}</span>
+            </div>
+        </div>`;
     });
     zonaKPIs.innerHTML = html;
   }
@@ -259,7 +257,6 @@
   // =======================================================
   btnPdf.addEventListener("click", () => {
     if (!datosReporteActual) return;
-
     btnPdf.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     btnPdf.disabled = true;
 
@@ -267,7 +264,6 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF("landscape");
 
-      // Estilos de Membrete Corporativo
       doc.setFontSize(20);
       doc.setTextColor(15, 23, 42);
       doc.setFont("helvetica", "bold");
@@ -290,7 +286,6 @@
         38,
       );
 
-      // Renderizado de tabla estructurada con autoTable
       doc.autoTable({
         startY: 43,
         head: [datosReporteActual.reporteTabla.columnas],

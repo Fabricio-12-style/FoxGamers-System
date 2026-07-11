@@ -7,6 +7,14 @@
   const regexNombre = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-&]+$/;
   const BASE_URL = "http://localhost:3000";
 
+  // INYECCIÓN DE SEGURIDAD
+  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
+  const authHeaders = { Authorization: `Bearer ${getToken()}` };
+  const authHeadersJson = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${getToken()}`,
+  };
+
   // =======================================================
   // 1. VERIFICACIÓN DE SESIÓN
   // =======================================================
@@ -26,7 +34,7 @@
           ? `${BASE_URL}/api/categorias?q=${encodeURIComponent(terminoBusqueda)}`
           : `${BASE_URL}/api/categorias`;
 
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders });
       listaCategoriasGlobal = await res.json();
 
       if (lblModo) {
@@ -64,7 +72,6 @@
       const statusBadge = c.Activo
         ? '<span class="badge badge-success">Activa</span>'
         : '<span class="badge badge-secondary">Suspendida</span>';
-
       const btnToggle = c.Activo
         ? `<button onclick="toggleEstadoCat(${c.CategoriaID}, 0)" class="btn btn-sm btn-secondary mx-1" style="width: 34px; height: 34px;" title="Suspender"><i class="fas fa-eye-slash"></i></button>`
         : `<button onclick="toggleEstadoCat(${c.CategoriaID}, 1)" class="btn btn-sm btn-fox-cyan mx-1" style="width: 34px; height: 34px;" title="Reactivar"><i class="fas fa-eye"></i></button>`;
@@ -81,13 +88,9 @@
             <td>${statusBadge}</td>
             <td>
                 <div class="btn-group">
-                    <button onclick="prepararEdicionCat(${c.CategoriaID})" class="btn btn-sm btn-fox mx-1" style="width: 34px; height: 34px;" title="Editar">
-                        <i class="fas fa-pencil-alt"></i>
-                    </button>
+                    <button onclick="prepararEdicionCat(${c.CategoriaID})" class="btn btn-sm btn-fox mx-1" style="width: 34px; height: 34px;" title="Editar"><i class="fas fa-pencil-alt"></i></button>
                     ${btnToggle}
-                    <button onclick="eliminarCategoriaFisica(${c.CategoriaID})" class="btn btn-sm btn-fox-danger mx-1" style="width: 34px; height: 34px;" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button onclick="eliminarCategoriaFisica(${c.CategoriaID})" class="btn btn-sm btn-fox-danger mx-1" style="width: 34px; height: 34px;" title="Eliminar"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
@@ -159,7 +162,7 @@
       try {
         const res = await fetch(url, {
           method: method,
-          headers: { "Content-Type": "application/json" },
+          headers: authHeadersJson,
           body: JSON.stringify(data),
         });
         const result = await res.json();
@@ -184,7 +187,7 @@
     try {
       const res = await fetch(`${BASE_URL}/api/categorias/estado/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeadersJson,
         body: JSON.stringify({ nuevoEstado }),
       });
       const result = await res.json();
@@ -249,6 +252,7 @@
       try {
         const res = await fetch(`${BASE_URL}/api/categorias/${id}`, {
           method: "DELETE",
+          headers: authHeaders,
         });
         const data = await res.json();
         if (data.success) {
