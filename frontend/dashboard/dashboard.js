@@ -5,70 +5,70 @@
       nombre: "Dashboard",
       icono: "fas fa-tachometer-alt",
       vista: "../modules/inicio/inicio_vista.html",
-      js: "../modules/inicio/inicio.js",
+      js: "../modules/inicio/inicioUI.js",
     },
     {
       id: "pos",
       nombre: "Punto de Venta",
       icono: "fas fa-cash-register",
       vista: "../modules/ventas/pos_vista.html",
-      js: "../modules/ventas/pos.js",
+      js: "../modules/ventas/posUI.js",
     },
     {
       id: "inventario",
       nombre: "Inventario",
       icono: "fas fa-box-open",
       vista: "../modules/inventario/inventario_vista.html",
-      js: "../modules/inventario/inventario.js",
+      js: "../modules/inventario/inventarioUI.js",
     },
     {
       id: "productos",
       nombre: "Productos",
       icono: "fas fa-boxes",
       vista: "../modules/productos/productos_vista.html",
-      js: "../modules/productos/productos.js",
+      js: "../modules/productos/productosUI.js",
     },
     {
       id: "categorias",
       nombre: "Categorías",
       icono: "fas fa-tags",
       vista: "../modules/categorias/categorias_vista.html",
-      js: "../modules/categorias/categorias.js",
+      js: "../modules/categorias/categoriasUI.js",
     },
     {
       id: "clientes",
       nombre: "Clientes",
       icono: "fas fa-users",
       vista: "../modules/clientes/clientes_vista.html",
-      js: "../modules/clientes/clientes.js",
+      js: "../modules/clientes/clientesUI.js",
     },
     {
       id: "proveedores",
       nombre: "Proveedores",
       icono: "fas fa-truck",
       vista: "../modules/proveedores/proveedores_vista.html",
-      js: "../modules/proveedores/proveedores.js",
+      js: "../modules/proveedores/proveedoresUI.js",
     },
     {
       id: "descuentos",
       nombre: "Descuentos",
       icono: "fas fa-percentage",
       vista: "../modules/descuentos/descuentos_vista.html",
-      js: "../modules/descuentos/descuentos.js",
+      js: "../modules/descuentos/descuentosUI.js",
     },
     {
       id: "usuarios",
       nombre: "Usuarios",
       icono: "fas fa-users",
       vista: "../modules/usuarios/usuarios_vista.html",
-      js: "../modules/usuarios/usuarios.js",
+      js: "../modules/usuarios/usuariosUI.js",
     },
     {
       id: "perfiles",
       nombre: "Perfiles y Accesos",
       icono: "fas fa-users-cog",
       vista: "../modules/perfiles/perfiles_vista.html",
-      js: "../modules/perfiles/perfiles.js",
+      js: "../modules/perfiles/perfilesUI.js",
     },
     {
       id: "reportes",
@@ -82,14 +82,14 @@
       nombre: "Configuración Web",
       icono: "fas fa-sliders-h",
       vista: "../modules/configuracion/config_vista.html",
-      js: "../modules/configuracion/configuracion.js",
+      js: "../modules/configuracion/configUI.js",
     },
     {
       id: "empresa",
       nombre: "Empresa",
       icono: "fas fa-building",
       vista: "../modules/empresa/empresa_vista.html",
-      js: "../modules/empresa/empresa.js",
+      js: "../modules/empresa/empresaUI.js",
     },
   ];
 
@@ -190,6 +190,9 @@ async function cargarModulo(urlHtml, urlJs = null) {
       const scriptNuevo = document.createElement("script");
       scriptNuevo.id = "script-modulo-dinamico";
       scriptNuevo.src = urlJs + "?v=" + new Date().getTime();
+      if (urlJs.includes("UI.js")) {
+        scriptNuevo.type = "module";
+      }
       document.body.appendChild(scriptNuevo);
     }
 

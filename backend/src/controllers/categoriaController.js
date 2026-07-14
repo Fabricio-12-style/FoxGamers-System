@@ -1,207 +1,80 @@
-const { getConnection, sql } = require("../config/db");
+const categoriasService = require("../services/categoriasService");
 
-const regexBasura = /([a-zA-Z0-9])\1\1/;
-const regexNombre = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-&]+$/;
-
-// =======================================================
-// 1. LISTAR CATEGORÍAS (OPTIMIZADO TOP-5 / BÚSQUEDA)
-// =======================================================
 const getCategorias = async (req, res) => {
-  const { q } = req.query;
   try {
-    const pool = await getConnection();
-    const request = pool.request();
-    let query = "";
-
-    if (q && q.trim() !== "") {
-      request.input("search", sql.VarChar, `%${q.trim()}%`);
-      query = `
-        SELECT CategoriaID, Nombre, Descripcion, Activo 
-        FROM Categoria 
-        WHERE Nombre LIKE @search
-        ORDER BY Nombre ASC
-      `;
-    } else {
-      query = `
-        SELECT TOP 5 CategoriaID, Nombre, Descripcion, Activo 
-        FROM Categoria 
-        ORDER BY CategoriaID DESC
-      `;
-    }
-
-    const result = await request.query(query);
-    res.json(result.recordset);
+    const data = await categoriasService.listar(req.query.q);
+    res.json(data);
   } catch (error) {
-    console.error("Error al obtener categorías:", error);
     res
       .status(500)
-      .json({ success: false, mensaje: "Error al listar categorías." });
+      .json({ success: false, mensaje: "Error al obtener categorías." });
   }
 };
 
-// =======================================================
-// 2. CREAR NUEVA CATEGORÍA
-// =======================================================
 const createCategoria = async (req, res) => {
-  const { Nombre, Descripcion } = req.body;
-
-  if (!Nombre || !Nombre.trim()) {
-    return res
-      .status(400)
-      .json({ success: false, mensaje: "El nombre es obligatorio." });
-  }
-
-  const nombreLimpio = Nombre.trim();
-  if (!regexNombre.test(nombreLimpio) || regexBasura.test(nombreLimpio)) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Nombre inválido o contiene caracteres no permitidos.",
-      });
-  }
-
   try {
-    const pool = await getConnection();
-
-    const existe = await pool
-      .request()
-      .input("Nombre", sql.VarChar, nombreLimpio)
-      .query("SELECT CategoriaID FROM Categoria WHERE Nombre = @Nombre");
-
-    if (existe.recordset.length > 0) {
-      return res
-        .status(400)
-        .json({ success: false, mensaje: "La categoría ya existe." });
-    }
-
-    await pool
-      .request()
-      .input("Nombre", sql.VarChar, nombreLimpio)
-      .input(
-        "Descripcion",
-        sql.VarChar,
-        Descripcion ? Descripcion.trim() : null,
-      )
-      .query(
-        "INSERT INTO Categoria (Nombre, Descripcion, Activo) VALUES (@Nombre, @Descripcion, 1)",
-      );
-
-    res.json({ success: true, mensaje: "Categoría creada correctamente." });
+    await categoriasService.crearCategoria(req.body);
+    res.json({ success: true, mensaje: "Categoría agregada correctamente." });
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, mensaje: "Error al crear categoría." });
+    res.status(400).json({ success: false, mensaje: error.message });
   }
 };
 
-// =======================================================
-// 3. ACTUALIZAR CATEGORÍA
-// =======================================================
 const updateCategoria = async (req, res) => {
-  const { id } = req.params;
-  const { Nombre, Descripcion } = req.body;
-
-  if (!Nombre || !Nombre.trim()) {
-    return res
-      .status(400)
-      .json({ success: false, mensaje: "El nombre es obligatorio." });
-  }
-
-  const nombreLimpio = Nombre.trim();
-  if (!regexNombre.test(nombreLimpio) || regexBasura.test(nombreLimpio)) {
-    return res
-      .status(400)
-      .json({
-        success: false,
-        mensaje: "Nombre inválido o contiene caracteres no permitidos.",
-      });
-  }
-
   try {
-    const pool = await getConnection();
-
-    const existe = await pool
-      .request()
-      .input("Nombre", sql.VarChar, nombreLimpio)
-      .input("ID", sql.Int, id)
-      .query(
-        "SELECT CategoriaID FROM Categoria WHERE Nombre = @Nombre AND CategoriaID != @ID",
-      );
-
-    if (existe.recordset.length > 0) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          mensaje: "Ya existe otra categoría con ese nombre.",
-        });
-    }
-
-    await pool
-      .request()
-      .input("ID", sql.Int, id)
-      .input("Nombre", sql.VarChar, nombreLimpio)
-      .input(
-        "Descripcion",
-        sql.VarChar,
-        Descripcion ? Descripcion.trim() : null,
-      )
-      .query(
-        "UPDATE Categoria SET Nombre = @Nombre, Descripcion = @Descripcion WHERE CategoriaID = @ID",
-      );
-
-    res.json({ success: true, mensaje: "Categoría actualizada." });
+    await categoriasService.actualizarCategoria(req.params.id, req.body);
+    res.json({
+      success: true,
+      mensaje: "Categoría actualizada correctamente.",
+    });
   } catch (error) {
-    res.status(500).json({ success: false, mensaje: "Error al actualizar." });
+    res.status(400).json({ success: false, mensaje: error.message });
   }
 };
 
-// =======================================================
-// 4. CAMBIAR ESTADO DE VISIBILIDAD (ACTIVAR/SUSPENDER)
-// =======================================================
 const cambiarEstadoCategoria = async (req, res) => {
-  const { id } = req.params;
-  const { nuevoEstado } = req.body;
   try {
-    const pool = await getConnection();
-    await pool
-      .request()
-      .input("ID", sql.Int, id)
-      .input("Estado", sql.Bit, nuevoEstado)
-      .query("UPDATE Categoria SET Activo = @Estado WHERE CategoriaID = @ID");
-
+    await categoriasService.alternarEstado(req.params.id, req.body.nuevoEstado);
     res.json({ success: true, mensaje: "Estado de categoría actualizado." });
   } catch (error) {
-    res.status(500).json({ success: false, mensaje: "Error de servidor." });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error de servidor al cambiar estado.",
+    });
   }
 };
 
-// =======================================================
-// 5. ELIMINAR CATEGORÍA FÍSICAMENTE
-// =======================================================
 const deleteCategoria = async (req, res) => {
-  const { id } = req.params;
   try {
-    const pool = await getConnection();
-    await pool
-      .request()
-      .input("ID", sql.Int, id)
-      .query("DELETE FROM Categoria WHERE CategoriaID = @ID");
-
+    await categoriasService.eliminarCategoria(req.params.id);
     res.json({
       success: true,
       mensaje: "Categoría eliminada de la base de datos.",
     });
   } catch (error) {
-    if (error.number === 547) {
-      return res.status(400).json({
-        success: false,
-        mensaje:
-          "No se puede eliminar: Esta familia tiene productos asociados. Prueba suspenderla.",
-      });
-    }
-    res.status(500).json({ success: false, mensaje: "Error al eliminar." });
+    const isConstraint = error.message.includes("productos asociados");
+    res
+      .status(isConstraint ? 400 : 500)
+      .json({ success: false, mensaje: error.message });
+  }
+};
+
+const getCategoriasActivas = async (req, res) => {
+  try {
+    const { getConnection } = require("../config/db");
+    const pool = await getConnection();
+    const result = await pool.request().query(`
+            SELECT CategoriaID, Nombre 
+            FROM Categoria 
+            WHERE Activo = 1 
+            ORDER BY Nombre ASC
+        `);
+    res.json(result.recordset);
+  } catch (error) {
+    console.error("Error en getCategoriasActivas:", error);
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error al cargar familias activas." });
   }
 };
 
@@ -211,4 +84,5 @@ module.exports = {
   updateCategoria,
   cambiarEstadoCategoria,
   deleteCategoria,
+  getCategoriasActivas,
 };

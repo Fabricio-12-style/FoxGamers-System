@@ -93,58 +93,23 @@
                 </div>
 
                 <div class="tab-pane fade" id="nav-sliders" role="tabpanel">
-                    <div class="row">
-                        <div class="col-md-5 col-12 mb-4">
-                            <div class="card shadow-sm h-100 border-0 bg-white" style="border-radius: 12px;">
-                                <div class="card-header bg-light border-bottom pt-4">
-                                    <h6 class="font-weight-bold dato-critico m-0" style="color: var(--fox-orange);">
-                                        <i class="fas fa-plus-circle mr-2"></i>Añadir Slider Promocional
-                                    </h6>
-                                </div>
-                                <div class="card-body text-center d-flex flex-column py-3 px-4">
-                                    <p class="small mb-4 text-left font-weight-bold"
-                                        style="color: var(--fox-text-gray);">
-                                        Medida recomendada: 1200x400px. Formatos válidos: JPG o PNG.
-                                    </p>
-                                    <div class="mb-4 d-flex justify-content-center">
-                                        <div style="width: 100%; height: 120px; border-radius: 8px; overflow: hidden; border: 2px dashed #cbd5e1; background-color: #f8fafc;"
-                                            class="d-flex align-items-center justify-content-center shadow-sm p-2">
-                                            <img id="imgPreviewSliderNuevo" src=""
-                                                style="width: 100%; height: 100%; object-fit: contain; display: none;">
-                                            <i class="fas fa-images" id="iconPlaceholderSlider"
-                                                style="font-size: 2.5rem; color: var(--fox-text-gray);"></i>
-                                        </div>
-                                    </div>
-                                    <input type="file" id="inputFileSlider" accept="image/png, image/jpeg"
-                                        class="d-none">
-                                    <button type="button"
-                                        class="btn btn-secondary btn-sm mb-4 font-weight-bold py-2 shadow-sm"
-                                        id="btnSeleccionarSlider">
-                                        Seleccionar imagen
-                                    </button>
-                                    <button type="button" class="btn btn-fox py-2 mt-auto shadow-sm btn-block"
-                                        id="btnSubirSlider">
-                                        <i class="fas fa-cloud-upload-alt mr-2"></i> Cargar a la Vitrina
-                                    </button>
-                                </div>
-                            </div>
+                    <div class="card shadow-sm h-100 border-0 bg-white" style="border-radius: 12px;">
+                        <div
+                            class="card-header bg-light border-bottom pt-4 d-flex justify-content-between align-items-center">
+                            <h6 class="font-weight-bold dato-critico m-0">
+                                <i class="fas fa-sliders-h mr-2" style="color: var(--fox-cyan);"></i>Gestión de Campañas
+                                y Sliders
+                            </h6>
+                            <button class="btn btn-primary font-weight-bold shadow-sm"
+                                style="background-color: #3b82f6; border: none;" onclick="abrirModalSlider()">
+                                <i class="fas fa-plus mr-1"></i> Agregar Slider
+                            </button>
                         </div>
-
-                        <div class="col-md-7 col-12 mb-4">
-                            <div class="card shadow-sm h-100 border-0 bg-white" style="border-radius: 12px;">
-                                <div class="card-header bg-light border-bottom pt-4">
-                                    <h6 class="font-weight-bold dato-critico m-0">
-                                        <i class="fas fa-sliders-h mr-2" style="color: var(--fox-cyan);"></i>Vitrina de
-                                        Sliders Activos y Campañas
-                                    </h6>
-                                </div>
-                                <div class="card-body py-4 px-4 bg-light">
-                                    <div class="row justify-content-start" id="galeriaSliders">
-                                        <div class="col-12 text-center py-4 font-weight-bold"
-                                            style="color: var(--fox-text-gray);">
-                                            <i class="fas fa-spinner fa-spin mr-2"></i> Cargando carrusel dinámico...
-                                        </div>
-                                    </div>
+                        <div class="card-body py-4 px-4 bg-light">
+                            <div id="galeriaSliders">
+                                <div class="col-12 text-center py-4 font-weight-bold"
+                                    style="color: var(--fox-text-gray);">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i> Cargando carrusel dinámico...
                                 </div>
                             </div>
                         </div>
@@ -152,6 +117,61 @@
                 </div>
 
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalSlider" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title font-weight-bold m-0" id="tituloModalSlider">
+                    <i class="fas fa-image mr-2" style="color: var(--fox-orange);"></i> Nuevo Slider
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form id="formSlider">
+                <div class="modal-body p-4">
+                    <input type="hidden" id="sliderId">
+
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-muted">Título de la Campaña *</label>
+                        <input type="text" id="sliderTitulo" class="form-control font-weight-bold"
+                            placeholder="Ej: Ofertas de Verano" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="small font-weight-bold text-muted">Descripción o Referencia</label>
+                        <input type="text" id="sliderDesc" class="form-control"
+                            placeholder="Ej: Válido hasta agotar stock">
+                    </div>
+
+                    <div class="form-group text-center mt-4">
+                        <p class="small mb-2 text-left font-weight-bold text-muted">
+                            Imagen del Banner (Recomendado: 1200x400px - JPG/PNG)
+                        </p>
+                        <div style="width: 100%; height: 140px; border-radius: 8px; overflow: hidden; border: 2px dashed #cbd5e1; background-color: #f8fafc; cursor: pointer;"
+                            class="d-flex align-items-center justify-content-center shadow-sm p-2 position-relative"
+                            id="boxUploadSlider" onclick="document.getElementById('inputFileSlider').click()">
+                            <img id="imgPreviewSliderNuevo" src=""
+                                style="width: 100%; height: 100%; object-fit: contain; display: none; z-index: 2;">
+                            <div id="iconPlaceholderSlider" class="text-center position-absolute" style="z-index: 1;">
+                                <i class="fas fa-upload d-block mb-2"
+                                    style="font-size: 2.5rem; color: var(--fox-text-gray);"></i>
+                                <span class="small font-weight-bold text-muted">Clic para subir imagen</span>
+                            </div>
+                        </div>
+                        <input type="file" id="inputFileSlider" accept="image/png, image/jpeg" class="d-none">
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-secondary font-weight-bold"
+                        data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-fox font-weight-bold px-4" id="btnGuardarSlider">
+                        <i class="fas fa-save mr-2"></i> Guardar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

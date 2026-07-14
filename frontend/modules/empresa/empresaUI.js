@@ -1,113 +1,97 @@
-(() => {
-  const BASE_URL = "http://localhost:3000";
+import { empresaApi } from "./empresaApi.js";
+import { empresaState } from "./empresaState.js";
+
+const camposFormulario = [
+  "empRuc",
+  "empRazonSocial",
+  "empNombreComercial",
+  "empDireccion",
+  "empTelefono",
+  "empCorreo",
+  "empWeb",
+];
+
+// ==========================================
+// 1. MANEJO DE INTERFAZ 
+// ==========================================
+const rellenarFormulario = (data) => {
+  document.getElementById("empRuc").value = data.RUC || "";
+  document.getElementById("empRazonSocial").value = data.RazonSocial || "";
+  document.getElementById("empNombreComercial").value =
+    data.NombreComercial || "";
+  document.getElementById("empDireccion").value = data.Direccion || "";
+  document.getElementById("empTelefono").value = data.Telefono || "";
+  document.getElementById("empCorreo").value = data.Correo || "";
+  document.getElementById("empWeb").value = data.Web || "";
+};
+
+const alternarModoInterfaz = (activarEdicion) => {
+  empresaState.setModoEdicion(activarEdicion);
+  const btnConsultar = document.getElementById("btnConsultarRuc");
+  const btnGuardar = document.getElementById("btnGuardarEmpresa");
+  const btnEditarToggle = document.getElementById("btnEditarToggle");
+
+  if (activarEdicion) {
+    camposFormulario.forEach(
+      (id) => (document.getElementById(id).disabled = false),
+    );
+    btnConsultar.disabled = false;
+    btnGuardar.classList.remove("d-none");
+    btnEditarToggle.style.backgroundColor = "#64748b";
+    btnEditarToggle.innerHTML =
+      '<i class="fas fa-times-circle mr-2"></i> Cancelar';
+  } else {
+    camposFormulario.forEach(
+      (id) => (document.getElementById(id).disabled = true),
+    );
+    btnConsultar.disabled = true;
+    btnGuardar.classList.add("d-none");
+    btnEditarToggle.style.backgroundColor = "#eab308";
+    btnEditarToggle.innerHTML = '<i class="fas fa-edit mr-2"></i> Editar';
+
+    const datosCache = empresaState.getDatos();
+    if (datosCache) rellenarFormulario(datosCache);
+  }
+};
+
+// ==========================================
+// 2. LÓGICA DE INICIALIZACIÓN
+// ==========================================
+const iniciarModuloEmpresa = async () => {
+  try {
+    const resJson = await empresaApi.obtenerEmpresa();
+    if (resJson.success && resJson.data) {
+      empresaState.setDatos(resJson.data);
+      rellenarFormulario(resJson.data);
+    }
+  } catch (e) {
+    console.error(
+      "Fallo al conectar con el servicio de datos corporativos:",
+      e,
+    );
+    Swal.fire(
+      "Error de Carga",
+      "No se pudieron jalar las configuraciones de la empresa.",
+      "error",
+    );
+  }
+};
+
+const inicializarEventos = () => {
+  const btnEditarToggle = document.getElementById("btnEditarToggle");
+  const btnConsultar = document.getElementById("btnConsultarRuc");
+  const inputRuc = document.getElementById("empRuc");
   const form = document.getElementById("formEmpresa");
   const btnGuardar = document.getElementById("btnGuardarEmpresa");
-  const btnConsultar = document.getElementById("btnConsultarRuc");
-  const btnEditarToggle = document.getElementById("btnEditarToggle");
-  const inputRuc = document.getElementById("empRuc");
-
-  // INYECCIÓN DE SEGURIDAD
-  const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
-  const authHeaders = { Authorization: `Bearer ${getToken()}` };
-  const authHeadersJson = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${getToken()}`,
-  };
-
-  let datosEmpresaCache = null;
-  let enModoEdicion = false;
-
-  const camposFormulario = [
-    "empRuc",
-    "empRazonSocial",
-    "empNombreComercial",
-    "empDireccion",
-    "empTelefono",
-    "empCorreo",
-    "empWeb",
-  ];
-
-  // =======================================================
-  // 1. CONTROLADOR DE ESTADOS DE INTERFAZ (UI)
-  // =======================================================
-  const alternarModoInterfaz = (activarEdicion) => {
-    enModoEdicion = activarEdicion;
-
-    if (enModoEdicion) {
-      camposFormulario.forEach(
-        (id) => (document.getElementById(id).disabled = false),
-      );
-      btnConsultar.disabled = false;
-      btnGuardar.classList.remove("d-none");
-      btnEditarToggle.style.backgroundColor = "#64748b";
-      btnEditarToggle.innerHTML =
-        '<i class="fas fa-times-circle mr-2"></i> Cancelar';
-    } else {
-      camposFormulario.forEach(
-        (id) => (document.getElementById(id).disabled = true),
-      );
-      btnConsultar.disabled = true;
-      btnGuardar.classList.add("d-none");
-      btnEditarToggle.style.backgroundColor = "#eab308";
-      btnEditarToggle.innerHTML = '<i class="fas fa-edit mr-2"></i> Editar';
-
-      if (datosEmpresaCache) rellenarFormulario(datosEmpresaCache);
-    }
-  };
-
-  const rellenarFormulario = (data) => {
-    inputRuc.value = data.RUC || "";
-    document.getElementById("empRazonSocial").value = data.RazonSocial || "";
-    document.getElementById("empNombreComercial").value =
-      data.NombreComercial || "";
-    document.getElementById("empDireccion").value = data.Direccion || "";
-    document.getElementById("empTelefono").value = data.Telefono || "";
-    document.getElementById("empCorreo").value = data.Correo || "";
-    document.getElementById("empWeb").value = data.Web || "";
-  };
 
   if (btnEditarToggle) {
-    btnEditarToggle.addEventListener("click", () => {
-      alternarModoInterfaz(!enModoEdicion);
-    });
+    btnEditarToggle.addEventListener("click", () =>
+      alternarModoInterfaz(!empresaState.isModoEdicion()),
+    );
   }
 
-  // =======================================================
-  // 2. CARGA INICIAL INMEDIATA
-  // =======================================================
-  const iniciarModuloEmpresa = async () => {
-    if (!form) return;
-
-    try {
-      const res = await fetch(`${BASE_URL}/api/empresa/publica`, {
-        headers: authHeaders,
-      });
-      const resJson = await res.json();
-
-      if (resJson.success && resJson.data) {
-        datosEmpresaCache = resJson.data;
-        rellenarFormulario(datosEmpresaCache);
-      }
-    } catch (e) {
-      console.error(
-        "Fallo al conectar con el servicio de datos corporativos:",
-        e,
-      );
-      Swal.fire(
-        "Error de Carga",
-        "No se pudieron jalar las configuraciones de la empresa.",
-        "error",
-      );
-    }
-  };
-
-  iniciarModuloEmpresa();
-
-  // =======================================================
-  // 3. CONSULTA RUC EN VIVO (SUNAT INTEGRADO)
-  // =======================================================
   const ejecutarConsultaRuc = async () => {
-    if (!enModoEdicion) return;
+    if (!empresaState.isModoEdicion()) return;
     const ruc = inputRuc.value.trim();
 
     if (!ruc)
@@ -142,10 +126,7 @@
     });
 
     try {
-      const res = await fetch(`${BASE_URL}/api/clientes/consultar/ruc/${ruc}`, {
-        headers: authHeaders,
-      });
-      const result = await res.json();
+      const result = await empresaApi.consultarRucSunat(ruc);
 
       if (result.success && result.data) {
         const datosSunat = result.data;
@@ -155,7 +136,6 @@
           datosSunat.nombreComercial || datosSunat.nombreCompleto || "";
         document.getElementById("empDireccion").value =
           datosSunat.direccionFiscal || datosSunat.direccion || "CHICLAYO";
-
         Swal.fire({
           icon: "success",
           title: "¡Encontrado!",
@@ -164,9 +144,7 @@
           showConfirmButton: false,
         });
       } else {
-        camposAuto.forEach((id) => {
-          document.getElementById(id).value = "";
-        });
+        camposAuto.forEach((id) => (document.getElementById(id).value = ""));
         Swal.fire(
           "No Registrado",
           "RUC no localizado en Sunat. Ingrese los datos manualmente.",
@@ -175,9 +153,7 @@
       }
     } catch (err) {
       console.error(err);
-      camposAuto.forEach((id) => {
-        document.getElementById(id).value = "";
-      });
+      camposAuto.forEach((id) => (document.getElementById(id).value = ""));
       Swal.fire(
         "Fallo de Conexión",
         "Error al conectar con el padrón en vivo.",
@@ -187,9 +163,9 @@
       btnConsultar.disabled = false;
       btnConsultar.innerHTML =
         '<i class="fas fa-search-dollar mr-1"></i> Consultar';
-      camposAuto.forEach((id) => {
-        document.getElementById(id).disabled = false;
-      });
+      camposAuto.forEach(
+        (id) => (document.getElementById(id).disabled = false),
+      );
     }
   };
 
@@ -203,14 +179,11 @@
     });
   }
 
-  // =======================================================
-  // 4. GUARDADO TRANSACCIONAL DE CAMBIOS (UPSERT)
-  // =======================================================
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
       const rucValue = inputRuc.value.trim();
+
       if (rucValue.length !== 11 || isNaN(rucValue)) {
         return Swal.fire(
           "Validación Fallida",
@@ -236,12 +209,7 @@
       };
 
       try {
-        const res = await fetch(`${BASE_URL}/api/empresa/guardar`, {
-          method: "POST",
-          headers: authHeadersJson,
-          body: JSON.stringify(datosEmpresa),
-        });
-        const result = await res.json();
+        const result = await empresaApi.guardarEmpresa(datosEmpresa);
 
         if (result.success) {
           Swal.fire({
@@ -251,9 +219,8 @@
             timer: 1800,
             showConfirmButton: false,
           });
-          datosEmpresaCache = datosEmpresa;
+          empresaState.setDatos(datosEmpresa);
           alternarModoInterfaz(false);
-
           if (typeof window.cargarDatosEmpresa === "function")
             window.cargarDatosEmpresa();
         } else {
@@ -277,4 +244,7 @@
       }
     });
   }
-})();
+};
+
+iniciarModuloEmpresa();
+inicializarEventos();

@@ -24,3 +24,4 @@ uploads/web/*
 !uploads/web/.gitkeep
 uploads/web/.gitkeep
 backend/uploads/*
+echo "backend/src/uploads/" >> .gitignore   

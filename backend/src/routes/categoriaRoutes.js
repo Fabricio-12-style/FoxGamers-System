@@ -7,6 +7,7 @@ const {
 } = require("../middlewares/authMiddleware");
 
 router.get("/", verificarToken, categoriaController.getCategorias);
+router.get("/activas", verificarToken, categoriaController.getCategoriasActivas);
 
 router.post(
   "/",
@@ -14,17 +15,26 @@ router.post(
   soloAdministradores,
   categoriaController.createCategoria,
 );
+
 router.put(
   "/:id",
   verificarToken,
   soloAdministradores,
   categoriaController.updateCategoria,
 );
+
 router.patch(
   "/estado/:id",
   verificarToken,
   soloAdministradores,
   categoriaController.cambiarEstadoCategoria,
+);
+
+router.delete(
+  "/:id",
+  verificarToken,
+  soloAdministradores,
+  categoriaController.deleteCategoria,
 );
 
 module.exports = router;

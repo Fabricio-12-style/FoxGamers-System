@@ -393,10 +393,12 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <div id="panelDetallePagos" class="p-3 border rounded bg-light d-none h-100">
+                        <div id="panelDetallePagos" class="p-3 border rounded bg-light h-100">
                             <h6 class="font-weight-bold text-secondary mb-2"><i class="fas fa-wallet mr-1"></i> Desglose
                                 de Pagos</h6>
-                            <ul id="detListaPagos" class="list-unstyled m-0 small font-weight-bold"></ul>
+                            <table class="table table-sm table-borderless m-0">
+                                <tbody id="detTablaPagos"></tbody>
+                            </table>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -523,7 +525,9 @@
                                 style="margin: 0 0 8px 0; font-weight: 700; color: #0A192F; font-size: 11px; text-transform: uppercase;">
                                 <i class="fas fa-wallet text-secondary"></i> Desglose de Medios de Pago:
                             </p>
-                            <div id="visorPagosLista" style="font-weight: 600; line-height: 1.6;"></div>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tbody id="visorTablaPagos"></tbody>
+                            </table>
                         </div>
                         <div style="width: 320px;">
                             <div
