@@ -3,7 +3,6 @@ window.cargarLogoGlobal = async () => {
     const res = await fetch("http://localhost:3000/api/config-web/publica");
     const config = await res.json();
 
-    // Buscamos el logo activo
     const logoActivo = config.logos
       ? config.logos.find((l) => l.Activo == 1 || l.Activo == true)
       : null;
@@ -13,7 +12,6 @@ window.cargarLogoGlobal = async () => {
         ? logoActivo.ImagenURL
         : `http://localhost:3000${logoActivo.ImagenURL}`;
 
-      // AÑADIMOS EL TIMESTAMP PARA EVITAR CACHÉ
       const urlConCacheBuster = `${urlLogoFinal}?t=${new Date().getTime()}`;
 
       const logosEnPantalla = document.querySelectorAll(".logo-global-fox");
@@ -29,7 +27,6 @@ window.cargarLogoGlobal = async () => {
   }
 };
 
-// Ejecutar al cargar la página
 document.addEventListener("DOMContentLoaded", () => {
   window.cargarLogoGlobal();
 });

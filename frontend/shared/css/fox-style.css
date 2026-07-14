@@ -349,3 +349,48 @@ body {
         margin: 10px !important;
     }
 }
+
+/* =========================================
+   9. CAMISA DE FUERZA DEFINITIVA
+   ========================================= */
+
+
+@media (min-width: 992px) {
+    body.sidebar-mini.sidebar-collapse .main-sidebar,
+    body.sidebar-mini.sidebar-collapse .main-sidebar::before,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover,
+    body.sidebar-mini.sidebar-collapse.sidebar-is-hover .main-sidebar {
+        width: 4.6rem !important;
+        overflow-x: hidden !important;
+        box-shadow: none !important;
+    }
+
+    body.sidebar-mini.sidebar-collapse .main-sidebar .brand-text,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover .brand-text,
+    body.sidebar-mini.sidebar-collapse .main-sidebar .user-panel .info,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover .user-panel .info,
+    body.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-item > .nav-link > p,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover .nav-sidebar .nav-item > .nav-link > p,
+    body.sidebar-mini.sidebar-collapse .main-sidebar .nav-header,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover .nav-header {
+        display: none !important;
+        width: 0 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+    }
+
+    body.sidebar-mini.sidebar-collapse .main-sidebar .brand-link,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover .brand-link {
+        width: 4.6rem !important;
+    }
+
+    body.sidebar-mini.sidebar-collapse .content-wrapper,
+    body.sidebar-mini.sidebar-collapse .main-header,
+    body.sidebar-mini.sidebar-collapse .main-footer,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover ~ .content-wrapper,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover ~ .main-header,
+    body.sidebar-mini.sidebar-collapse .main-sidebar:hover ~ .main-footer {
+        margin-left: 4.6rem !important;
+        transition: margin-left 0s !important;
+    }
+}
