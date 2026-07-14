@@ -49,7 +49,7 @@ class DescuentoRepository {
     await pool.request().input("id", sql.Int, id).query("DELETE FROM Descuento WHERE DescuentoID = @id");
   }
 
-  // 🚀 NUEVO: Buscador ultra rápido para el Autocomplete
+
   async buscarProductos(q) {
     const pool = await getConnection();
     return (await pool.request()

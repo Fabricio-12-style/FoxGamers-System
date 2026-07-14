@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 const puppeteer = require("puppeteer");
 const ventaService = require("../services/ventaService");
-const empresaService = require("../services/empresaService"); 
+const empresaService = require("../services/empresaService");
 
 const finalizarVenta = async (req, res) => {
   try {

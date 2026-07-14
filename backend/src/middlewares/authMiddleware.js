@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 
-// MIDDLEWARE 1: Valida que la petición tenga un token real y vigente
 const verificarToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -28,9 +27,7 @@ const verificarToken = (req, res, next) => {
   }
 };
 
-// MIDDLEWARE 2: Filtro de exclusividad para prevenir fraudes de vendedores
 const soloAdministradores = (req, res, next) => {
-  // Recordamos que el middleware anterior inyectó el objeto 'req.usuario'
   if (!req.usuario || req.usuario.rol.toLowerCase() !== "administrador") {
     return res.status(403).json({
       success: false,

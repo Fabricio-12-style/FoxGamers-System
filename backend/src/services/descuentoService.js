@@ -5,7 +5,7 @@ class DescuentoService {
   async obtenerPorId(id) { return await repository.getById(id); }
   async listarVigentes() { return await repository.getVigentes(); }
   async eliminar(id) { return await repository.delete(id); }
-  async buscarProductos(q) { return await repository.buscarProductos(q); } // 🚀 Nuevo
+  async buscarProductos(q) { return await repository.buscarProductos(q); } 
 
   async validarYGuardar(data, id = null) {
     if (new Date(data.FechaInicio) >= new Date(data.FechaFin))

@@ -121,7 +121,6 @@ function configurarEventosBasicos() {
         }
     });
 
-    // 🚀 LÓGICA DEL BUSCADOR AUTOCOMPLETADO
     document.getElementById("inputBuscarProdDsc")?.addEventListener("input", (e) => {
         clearTimeout(debounceBuscador);
         const q = e.target.value.trim();
@@ -154,7 +153,6 @@ function configurarEventosBasicos() {
         }, 300);
     });
 
-    // Cerrar buscador al hacer clic afuera
     document.addEventListener("click", (e) => {
         if (!e.target.closest("#boxBuscarProducto")) document.getElementById("resultadosProdDsc").style.display = "none";
     });
@@ -246,7 +244,6 @@ window.prepararEdicionDsc = async (id) => {
         const aplicaSelect = document.getElementById("dscAplicaA");
         aplicaSelect.value = d.AplicaA;
 
-        // Simular el cambio para que aparezcan los cuadros correctos
         aplicaSelect.dispatchEvent(new Event('change'));
 
         setTimeout(() => {
@@ -256,7 +253,7 @@ window.prepararEdicionDsc = async (id) => {
             } else if (d.AplicaA === "PRODUCTO") {
                 document.getElementById("inputBuscarProdDsc").value = d.NombreReferencia || "";
             }
-        }, 300); // Pequeña espera para que cargue la lista de categorías si es necesario
+        }, 300); 
 
         window.seleccionarModo(d.ModoControl || "AUTO");
         $("#modalDescuento").modal("show");
