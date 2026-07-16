@@ -87,10 +87,14 @@ const enviarTicketPorCorreo = async (req, res) => {
     }
 
     const { cabecera, detalles, pagos } = dataTicket;
+
     const sumaDescuentosGral = detalles.reduce(
       (acc, item) => acc + (parseFloat(item.Descuento) || 0),
       0,
     );
+    const subtotalCalculado = cabecera.Total + sumaDescuentosGral;
+    const metodoPrincipal =
+      pagos.length > 0 ? pagos.map((p) => p.Metodo).join(", ") : "VARIOS";
 
     const fechaObj = new Date(cabecera.FechaVenta);
     const fechaLimpia = isNaN(fechaObj.getTime())
@@ -131,7 +135,7 @@ const enviarTicketPorCorreo = async (req, res) => {
     } else {
       listaPagosHtml = `
             <tr>
-                <td style="padding: 4px 0; color: #0f172a; font-size: 12px;">• ${cabecera.MetodoPago}:</td>
+                <td style="padding: 4px 0; color: #0f172a; font-size: 12px;">• Efectivo:</td>
                 <td style="padding: 4px 0; text-align: right; color: #0f172a; font-size: 12px;">S/ ${cabecera.Total.toFixed(2)}</td>
             </tr>`;
     }
@@ -174,7 +178,7 @@ const enviarTicketPorCorreo = async (req, res) => {
                     <p style="margin: 0 0 10px 0; color: #64748b; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Detalles de Emisión</p>
                     <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 12px; color: #334155;">
                         <tr><td style="padding-bottom: 4px;"><strong>Fecha:</strong></td><td style="padding-bottom: 4px;">${fechaLimpia}</td></tr>
-                        <tr><td style="padding-bottom: 4px;"><strong>Pago:</strong></td><td style="padding-bottom: 4px;">${cabecera.MetodoPago}</td></tr>
+                        <tr><td style="padding-bottom: 4px;"><strong>Pago:</strong></td><td style="padding-bottom: 4px;">${metodoPrincipal}</td></tr>
                         <tr><td><strong>Vendedor:</strong></td><td>${cabecera.UsuarioNombre || "Cajero"}</td></tr>
                     </table>
                     </td>
@@ -205,7 +209,7 @@ const enviarTicketPorCorreo = async (req, res) => {
                     <td width="4%"></td> 
                     <td width="48%" style="vertical-align: bottom;">
                     <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 13px; margin-bottom: 10px;">
-                        <tr><td style="color: #64748b; padding: 4px 15px;">Subtotal:</td><td align="right" style="color: #0f172a; font-weight: bold; padding: 4px 15px;">S/ ${cabecera.Subtotal.toFixed(2)}</td></tr>
+                        <tr><td style="color: #64748b; padding: 4px 15px;">Subtotal:</td><td align="right" style="color: #0f172a; font-weight: bold; padding: 4px 15px;">S/ ${subtotalCalculado.toFixed(2)}</td></tr>
                         <tr><td style="color: #ef4444; padding: 4px 15px;">Descuento:</td><td align="right" style="color: #ef4444; font-weight: bold; padding: 4px 15px;">${sumaDescuentosGral > 0 ? `-S/ ${sumaDescuentosGral.toFixed(2)}` : `S/ 0.00`}</td></tr>
                     </table>
                     <div style="background-color: #0f172a; border-radius: 6px; padding: 15px;">
@@ -277,12 +281,10 @@ const enviarTicketPorCorreo = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al enviar correo con PDF:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        mensaje: "Error al generar o enviar el comprobante.",
-      });
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al generar o enviar el comprobante.",
+    });
   }
 };
 

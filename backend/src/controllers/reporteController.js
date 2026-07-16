@@ -1,859 +1,157 @@
-const { getConnection, sql } = require("../config/db");
+const service = require("../services/reporteService");
+const empresaService = require("../services/empresaService");
 const ExcelJS = require("exceljs");
-const fs = require("fs");
-const path = require("path");
+const {
+  aplicarCabeceraExcel,
+  aplicarEstilosEncabezadoTabla,
+} = require("../utils/excelHelper");
 
-// =======================================================
-// 1. GENERADOR DE REPORTES JSON
-// =======================================================
-const generarReporte = async (req, res) => {
-  const { tipoReporte, filtros } = req.body;
-
+const getReporteGeneral = async (req, res) => {
   try {
-    const pool = await getConnection();
-    const fechaHoraActual = new Date().toLocaleString();
-
-    if (tipoReporte === "ventas_periodo") {
-      const { fechaInicio, fechaFin } = filtros;
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin).query(`
-          SELECT ISNULL(SUM(Total), 0) AS IngresosTotales, COUNT(VentaID) AS Transacciones, ISNULL(AVG(Total), 0) AS TicketPromedio
-          FROM Venta WHERE Estado = 'COMPLETADA' AND CAST(FechaVenta AS DATE) BETWEEN @inicio AND @fin;
-
-          SELECT v.NumeroDoc, ISNULL(c.NombreRazonSocial, 'PÚBLICO GENERAL') AS Cliente, FORMAT(v.FechaVenta, 'yyyy-MM-dd HH:mm') AS Fecha, v.MetodoPago AS Metodo, v.Total
-          FROM Venta v LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID
-          WHERE v.Estado = 'COMPLETADA' AND CAST(FechaVenta AS DATE) BETWEEN @inicio AND @fin ORDER BY v.FechaVenta DESC;
-        `);
-
-      const kpis = result.recordsets[0][0];
-      return res.json({
-        success: true,
-        data: {
-          metadata: {
-            reporteTipo: "VENTAS_PERIODO",
-            titulo: "Ventas por Período",
-            filtrosAplicados: `Desde: ${fechaInicio} | Hasta: ${fechaFin}`,
-            fechaGeneracion: fechaHoraActual,
-          },
-          resumenKPIs: [
-            {
-              label: "Ingresos Totales",
-              value: kpis.IngresosTotales,
-              formato: "MONEDA",
-            },
-            {
-              label: "Transacciones",
-              value: kpis.Transacciones,
-              formato: "NUMERO",
-            },
-            {
-              label: "Ticket Promedio",
-              value: kpis.TicketPromedio,
-              formato: "MONEDA",
-            },
-          ],
-          reporteTabla: {
-            columnas: ["Documento", "Cliente", "Fecha", "Método", "Total"],
-            filas: result.recordsets[1].map((r) => [
-              r.NumeroDoc,
-              r.Cliente,
-              r.Fecha,
-              r.Metodo,
-              r.Total,
-            ]),
-          },
-        },
-      });
-    } else if (tipoReporte === "productos_top") {
-      const { fechaInicio, fechaFin } = filtros;
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin).query(`
-          SELECT TOP 20 i.Codigo, i.Nombre, SUM(dv.Cantidad) AS CantidadVendida, SUM(dv.Subtotal) AS IngresoGenerado
-          FROM DetalleVenta dv
-          JOIN Inventario i ON dv.ProductoID = i.ProductoID
-          JOIN Venta v ON dv.VentaID = v.VentaID
-          WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin
-          GROUP BY i.Codigo, i.Nombre
-          ORDER BY CantidadVendida DESC;
-        `);
-
-      const filasTabla = result.recordsets[0];
-      const totalProductos = filasTabla.reduce(
-        (acc, row) => acc + row.CantidadVendida,
-        0,
-      );
-      const totalDinero = filasTabla.reduce(
-        (acc, row) => acc + row.IngresoGenerado,
-        0,
-      );
-
-      return res.json({
-        success: true,
-        data: {
-          metadata: {
-            reporteTipo: "PRODUCTOS_TOP",
-            titulo: "Top Productos Más Vendidos",
-            filtrosAplicados: `Desde: ${fechaInicio} | Hasta: ${fechaFin}`,
-            fechaGeneracion: fechaHoraActual,
-          },
-          resumenKPIs: [
-            {
-              label: "Unidades Vendidas (Top)",
-              value: totalProductos,
-              formato: "NUMERO",
-            },
-            {
-              label: "Ingreso por Top Ventas",
-              value: totalDinero,
-              formato: "MONEDA",
-            },
-          ],
-          reporteTabla: {
-            columnas: ["Código", "Producto", "Cant. Vendida", "Total Generado"],
-            filas: filasTabla.map((r) => [
-              r.Codigo || "N/A",
-              r.Nombre,
-              r.CantidadVendida,
-              r.IngresoGenerado,
-            ]),
-          },
-        },
-      });
-    } else if (tipoReporte === "ventas_vendedor") {
-      const { fechaInicio, fechaFin } = filtros;
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin).query(`
-          SELECT u.NombreUsuario AS Vendedor, COUNT(v.VentaID) AS CantidadVentas, ISNULL(SUM(v.Total), 0) AS MontoVendido
-          FROM Venta v
-          LEFT JOIN Usuario u ON v.UsuarioID = u.UsuarioID
-          WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin
-          GROUP BY u.NombreUsuario
-          ORDER BY MontoVendido DESC;
-        `);
-
-      const filasTabla = result.recordsets[0];
-      const mejorVendedor =
-        filasTabla.length > 0 ? filasTabla[0].Vendedor : "N/A";
-      const totalVendidoGlobal = filasTabla.reduce(
-        (acc, row) => acc + row.MontoVendido,
-        0,
-      );
-
-      return res.json({
-        success: true,
-        data: {
-          metadata: {
-            reporteTipo: "VENTAS_VENDEDOR",
-            titulo: "Rendimiento por Vendedores",
-            filtrosAplicados: `Desde: ${fechaInicio} | Hasta: ${fechaFin}`,
-            fechaGeneracion: fechaHoraActual,
-          },
-          resumenKPIs: [
-            {
-              label: "Vendedor Estrella",
-              value: mejorVendedor,
-              formato: "TEXTO",
-            },
-            {
-              label: "Monto Total Vendido",
-              value: totalVendidoGlobal,
-              formato: "MONEDA",
-            },
-          ],
-          reporteTabla: {
-            columnas: ["Vendedor", "Cant. Operaciones", "Monto Generado"],
-            filas: filasTabla.map((r) => [
-              r.Vendedor || "Cajero Sistema",
-              r.CantidadVentas,
-              r.MontoVendido,
-            ]),
-          },
-        },
-      });
-    } else if (tipoReporte === "cuadre_caja") {
-      const { fechaUnica } = filtros;
-      const result = await pool.request().input("fecha", sql.Date, fechaUnica)
-        .query(`
-          SELECT vp.Metodo, ISNULL(SUM(vp.MontoRecibido - vp.Vuelto), 0) AS IngresoNeto
-          FROM VentaPago vp
-          JOIN Venta v ON vp.VentaID = v.VentaID
-          WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) = @fecha
-          GROUP BY vp.Metodo
-          ORDER BY IngresoNeto DESC;
-        `);
-
-      const filasTabla = result.recordsets[0];
-      const totalCaja = filasTabla.reduce(
-        (acc, row) => acc + row.IngresoNeto,
-        0,
-      );
-      const efectivoReal =
-        filasTabla.find((r) => r.Metodo === "EFECTIVO")?.IngresoNeto || 0;
-
-      return res.json({
-        success: true,
-        data: {
-          metadata: {
-            reporteTipo: "CUADRE_CAJA",
-            titulo: "Cuadre de Caja Diario",
-            filtrosAplicados: `Día: ${fechaUnica}`,
-            fechaGeneracion: fechaHoraActual,
-          },
-          resumenKPIs: [
-            {
-              label: "Cierre Total del Día",
-              value: totalCaja,
-              formato: "MONEDA",
-            },
-            {
-              label: "Efectivo Físico en Caja",
-              value: efectivoReal,
-              formato: "MONEDA",
-            },
-          ],
-          reporteTabla: {
-            columnas: ["Método de Pago", "Ingreso Neto (Restando Vueltos)"],
-            filas: filasTabla.map((r) => [r.Metodo, r.IngresoNeto]),
-          },
-        },
-      });
-    } else if (tipoReporte === "inventario_actual") {
-      const { categoria } = filtros;
-      let queryCat = categoria === "ALL" ? "" : " AND i.CategoriaID = @catId ";
-
-      const result = await pool
-        .request()
-        .input("catId", sql.Int, categoria === "ALL" ? 0 : categoria).query(`
-          SELECT i.Codigo, i.Nombre, ISNULL(c.Nombre, 'Sin Categoría') AS Categoria, 
-                 i.StockActual, i.PrecioCompra, (i.StockActual * i.PrecioCompra) AS Valorizado
-          FROM Inventario i
-          LEFT JOIN Categoria c ON i.CategoriaID = c.CategoriaID
-          WHERE i.Activo = 1 ${queryCat}
-          ORDER BY i.StockActual ASC;
-        `);
-
-      const filasTabla = result.recordsets[0];
-      const totalArticulos = filasTabla.reduce(
-        (acc, row) => acc + row.StockActual,
-        0,
-      );
-      const capitalInvertido = filasTabla.reduce(
-        (acc, row) => acc + row.Valorizado,
-        0,
-      );
-
-      return res.json({
-        success: true,
-        data: {
-          metadata: {
-            reporteTipo: "INVENTARIO_ACTUAL",
-            titulo: "Estado de Inventario (Valorización)",
-            filtrosAplicados: `Categoría: ${categoria === "ALL" ? "Todas" : "Específica"}`,
-            fechaGeneracion: fechaHoraActual,
-          },
-          resumenKPIs: [
-            {
-              label: "Unidades Totales Físicas",
-              value: totalArticulos,
-              formato: "NUMERO",
-            },
-            {
-              label: "Capital Invertido (S/)",
-              value: capitalInvertido,
-              formato: "MONEDA",
-            },
-          ],
-          reporteTabla: {
-            columnas: [
-              "Código",
-              "Producto",
-              "Categoría",
-              "Stock Físico",
-              "Costo Unitario",
-              "Valorización Total",
-            ],
-            filas: filasTabla.map((r) => [
-              r.Codigo || "N/A",
-              r.Nombre,
-              r.Categoria,
-              r.StockActual,
-              r.PrecioCompra,
-              r.Valorizado,
-            ]),
-          },
-        },
-      });
-    } else if (tipoReporte === "kardex_global") {
-      const { fechaInicio, fechaFin } = filtros;
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin).query(`
-          SELECT FORMAT(h.FechaMovimiento, 'yyyy-MM-dd HH:mm') AS Fecha, i.Nombre AS Producto, 
-                 u.NombreUsuario AS Usuario, h.TipoMovimiento, h.Cantidad, h.Motivo
-          FROM HistorialInventario h
-          JOIN Inventario i ON h.ProductoID = i.ProductoID
-          LEFT JOIN Usuario u ON h.UsuarioID = u.UsuarioID
-          WHERE CAST(h.FechaMovimiento AS DATE) BETWEEN @inicio AND @fin
-          ORDER BY h.FechaMovimiento DESC;
-        `);
-
-      const filasTabla = result.recordsets[0];
-      const entradas = filasTabla
-        .filter((r) => r.TipoMovimiento === "ENTRADA")
-        .reduce((acc, r) => acc + r.Cantidad, 0);
-      const salidas = filasTabla
-        .filter((r) => r.TipoMovimiento === "SALIDA")
-        .reduce((acc, r) => acc + r.Cantidad, 0);
-
-      return res.json({
-        success: true,
-        data: {
-          metadata: {
-            reporteTipo: "KARDEX_GLOBAL",
-            titulo: "Auditoría de Movimientos de Inventario",
-            filtrosAplicados: `Desde: ${fechaInicio} | Hasta: ${fechaFin}`,
-            fechaGeneracion: fechaHoraActual,
-          },
-          resumenKPIs: [
-            {
-              label: "Total Entradas (Unds)",
-              value: entradas,
-              formato: "NUMERO",
-            },
-            {
-              label: "Total Salidas (Unds)",
-              value: salidas,
-              formato: "NUMERO",
-            },
-          ],
-          reporteTabla: {
-            columnas: [
-              "Fecha",
-              "Producto",
-              "Usuario",
-              "Tipo",
-              "Cant.",
-              "Motivo",
-            ],
-            filas: filasTabla.map((r) => [
-              r.Fecha,
-              r.Producto,
-              r.Usuario || "Sistema",
-              r.TipoMovimiento,
-              r.Cantidad,
-              r.Motivo,
-            ]),
-          },
-        },
-      });
-    } else if (tipoReporte === "directorio_clientes") {
-      const result = await pool.request().query(`
-        SELECT Documento, NombreRazonSocial, TipoDocumento, FORMAT(FechaCreacion, 'yyyy-MM-dd') AS FechaRegistro
-        FROM Cliente
-        WHERE Activo = 1
-        ORDER BY FechaCreacion DESC;
-      `);
-
-      const filasTabla = result.recordsets[0];
-      return res.json({
-        success: true,
-        data: {
-          metadata: {
-            reporteTipo: "CLIENTES",
-            titulo: "Directorio Global de Clientes",
-            filtrosAplicados: "Todos los activos",
-            fechaGeneracion: fechaHoraActual,
-          },
-          resumenKPIs: [
-            {
-              label: "Total de Clientes Registrados",
-              value: filasTabla.length,
-              formato: "NUMERO",
-            },
-          ],
-          reporteTabla: {
-            columnas: [
-              "Documento",
-              "Nombre / Razón Social",
-              "Tipo",
-              "Fecha Registro",
-            ],
-            filas: filasTabla.map((r) => [
-              r.Documento || "N/A",
-              r.NombreRazonSocial,
-              r.TipoDocumento || "DNI/RUC",
-              r.FechaRegistro,
-            ]),
-          },
-        },
-      });
-    } else if (tipoReporte === "totalizado_ventas") {
-      const { fechaInicio, fechaFin } = filtros;
-
-      // 🚀 LÓGICA SIN IGV
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin).query(`
-          WITH PagosAgrupados AS (
-              SELECT VentaID, 
-                  SUM(CASE WHEN Metodo = 'Efectivo' THEN MontoRecibido - Vuelto ELSE 0 END) AS Total_Efectivo,
-                  SUM(CASE WHEN Metodo IN ('Yape', 'Plin') THEN MontoRecibido ELSE 0 END) AS Total_Billeteras,
-                  SUM(CASE WHEN Metodo LIKE '%Tarjeta%' OR Metodo LIKE '%Visa%' OR Metodo LIKE '%Mastercard%' THEN MontoRecibido ELSE 0 END) AS Total_Tarjetas
-              FROM dbo.VentaPago GROUP BY VentaID
-          )
-          SELECT 
-              FORMAT(v.FechaVenta, 'yyyy-MM-dd') AS Fecha,
-              u.NombreUsuario AS Vendedor,
-              COUNT(v.VentaID) AS Cantidad_Transacciones,
-              ISNULL(SUM(v.Subtotal), 0) AS Subtotal_Neto,
-              ISNULL(SUM(p.Total_Efectivo), 0) AS Total_Efectivo,
-              ISNULL(SUM(p.Total_Billeteras), 0) AS Total_Billeteras,
-              ISNULL(SUM(p.Total_Tarjetas), 0) AS Total_Tarjetas,
-              ISNULL(SUM(v.Total), 0) AS Total_Recaudado
-          FROM dbo.Venta v
-          INNER JOIN dbo.Usuario u ON v.UsuarioID = u.UsuarioID
-          LEFT JOIN PagosAgrupados p ON v.VentaID = p.VentaID
-          WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin
-          GROUP BY FORMAT(v.FechaVenta, 'yyyy-MM-dd'), u.UsuarioID, u.NombreUsuario
-          ORDER BY Fecha DESC, Vendedor ASC;
-        `);
-
-      const filasTabla = result.recordsets[0];
-      const totalRecaudadoGlobal = filasTabla.reduce(
-        (acc, row) => acc + row.Total_Recaudado,
-        0,
-      );
-      const totalTransacciones = filasTabla.reduce(
-        (acc, row) => acc + row.Cantidad_Transacciones,
-        0,
-      );
-
-      return res.json({
-        success: true,
-        data: {
-          metadata: {
-            reporteTipo: "TOTALIZADO_VENTAS",
-            titulo: "Totalizado de Ingresos / Egresos",
-            filtrosAplicados: `Desde: ${fechaInicio} | Hasta: ${fechaFin}`,
-            fechaGeneracion: fechaHoraActual,
-          },
-          resumenKPIs: [
-            {
-              label: "Total Recaudado",
-              value: totalRecaudadoGlobal,
-              formato: "MONEDA",
-            },
-            {
-              label: "Total Transacciones",
-              value: totalTransacciones,
-              formato: "NUMERO",
-            },
-          ],
-          reporteTabla: {
-            columnas: [
-              "Fecha",
-              "Vendedor",
-              "Transacciones",
-              "Efectivo",
-              "Billeteras",
-              "Tarjetas",
-              "Total Recaudado",
-            ],
-            filas: filasTabla.map((r) => [
-              r.Fecha,
-              r.Vendedor,
-              r.Cantidad_Transacciones,
-              r.Total_Efectivo,
-              r.Total_Billeteras,
-              r.Total_Tarjetas,
-              r.Total_Recaudado,
-            ]),
-          },
-        },
-      });
-    } else {
+    const { fechaInicio, fechaFin, estado, metodoPago, busqueda } = req.query;
+    if (!fechaInicio || !fechaFin) {
       return res
         .status(400)
-        .json({ success: false, mensaje: "Tipo de reporte no soportado aún." });
+        .json({ success: false, mensaje: "Faltan fechas." });
     }
-  } catch (error) {
-    console.error("Error al generar reporte:", error);
+    const data = await service.obtenerResumenVentasDetallado(
+      fechaInicio,
+      fechaFin,
+      estado,
+      metodoPago,
+      busqueda,
+    );
+    res.json({ success: true, ...data });
+  } catch (e) {
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error al generar reporte de ventas." });
+  }
+};
+
+const getReporteCajeros = async (req, res) => {
+  try {
+    const { fechaInicio, fechaFin, estado, usuarioId } = req.query;
+    if (!fechaInicio || !fechaFin) {
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Faltan fechas." });
+    }
+    const data = await service.obtenerVentasCajeros(
+      fechaInicio,
+      fechaFin,
+      estado,
+      usuarioId,
+    );
+    res.json({ success: true, datos: data });
+  } catch (e) {
     res.status(500).json({
       success: false,
-      mensaje: "Error interno al procesar el reporte.",
+      mensaje: "Error al generar reporte de cajeros.",
     });
   }
 };
 
-// =======================================================
-// 2. EXPORTADOR A EXCEL PREMIUM CORPORATIVO
-// =======================================================
 const exportarExcelReporte = async (req, res) => {
-  const { tipoReporte, fechaInicio, fechaFin, categoria, fechaUnica } =
-    req.query;
-
   try {
-    const pool = await getConnection();
-
-    let nombreHoja = "Reporte";
-    let columnasConfig = [];
-    let filasData = [];
-    let tituloReporte = "Reporte General";
-
-    if (tipoReporte === "ventas_periodo") {
-      nombreHoja = "Ventas Periodo";
-      tituloReporte = "REPORTE DE VENTAS POR PERÍODO";
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin)
-        .query(
-          `SELECT v.NumeroDoc, ISNULL(c.NombreRazonSocial, 'PÚBLICO GENERAL') AS Cliente, FORMAT(v.FechaVenta, 'yyyy-MM-dd HH:mm') AS Fecha, v.MetodoPago AS Metodo, v.Total FROM Venta v LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID WHERE v.Estado = 'COMPLETADA' AND CAST(FechaVenta AS DATE) BETWEEN @inicio AND @fin ORDER BY v.FechaVenta DESC;`,
-        );
-      columnasConfig = [
-        { header: "Documento", key: "doc", width: 20 },
-        { header: "Cliente", key: "cliente", width: 45 },
-        { header: "Fecha", key: "fecha", width: 22 },
-        { header: "Método", key: "metodo", width: 20 },
-        { header: "Total", key: "total", width: 18, esMoneda: true },
-      ];
-      filasData = result.recordsets[0].map((r) => ({
-        doc: r.NumeroDoc,
-        cliente: r.Cliente,
-        fecha: r.Fecha,
-        metodo: r.Metodo,
-        total: r.Total,
-      }));
-    } else if (tipoReporte === "productos_top") {
-      nombreHoja = "Productos Top";
-      tituloReporte = "RANKING DE PRODUCTOS MÁS VENDIDOS";
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin)
-        .query(
-          `SELECT TOP 20 i.Codigo, i.Nombre, SUM(dv.Cantidad) AS CantidadVendida, SUM(dv.Subtotal) AS IngresoGenerado FROM DetalleVenta dv JOIN Inventario i ON dv.ProductoID = i.ProductoID JOIN Venta v ON dv.VentaID = v.VentaID WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin GROUP BY i.Codigo, i.Nombre ORDER BY CantidadVendida DESC;`,
-        );
-      columnasConfig = [
-        { header: "Código", key: "codigo", width: 20 },
-        { header: "Producto", key: "producto", width: 55 },
-        { header: "Cant. Vendida", key: "cant", width: 18, esNumero: true },
-        { header: "Total Generado", key: "total", width: 22, esMoneda: true },
-      ];
-      filasData = result.recordsets[0].map((r) => ({
-        codigo: r.Codigo || "N/A",
-        producto: r.Nombre,
-        cant: r.CantidadVendida,
-        total: r.IngresoGenerado,
-      }));
-    } else if (tipoReporte === "ventas_vendedor") {
-      nombreHoja = "Rendimiento Vendedores";
-      tituloReporte = "RENDIMIENTO COMERCIAL POR VENDEDOR";
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin)
-        .query(
-          `SELECT u.NombreUsuario AS Vendedor, COUNT(v.VentaID) AS CantidadVentas, ISNULL(SUM(v.Total), 0) AS MontoVendido FROM Venta v LEFT JOIN Usuario u ON v.UsuarioID = u.UsuarioID WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin GROUP BY u.NombreUsuario ORDER BY MontoVendido DESC;`,
-        );
-      columnasConfig = [
-        { header: "Vendedor", key: "vendedor", width: 40 },
-        { header: "Cant. Operaciones", key: "cant", width: 20, esNumero: true },
-        { header: "Monto Generado", key: "monto", width: 25, esMoneda: true },
-      ];
-      filasData = result.recordsets[0].map((r) => ({
-        vendedor: r.Vendedor || "Cajero Sistema",
-        cant: r.CantidadVentas,
-        monto: r.MontoVendido,
-      }));
-    } else if (tipoReporte === "cuadre_caja") {
-      nombreHoja = "Cuadre Caja";
-      tituloReporte = "CUADRE DE CAJA - MÉTODOS DE PAGO";
-      const result = await pool
-        .request()
-        .input("fecha", sql.Date, fechaUnica)
-        .query(
-          `SELECT vp.Metodo, ISNULL(SUM(vp.MontoRecibido - vp.Vuelto), 0) AS IngresoNeto FROM VentaPago vp JOIN Venta v ON vp.VentaID = v.VentaID WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) = @fecha GROUP BY vp.Metodo ORDER BY IngresoNeto DESC;`,
-        );
-      columnasConfig = [
-        { header: "Método de Pago", key: "metodo", width: 35 },
-        { header: "Ingreso Neto", key: "ingreso", width: 25, esMoneda: true },
-      ];
-      filasData = result.recordsets[0].map((r) => ({
-        metodo: r.Metodo,
-        ingreso: r.IngresoNeto,
-      }));
-    } else if (tipoReporte === "inventario_actual") {
-      nombreHoja = "Valorizacion Inv.";
-      tituloReporte = "VALORIZACIÓN DE INVENTARIO ACTUAL";
-      let queryCat = categoria === "ALL" ? "" : " AND i.CategoriaID = @catId ";
-      const result = await pool
-        .request()
-        .input("catId", sql.Int, categoria === "ALL" ? 0 : categoria)
-        .query(
-          `SELECT i.Codigo, i.Nombre, ISNULL(c.Nombre, 'Sin Categoría') AS Categoria, i.StockActual, i.PrecioCompra, (i.StockActual * i.PrecioCompra) AS Valorizado FROM Inventario i LEFT JOIN Categoria c ON i.CategoriaID = c.CategoriaID WHERE i.Activo = 1 ${queryCat} ORDER BY i.StockActual ASC;`,
-        );
-      columnasConfig = [
-        { header: "Código", key: "codigo", width: 20 },
-        { header: "Producto", key: "producto", width: 50 },
-        { header: "Categoría", key: "categoria", width: 25 },
-        { header: "Stock Físico", key: "stock", width: 15, esNumero: true },
-        { header: "Costo Unit.", key: "costo", width: 18, esMoneda: true },
-        {
-          header: "Valorización",
-          key: "valorizado",
-          width: 20,
-          esMoneda: true,
-        },
-      ];
-      filasData = result.recordsets[0].map((r) => ({
-        codigo: r.Codigo || "N/A",
-        producto: r.Nombre,
-        categoria: r.Categoria,
-        stock: r.StockActual,
-        costo: r.PrecioCompra,
-        valorizado: r.Valorizado,
-      }));
-    } else if (tipoReporte === "kardex_global") {
-      nombreHoja = "Kardex Global";
-      tituloReporte = "AUDITORÍA DE MOVIMIENTOS DE INVENTARIO";
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin)
-        .query(
-          `SELECT FORMAT(h.FechaMovimiento, 'yyyy-MM-dd HH:mm') AS Fecha, i.Nombre AS Producto, u.NombreUsuario AS Usuario, h.TipoMovimiento, h.Cantidad, h.Motivo FROM HistorialInventario h JOIN Inventario i ON h.ProductoID = i.ProductoID LEFT JOIN Usuario u ON h.UsuarioID = u.UsuarioID WHERE CAST(h.FechaMovimiento AS DATE) BETWEEN @inicio AND @fin ORDER BY h.FechaMovimiento DESC;`,
-        );
-      columnasConfig = [
-        { header: "Fecha", key: "fecha", width: 22 },
-        { header: "Producto", key: "producto", width: 45 },
-        { header: "Usuario", key: "usuario", width: 25 },
-        { header: "Tipo", key: "tipo", width: 15 },
-        { header: "Cant.", key: "cant", width: 12, esNumero: true },
-        { header: "Motivo", key: "motivo", width: 35 },
-      ];
-      filasData = result.recordsets[0].map((r) => ({
-        fecha: r.Fecha,
-        producto: r.Producto,
-        usuario: r.Usuario || "Sistema",
-        tipo: r.TipoMovimiento,
-        cant: r.Cantidad,
-        motivo: r.Motivo,
-      }));
-    } else if (tipoReporte === "directorio_clientes") {
-      nombreHoja = "Directorio Clientes";
-      tituloReporte = "DIRECTORIO GLOBAL DE CLIENTES";
-      const result = await pool
-        .request()
-        .query(
-          `SELECT Documento, NombreRazonSocial, TipoDocumento, FORMAT(FechaCreacion, 'yyyy-MM-dd') AS FechaRegistro FROM Cliente WHERE Activo = 1 ORDER BY FechaCreacion DESC;`,
-        );
-      columnasConfig = [
-        { header: "Documento", key: "doc", width: 20 },
-        { header: "Nombre / Razón Social", key: "nombre", width: 50 },
-        { header: "Tipo", key: "tipo", width: 15 },
-        { header: "Fecha Registro", key: "fecha", width: 20 },
-      ];
-      filasData = result.recordsets[0].map((r) => ({
-        doc: r.Documento || "N/A",
-        nombre: r.NombreRazonSocial,
-        tipo: r.TipoDocumento || "DNI/RUC",
-        fecha: r.FechaRegistro,
-      }));
-    } else if (tipoReporte === "totalizado_ventas") {
-      // 🚀 LÓGICA SIN IGV
-      nombreHoja = "Totalizado Ventas";
-      tituloReporte = "REPORTE TOTALIZADO DE INGRESOS Y EGRESOS";
-      const result = await pool
-        .request()
-        .input("inicio", sql.Date, fechaInicio)
-        .input("fin", sql.Date, fechaFin).query(`
-          WITH PagosAgrupados AS (
-              SELECT VentaID, SUM(CASE WHEN Metodo = 'Efectivo' THEN MontoRecibido - Vuelto ELSE 0 END) AS Total_Efectivo, SUM(CASE WHEN Metodo IN ('Yape', 'Plin') THEN MontoRecibido ELSE 0 END) AS Total_Billeteras, SUM(CASE WHEN Metodo LIKE '%Tarjeta%' OR Metodo LIKE '%Visa%' OR Metodo LIKE '%Mastercard%' THEN MontoRecibido ELSE 0 END) AS Total_Tarjetas FROM dbo.VentaPago GROUP BY VentaID
-          )
-          SELECT FORMAT(v.FechaVenta, 'yyyy-MM-dd') AS Fecha, u.NombreUsuario AS Vendedor, COUNT(v.VentaID) AS Cantidad_Transacciones, ISNULL(SUM(v.Subtotal), 0) AS Subtotal_Neto, ISNULL(SUM(p.Total_Efectivo), 0) AS Total_Efectivo, ISNULL(SUM(p.Total_Billeteras), 0) AS Total_Billeteras, ISNULL(SUM(p.Total_Tarjetas), 0) AS Total_Tarjetas, ISNULL(SUM(v.Total), 0) AS Total_Recaudado FROM dbo.Venta v INNER JOIN dbo.Usuario u ON v.UsuarioID = u.UsuarioID LEFT JOIN PagosAgrupados p ON v.VentaID = p.VentaID WHERE v.Estado = 'COMPLETADA' AND CAST(v.FechaVenta AS DATE) BETWEEN @inicio AND @fin GROUP BY FORMAT(v.FechaVenta, 'yyyy-MM-dd'), u.UsuarioID, u.NombreUsuario ORDER BY Fecha DESC, Vendedor ASC;
-        `);
-      columnasConfig = [
-        { header: "Fecha", key: "fecha", width: 15 },
-        { header: "Vendedor", key: "vendedor", width: 35 },
-        { header: "Transacciones", key: "trans", width: 16, esNumero: true },
-        { header: "Efectivo", key: "efec", width: 18, esMoneda: true },
-        { header: "Billeteras", key: "bille", width: 18, esMoneda: true },
-        { header: "Tarjetas", key: "tarj", width: 18, esMoneda: true },
-        { header: "Total Recaudado", key: "total", width: 22, esMoneda: true },
-      ];
-      filasData = result.recordsets[0].map((r) => ({
-        fecha: r.Fecha,
-        vendedor: r.Vendedor,
-        trans: r.Cantidad_Transacciones,
-        efec: r.Total_Efectivo,
-        bille: r.Total_Billeteras,
-        tarj: r.Total_Tarjetas,
-        total: r.Total_Recaudado,
-      }));
-    } else {
-      return res.status(400).json({
-        success: false,
-        mensaje: "Tipo de reporte no soportado para exportación.",
-      });
+    const { fechaInicio, fechaFin, estado, metodoPago, busqueda } = req.query;
+    if (!fechaInicio || !fechaFin) {
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Faltan fechas para exportar." });
     }
+
+    let empresa = {};
+    try {
+      empresa = await empresaService.obtenerEmpresa();
+    } catch (err) {}
+
+    const data = await service.obtenerResumenVentasDetallado(
+      fechaInicio,
+      fechaFin,
+      estado,
+      metodoPago,
+      busqueda,
+    );
 
     const workbook = new ExcelJS.Workbook();
-    workbook.creator = "FOX GAMERS";
-    const worksheet = workbook.addWorksheet(nombreHoja, {
-      views: [{ showGridLines: false }],
-    });
+    const worksheet = workbook.addWorksheet("Reporte de Ventas Detallado");
 
-    columnasConfig.forEach((col, index) => {
-      worksheet.getColumn(index + 1).width = col.width;
-    });
+    worksheet.getColumn("A").width = 15;
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 35;
+    worksheet.getColumn("D").width = 15;
+    worksheet.getColumn("E").width = 20;
+    worksheet.getColumn("F").width = 15;
 
-    try {
-      const rutasLogoPosibles = [
-        path.join(__dirname, "../../public/uploads/logo.png"),
-        path.join(__dirname, "../../public/images/logo.png"),
-        path.join(__dirname, "../public/uploads/logo.png"),
-        path.join(__dirname, "../assets/logo.png"),
-      ];
+    aplicarCabeceraExcel(
+      worksheet,
+      "Reporte Detallado de Ventas",
+      `${fechaInicio} al ${fechaFin}`,
+      empresa,
+    );
 
-      let logoEncontradoPath = null;
-      for (const ruta of rutasLogoPosibles) {
-        if (fs.existsSync(ruta)) {
-          logoEncontradoPath = ruta;
-          break;
-        }
-      }
+    const headerRow = worksheet.addRow([
+      "N° Doc",
+      "Fecha",
+      "Cliente",
+      "Estado",
+      "Método(s)",
+      "Total (S/)",
+    ]);
+    aplicarEstilosEncabezadoTabla(headerRow);
 
-      if (logoEncontradoPath) {
-        const logoId = workbook.addImage({
-          filename: logoEncontradoPath,
-          extension: "png",
-        });
-        worksheet.addImage(logoId, {
-          tl: { col: 0, row: 1 },
-          br: { col: 2, row: 5 },
-          editAs: "absolute",
-        });
-      }
-    } catch (e) {
-      console.log(
-        "Aviso: No se pudo acoplar el logo dinámico al Excel:",
-        e.message,
-      );
-    }
+    if (data.ventas && data.ventas.length > 0) {
+      data.ventas.forEach((venta) => {
+        const mainRow = worksheet.addRow([
+          `N-${venta.VentaID}`,
+          new Date(venta.FechaCreacion).toLocaleString("es-PE"),
+          venta.Cliente,
+          venta.Estado,
+          venta.MetodoResumen,
+          parseFloat(venta.Total),
+        ]);
 
-    worksheet.mergeCells("D2:H2");
-    const cellEmpresa = worksheet.getCell("D2");
-    cellEmpresa.value = "FOX GAMERS";
-    cellEmpresa.font = { size: 18, bold: true, color: { argb: "FF0F172A" } };
-    cellEmpresa.alignment = { vertical: "middle", horizontal: "left" };
+        mainRow.getCell(1).alignment = { horizontal: "left" };
+        mainRow.getCell(2).alignment = { horizontal: "center" };
+        mainRow.getCell(3).alignment = { horizontal: "left" };
+        mainRow.getCell(4).alignment = { horizontal: "center" };
+        mainRow.getCell(5).alignment = { horizontal: "center" };
+        mainRow.getCell(6).alignment = { horizontal: "right" };
+        mainRow.getCell(6).numFmt = '"S/" #,##0.00';
 
-    worksheet.mergeCells("D3:H3");
-    const cellTitulo = worksheet.getCell("D3");
-    cellTitulo.value = tituloReporte;
-    cellTitulo.font = { size: 12, bold: true, color: { argb: "FF475569" } };
+        if (venta.MetodoResumen === "MIXTO" && venta.Pagos) {
+          mainRow.font = { bold: true };
 
-    worksheet.mergeCells("D4:H4");
-    worksheet.getCell("D4").value =
-      `Fecha de impresión: ${new Date().toLocaleString("es-PE")}`;
-    worksheet.getCell("D4").font = { size: 10, italic: true };
+          venta.Pagos.forEach((pago) => {
+            const childRow = worksheet.addRow([
+              "",
+              "",
+              "",
+              "",
+              `↳ ${pago.Metodo}`,
+              parseFloat(pago.MontoRecibido - (pago.Vuelto || 0)),
+            ]);
 
-    worksheet.mergeCells("D5:H5");
-    let txtFiltro = "Filtro: Todos los registros históricos.";
-    if (fechaInicio && fechaFin)
-      txtFiltro = `Rango de fechas: ${fechaInicio} al ${fechaFin}`;
-    else if (fechaUnica) txtFiltro = `Día de consulta: ${fechaUnica}`;
-    worksheet.getCell("D5").value = txtFiltro;
-    worksheet.getCell("D5").font = { size: 10, bold: true };
-
-    const filaCabecera = worksheet.getRow(7);
-    filaCabecera.values = columnasConfig.map((c) => c.header);
-    filaCabecera.height = 25;
-
-    filaCabecera.eachCell((cell, colNumber) => {
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF0F172A" },
-      };
-      cell.font = { color: { argb: "FFFFFFFF" }, bold: true, size: 10 };
-      cell.alignment = { vertical: "middle", horizontal: "center" };
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
-
-    let currentRow = 8;
-    const subtotales = {};
-
-    filasData.forEach((dataRow) => {
-      const filaData = worksheet.getRow(currentRow);
-      const valoresFila = columnasConfig.map((c) => dataRow[c.key]);
-      filaData.values = valoresFila;
-
-      filaData.eachCell((cell, colNumber) => {
-        const config = columnasConfig[colNumber - 1];
-
-        cell.border = {
-          top: { style: "thin", color: { argb: "FFE2E8F0" } },
-          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
-        };
-        cell.font = { size: 10 };
-
-        if (config.esMoneda) {
-          cell.numFmt = '"S/" #,##0.00';
-          cell.alignment = { vertical: "middle", horizontal: "right" };
-          subtotales[colNumber] =
-            (subtotales[colNumber] || 0) + (Number(cell.value) || 0);
-        } else if (config.esNumero) {
-          cell.numFmt = "#,##0";
-          cell.alignment = { vertical: "middle", horizontal: "center" };
-          subtotales[colNumber] =
-            (subtotales[colNumber] || 0) + (Number(cell.value) || 0);
-        } else {
-          cell.alignment = { vertical: "middle", horizontal: "left" };
+            childRow.font = { italic: true, color: { argb: "FF475569" } };
+            childRow.getCell(5).alignment = { horizontal: "right" };
+            childRow.getCell(6).alignment = { horizontal: "right" };
+            childRow.getCell(6).numFmt = '"S/" #,##0.00';
+          });
         }
       });
-      currentRow++;
-    });
-
-    if (Object.keys(subtotales).length > 0) {
-      const filaTotales = worksheet.getRow(currentRow);
-
-      const celdaEtiqueta = filaTotales.getCell(1);
-      celdaEtiqueta.value = "TOTALES GLOBALES";
-      celdaEtiqueta.alignment = { vertical: "middle", horizontal: "right" };
-
-      filaTotales.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        cell.font = { bold: true, size: 11, color: { argb: "FF0F172A" } };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFF1F5F9" },
-        };
-        cell.border = {
-          top: { style: "medium", color: { argb: "FF94A3B8" } },
-          bottom: { style: "medium", color: { argb: "FF94A3B8" } },
-        };
-
-        if (subtotales[colNumber]) {
-          cell.value = subtotales[colNumber];
-          const config = columnasConfig[colNumber - 1];
-          cell.numFmt = config.esMoneda ? '"S/" #,##0.00' : "#,##0";
-          cell.alignment = { vertical: "middle", horizontal: "right" };
-        }
-      });
+    } else {
+      const emptyRow = worksheet.addRow([
+        "Sin ventas con los filtros aplicados",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ]);
+      worksheet.mergeCells(`A${emptyRow.number}:F${emptyRow.number}`);
+      emptyRow.getCell(1).alignment = { horizontal: "center" };
+      emptyRow.getCell(1).font = { italic: true, color: { argb: "FF94A3B8" } };
     }
 
     res.setHeader(
@@ -862,17 +160,542 @@ const exportarExcelReporte = async (req, res) => {
     );
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename=Reporte_FoxGamers_${new Date().getTime()}.xlsx`,
+      `attachment; filename=Ventas_FoxGamers_${fechaInicio}_al_${fechaFin}.xlsx`,
     );
-
     await workbook.xlsx.write(res);
-    res.status(200).end();
+    res.end();
   } catch (error) {
-    console.error("Error al exportar Excel:", error);
-    res
-      .status(500)
-      .json({ success: false, mensaje: "Error interno al generar el Excel." });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        mensaje: "Error interno al generar el Excel.",
+      });
+    }
   }
 };
 
-module.exports = { generarReporte, exportarExcelReporte };
+const exportarExcelCajeros = async (req, res) => {
+  try {
+    const { fechaInicio, fechaFin, estado, usuarioId } = req.query;
+
+    if (!fechaInicio || !fechaFin) {
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Faltan fechas para exportar." });
+    }
+
+    let empresa = {};
+    try {
+      empresa = await empresaService.obtenerEmpresa();
+    } catch (err) {}
+
+    const data = await service.obtenerVentasCajeros(
+      fechaInicio,
+      fechaFin,
+      estado,
+      usuarioId,
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Ranking Cajeros");
+
+    worksheet.getColumn("A").width = 30;
+    worksheet.getColumn("B").width = 20;
+    worksheet.getColumn("C").width = 25;
+    worksheet.getColumn("D").width = 20;
+
+    aplicarCabeceraExcel(
+      worksheet,
+      "Rendimiento por Cajeros",
+      `${fechaInicio} al ${fechaFin}`,
+      empresa,
+    );
+
+    const headerRow = worksheet.addRow([
+      "Nombre",
+      "Transacciones",
+      "Total Generado",
+      "Ticket Promedio",
+    ]);
+    aplicarEstilosEncabezadoTabla(headerRow);
+
+    // Validación: Solo iteramos si hay datos reales
+    if (data && data.length > 0) {
+      data.forEach((c) => {
+        const dataRow = worksheet.addRow([
+          c.Nombre,
+          c.Transacciones,
+          parseFloat(c.TotalVendido),
+          parseFloat(c.TicketPromedio),
+        ]);
+        dataRow.getCell(1).alignment = { horizontal: "left" };
+        dataRow.getCell(2).alignment = { horizontal: "center" };
+        dataRow.getCell(3).alignment = { horizontal: "right" };
+        dataRow.getCell(3).numFmt = '"S/" #,##0.00';
+        dataRow.getCell(4).alignment = { horizontal: "right" };
+        dataRow.getCell(4).numFmt = '"S/" #,##0.00';
+      });
+    } else {
+      const emptyRow = worksheet.addRow([
+        "Sin ventas registradas con los filtros aplicados",
+        "",
+        "",
+        "",
+      ]);
+      worksheet.mergeCells(`A${emptyRow.number}:D${emptyRow.number}`);
+      emptyRow.getCell(1).alignment = { horizontal: "center" };
+      emptyRow.getCell(1).font = { italic: true, color: { argb: "FF94A3B8" } };
+    }
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Ranking_Cajeros_${fechaInicio}.xlsx`,
+    );
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (e) {
+    console.error("Error crítico Exportación Cajeros:", e);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        mensaje: "Error al generar el archivo Excel de cajeros.",
+      });
+    }
+  }
+};
+
+const getReporteInventario = async (req, res) => {
+  try {
+    const { fechaInicio, fechaFin, categoriaId, estadoStock, busqueda } =
+      req.query;
+    if (!fechaInicio || !fechaFin) {
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Faltan fechas." });
+    }
+    const data = await service.obtenerReporteInventario(
+      fechaInicio,
+      fechaFin,
+      categoriaId,
+      estadoStock,
+      busqueda,
+    );
+    res.json({ success: true, ...data });
+  } catch (e) {
+    console.error("🔥 Error Crítico en getReporteInventario:", e);
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al generar reporte de inventario.",
+    });
+  }
+};
+
+const exportarExcelInventario = async (req, res) => {
+  try {
+    const { fechaInicio, fechaFin, categoriaId, estadoStock, busqueda } =
+      req.query;
+    if (!fechaInicio || !fechaFin) {
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Faltan fechas para exportar." });
+    }
+
+    let empresa = {};
+    try {
+      empresa = await empresaService.obtenerEmpresa();
+    } catch (err) {}
+
+    const data = await service.obtenerReporteInventario(
+      fechaInicio,
+      fechaFin,
+      categoriaId,
+      estadoStock,
+      busqueda,
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Inventario y Ventas");
+
+    worksheet.getColumn("A").width = 10;
+    worksheet.getColumn("B").width = 40;
+    worksheet.getColumn("C").width = 25;
+    worksheet.getColumn("D").width = 15;
+    worksheet.getColumn("E").width = 15;
+    worksheet.getColumn("F").width = 15;
+
+    aplicarCabeceraExcel(
+      worksheet,
+      "Reporte de Inventario y Top Productos",
+      `${fechaInicio} al ${fechaFin}`,
+      empresa,
+    );
+
+    const headerRow = worksheet.addRow([
+      "Posición",
+      "Producto",
+      "Categoría",
+      "Ventas (Unds)",
+      "Stock Actual",
+      "Estado",
+    ]);
+    aplicarEstilosEncabezadoTabla(headerRow);
+
+    if (data.productos && data.productos.length > 0) {
+      data.productos.forEach((p, index) => {
+        const dataRow = worksheet.addRow([
+          index + 1,
+          p.Producto,
+          p.Categoria,
+          p.Ventas,
+          p.StockActual,
+          p.EstadoStock,
+        ]);
+        dataRow.getCell(1).alignment = { horizontal: "center" };
+        dataRow.getCell(2).alignment = { horizontal: "left" };
+        dataRow.getCell(3).alignment = { horizontal: "left" };
+        dataRow.getCell(4).alignment = { horizontal: "center" };
+        dataRow.getCell(5).alignment = { horizontal: "center" };
+        dataRow.getCell(6).alignment = { horizontal: "center" };
+
+        if (p.EstadoStock === "AGOTADO")
+          dataRow.getCell(6).font = { color: { argb: "FFDC2626" }, bold: true };
+        if (p.EstadoStock === "BAJO")
+          dataRow.getCell(6).font = { color: { argb: "FFD97706" }, bold: true };
+        if (p.EstadoStock === "OK")
+          dataRow.getCell(6).font = { color: { argb: "FF16A34A" }, bold: true };
+      });
+    } else {
+      const emptyRow = worksheet.addRow([
+        "Sin productos que coincidan con los filtros",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ]);
+      worksheet.mergeCells(`A${emptyRow.number}:F${emptyRow.number}`);
+      emptyRow.getCell(1).alignment = { horizontal: "center" };
+      emptyRow.getCell(1).font = { italic: true, color: { argb: "FF94A3B8" } };
+    }
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Inventario_${fechaInicio}.xlsx`,
+    );
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (e) {
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        mensaje: "Error al generar Excel de inventario.",
+      });
+    }
+  }
+};
+
+const getReporteUtilidades = async (req, res) => {
+  try {
+    const {
+      fechaInicio,
+      fechaFin,
+      nivelAnalisis = "PRODUCTO",
+      categoriaId,
+      alertaRentabilidad,
+      busqueda,
+    } = req.query;
+    if (!fechaInicio || !fechaFin) {
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Faltan fechas." });
+    }
+    const data = await service.obtenerReporteUtilidades(
+      fechaInicio,
+      fechaFin,
+      nivelAnalisis,
+      categoriaId,
+      alertaRentabilidad,
+      busqueda,
+    );
+    res.json({ success: true, ...data });
+  } catch (e) {
+    console.error("🔥 Error en getReporteUtilidades:", e);
+    res.status(500).json({
+      success: false,
+      mensaje: "Error al generar reporte de utilidades.",
+    });
+  }
+};
+
+const exportarExcelUtilidades = async (req, res) => {
+  try {
+    const {
+      fechaInicio,
+      fechaFin,
+      nivelAnalisis = "PRODUCTO",
+      categoriaId,
+      alertaRentabilidad,
+      busqueda,
+    } = req.query;
+    if (!fechaInicio || !fechaFin) {
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Faltan fechas para exportar." });
+    }
+
+    let empresa = {};
+    try {
+      empresa = await empresaService.obtenerEmpresa();
+    } catch (err) {}
+
+    const data = await service.obtenerReporteUtilidades(
+      fechaInicio,
+      fechaFin,
+      nivelAnalisis,
+      categoriaId,
+      alertaRentabilidad,
+      busqueda,
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Utilidades y Rentabilidad");
+
+    worksheet.getColumn("A").width = 15;
+    worksheet.getColumn("B").width = 40;
+    worksheet.getColumn("C").width = 25;
+    worksheet.getColumn("D").width = 15;
+    worksheet.getColumn("E").width = 20;
+    worksheet.getColumn("F").width = 20;
+    worksheet.getColumn("G").width = 20;
+    worksheet.getColumn("H").width = 15;
+
+    aplicarCabeceraExcel(
+      worksheet,
+      `Reporte de Rentabilidad por ${nivelAnalisis === "CATEGORIA" ? "Categoría" : "Producto"}`,
+      `${fechaInicio} al ${fechaFin}`,
+      empresa,
+    );
+
+    const headerRow = worksheet.addRow([
+      "Código/ID",
+      "Concepto",
+      "Categoría",
+      "Unds Vendidas",
+      "Ingreso Total",
+      "Costo Total",
+      "Utilidad Neta",
+      "Margen",
+    ]);
+    aplicarEstilosEncabezadoTabla(headerRow);
+
+    if (data.detalles && data.detalles.length > 0) {
+      data.detalles.forEach((row) => {
+        const dataRow = worksheet.addRow([
+          row.ID,
+          row.Concepto,
+          row.Categoria,
+          row.UnidadesVendidas,
+          parseFloat(row.IngresoTotal),
+          parseFloat(row.CostoTotal),
+          parseFloat(row.UtilidadNeta),
+          `${parseFloat(row.MargenPorcentaje).toFixed(2)}%`,
+        ]);
+        dataRow.getCell(1).alignment = { horizontal: "center" };
+        dataRow.getCell(2).alignment = { horizontal: "left" };
+        dataRow.getCell(3).alignment = { horizontal: "left" };
+        dataRow.getCell(4).alignment = { horizontal: "center" };
+
+        for (let i = 5; i <= 7; i++) {
+          dataRow.getCell(i).alignment = { horizontal: "right" };
+          dataRow.getCell(i).numFmt = '"S/" #,##0.00';
+        }
+        dataRow.getCell(7).font = {
+          bold: true,
+          color: { argb: row.UtilidadNeta < 0 ? "FFDC2626" : "FF16A34A" },
+        };
+        dataRow.getCell(8).alignment = { horizontal: "right" };
+        dataRow.getCell(8).font = { bold: true };
+      });
+
+      const summaryRow = worksheet.addRow([
+        "",
+        "TOTALES DEL PERIODO",
+        "",
+        "",
+        parseFloat(data.kpis.totalIngresos),
+        parseFloat(data.kpis.totalCostos),
+        parseFloat(data.kpis.totalUtilidad),
+        `${parseFloat(data.kpis.margenGeneral).toFixed(2)}%`,
+      ]);
+      summaryRow.font = { bold: true };
+      summaryRow.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF1F5F9" },
+      };
+      for (let i = 5; i <= 7; i++)
+        summaryRow.getCell(i).numFmt = '"S/" #,##0.00';
+    } else {
+      const emptyRow = worksheet.addRow([
+        "Sin datos para los filtros aplicados",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ]);
+      worksheet.mergeCells(`A${emptyRow.number}:H${emptyRow.number}`);
+      emptyRow.getCell(1).alignment = { horizontal: "center" };
+    }
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Utilidades_${fechaInicio}.xlsx`,
+    );
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (e) {
+    if (!res.headersSent)
+      res
+        .status(500)
+        .json({ success: false, mensaje: "Error al generar Excel." });
+  }
+};
+
+const getReporteFlujoCaja = async (req, res) => {
+  try {
+    const { fecha, usuarioId } = req.query;
+    if (!fecha)
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Falta la fecha de consulta." });
+
+    const data = await service.obtenerFlujoCajaDiario(fecha, usuarioId);
+    res.json({ success: true, ...data });
+  } catch (e) {
+    console.error("🔥 Error en getReporteFlujoCaja:", e);
+    res
+      .status(500)
+      .json({ success: false, mensaje: "Error al generar flujo de caja." });
+  }
+};
+
+const exportarExcelFlujoCaja = async (req, res) => {
+  try {
+    const { fecha, usuarioId } = req.query;
+    if (!fecha)
+      return res
+        .status(400)
+        .json({ success: false, mensaje: "Falta la fecha para exportar." });
+
+    let empresa = {};
+    try {
+      empresa = await empresaService.obtenerEmpresa();
+    } catch (err) {}
+
+    const data = await service.obtenerFlujoCajaDiario(fecha, usuarioId);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Flujo de Caja");
+
+    worksheet.getColumn("A").width = 30;
+    worksheet.getColumn("B").width = 25;
+    worksheet.getColumn("C").width = 25;
+    worksheet.getColumn("D").width = 25;
+    worksheet.getColumn("E").width = 25;
+    worksheet.getColumn("F").width = 25;
+
+    aplicarCabeceraExcel(
+      worksheet,
+      "Reporte Diario de Flujo de Caja",
+      `Fecha: ${fecha}`,
+      empresa,
+    );
+
+    const headerRow = worksheet.addRow([
+      "Cajero / Vendedor",
+      "Efectivo (Físico)",
+      "Billetera Digital",
+      "Pagos con Tarjeta",
+      "Transferencias",
+      "Total Generado",
+    ]);
+    aplicarEstilosEncabezadoTabla(headerRow);
+
+    if (data.detalles && data.detalles.length > 0) {
+      data.detalles.forEach((row) => {
+        const dataRow = worksheet.addRow([
+          row.Cajero,
+          `S/ ${parseFloat(row.TotalEfectivo).toFixed(2)} (${row.TransaccionesEfectivo} tx)`,
+          `S/ ${parseFloat(row.TotalDigital).toFixed(2)} (${row.TransaccionesDigital} tx)`,
+          `S/ ${parseFloat(row.TotalTarjeta).toFixed(2)} (${row.TransaccionesTarjeta} tx)`,
+          `S/ ${parseFloat(row.TotalTransferencia).toFixed(2)} (${row.TransaccionesTransferencia} tx)`,
+          parseFloat(row.TotalGenerado),
+        ]);
+
+        dataRow.getCell(1).alignment = { horizontal: "left" };
+        for (let i = 2; i <= 5; i++) {
+          dataRow.getCell(i).alignment = { horizontal: "center" };
+        }
+        dataRow.getCell(6).alignment = { horizontal: "right" };
+        dataRow.getCell(6).numFmt = '"S/" #,##0.00';
+        dataRow.getCell(6).font = { bold: true };
+      });
+    } else {
+      const emptyRow = worksheet.addRow([
+        "Sin movimientos registrados en esta fecha",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ]);
+      worksheet.mergeCells(`A${emptyRow.number}:F${emptyRow.number}`);
+      emptyRow.getCell(1).alignment = { horizontal: "center" };
+    }
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=FlujoCaja_${fecha}.xlsx`,
+    );
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (e) {
+    console.error("Error al exportar Excel de Flujo de Caja:", e);
+    if (!res.headersSent)
+      res
+        .status(500)
+        .json({ success: false, mensaje: "Error al generar Excel." });
+  }
+};
+
+module.exports = {
+  getReporteGeneral,
+  getReporteCajeros,
+  getReporteInventario,
+  getReporteUtilidades,
+  getReporteFlujoCaja,
+  exportarExcelReporte,
+  exportarExcelCajeros,
+  exportarExcelInventario,
+  exportarExcelUtilidades,
+  exportarExcelFlujoCaja,
+};

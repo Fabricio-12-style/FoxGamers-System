@@ -99,12 +99,10 @@ class VentaRepository {
         .input("Cli", sql.Int, finalClienteID)
         .input("Usu", sql.Int, data.UsuarioID)
         .input("Doc", sql.VarChar, correlativo)
-        .input("Pago", sql.VarChar, data.MetodoPago || "EFECTIVO")
-        .input("Sub", sql.Decimal(18, 2), realTotal)
         .input("Total", sql.Decimal(18, 2), realTotal)
         .input("Obs", sql.VarChar, data.Observacion || "")
         .query(
-          `INSERT INTO Venta (ClienteID, UsuarioID, NumeroDoc, TipoDoc, MetodoPago, FechaVenta, Subtotal, IGV, Total, Estado, Observacion, FechaCreacion) OUTPUT INSERTED.VentaID VALUES (@Cli, @Usu, @Doc, 'NOTA DE VENTA', @Pago, GETDATE(), @Sub, 0, @Total, 'COMPLETADA', @Obs, GETDATE())`,
+          `INSERT INTO Venta (ClienteID, UsuarioID, NumeroDoc, TipoDoc, FechaVenta, Total, Estado, Observacion, FechaCreacion) OUTPUT INSERTED.VentaID VALUES (@Cli, @Usu, @Doc, 'NOTA DE VENTA', GETDATE(), @Total, 'COMPLETADA', @Obs, GETDATE())`,
         );
       const ventaID = ventaRes.recordset[0].VentaID;
 
@@ -117,7 +115,7 @@ class VentaRepository {
             .input("Monto", sql.Decimal(18, 2), p.montoRecibido)
             .input("Vuelto", sql.Decimal(18, 2), p.vuelto)
             .query(
-              "INSERT INTO PagoVenta (VentaID, MetodoPago, MontoRecibido, Vuelto, FechaPago) VALUES (@vId, @Met, @Monto, @Vuelto, GETDATE())",
+              "INSERT INTO VentaPago (VentaID, Metodo, MontoRecibido, Vuelto, FechaPago) VALUES (@vId, @Met, @Monto, @Vuelto, GETDATE())",
             );
         }
       }
@@ -164,17 +162,27 @@ class VentaRepository {
   async listar(busqueda = "") {
     const pool = await getConnection();
     const request = pool.request();
+    const baseQuery = `
+      SELECT v.VentaID, v.NumeroDoc, c.NombreRazonSocial AS ClienteNombre, 
+             FORMAT(v.FechaVenta, 'dd/MM/yyyy HH:mm') AS FechaVenta, 
+             ISNULL((SELECT STRING_AGG(Metodo, ', ') FROM VentaPago WHERE VentaID = v.VentaID), 'NO DEFINIDO') AS MetodoPago, 
+             ISNULL((SELECT SUM(dv.Descuento) FROM DetalleVenta dv WHERE dv.VentaID = v.VentaID), 0) AS TotalDescuento, 
+             v.Total, v.Estado 
+      FROM Venta v 
+      LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID
+    `;
+
     if (busqueda) {
       request.input("q", sql.VarChar, `%${busqueda}%`);
       return (
         await request.query(
-          `SELECT v.VentaID, v.NumeroDoc, c.NombreRazonSocial AS ClienteNombre, FORMAT(v.FechaVenta, 'dd/MM/yyyy HH:mm') AS FechaVenta, v.MetodoPago, ISNULL((SELECT SUM(dv.Descuento) FROM DetalleVenta dv WHERE dv.VentaID = v.VentaID), 0) AS TotalDescuento, v.Total, v.Estado FROM Venta v LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID WHERE v.NumeroDoc LIKE @q OR c.NombreRazonSocial LIKE @q ORDER BY v.VentaID DESC`,
+          `${baseQuery} WHERE v.NumeroDoc LIKE @q OR c.NombreRazonSocial LIKE @q ORDER BY v.VentaID DESC`,
         )
       ).recordset;
     }
     return (
       await request.query(
-        `SELECT TOP 5 v.VentaID, v.NumeroDoc, c.NombreRazonSocial AS ClienteNombre, FORMAT(v.FechaVenta, 'dd/MM/yyyy HH:mm') AS FechaVenta, v.MetodoPago, ISNULL((SELECT SUM(dv.Descuento) FROM DetalleVenta dv WHERE dv.VentaID = v.VentaID), 0) AS TotalDescuento, v.Total, v.Estado FROM Venta v LEFT JOIN Cliente c ON v.ClienteID = c.ClienteID ORDER BY v.VentaID DESC`,
+        `${baseQuery} ORDER BY v.VentaID DESC OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY`,
       )
     ).recordset;
   }

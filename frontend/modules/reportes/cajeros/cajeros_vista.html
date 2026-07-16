@@ -1,0 +1,94 @@
+<div class="content-header pt-4">
+    <div class="container-fluid">
+        <div class="row mb-2 align-items-center">
+            <div class="col-sm-6">
+                <h1 class="m-0 font-weight-bold" style="font-size: 2.2rem; color: #0f172a;">
+                    <i class="fas fa-user-tie text-primary mr-2"></i> Rendimiento por Cajeros
+                </h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content mt-3">
+    <div class="container-fluid">
+        <div class="card shadow-sm border-0 mb-4" style="border-radius: 8px;">
+            <div class="card-body py-3">
+                <form id="frmFiltrosCajeros" class="row align-items-end">
+                    <div class="col-md-2">
+                        <label class="small font-weight-bold text-muted mb-1">Fecha Inicio</label>
+                        <input type="date" class="form-control form-control-sm" id="txtFechaInicioCajeros" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="small font-weight-bold text-muted mb-1">Fecha Fin</label>
+                        <input type="date" class="form-control form-control-sm" id="txtFechaFinCajeros" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="small font-weight-bold text-muted mb-1">Estado</label>
+                        <select class="form-control form-control-sm" id="cboEstadoCajeros">
+                            <option value="COMPLETADA" selected>Completadas (Ranking Real)</option>
+                            <option value="ANULADA">Anuladas (Auditoría)</option>
+                            <option value="TODAS">Todas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="small font-weight-bold text-muted mb-1">Vendedor / Cajero</label>
+                        <select class="form-control form-control-sm" id="cboCajero">
+                            <option value="TODOS">Todos (Ranking General)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 text-right mt-3 mt-md-0">
+                        <button type="submit" class="btn btn-primary font-weight-bold shadow-sm px-2">
+                            <i class="fas fa-search mr-1"></i> Generar
+                        </button>
+                        <button type="button" class="btn btn-outline-danger font-weight-bold shadow-sm px-2 ml-1"
+                            id="btnExportarPDFCajeros" disabled>
+                            <i class="fas fa-file-pdf mr-1"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-success font-weight-bold shadow-sm px-2 ml-1"
+                            id="btnExportarExcelCajeros" disabled>
+                            <i class="fas fa-file-excel mr-1"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row" id="zonaKPICajeros"></div>
+
+        <div class="card shadow-sm border-0" style="border-radius: 8px;">
+            <div class="card-header bg-white border-bottom py-3">
+                <h3 class="card-title font-weight-bold text-muted mb-0">
+                    <i class="fas fa-list-ol mr-2"></i> Detalle de Rendimiento
+                </h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive bg-white" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-bordered table-sm text-center mb-0"
+                        style="font-size: 0.85rem;">
+                        <thead style="background-color: #1e293b; color: white; position: sticky; top: 0; z-index: 1;">
+                            <tr>
+                                <th style="width: 10%;">Posición</th>
+                                <th style="width: 30%;">Nombre del Vendedor</th>
+                                <th style="width: 20%;">Transacciones</th>
+                                <th style="width: 20%;">Monto Generado (S/)</th>
+                                <th style="width: 20%;">Ticket Promedio (S/)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTablaCajeros">
+                            <tr>
+                                <td colspan="5" class="text-muted py-4">
+                                    <i class="fas fa-info-circle mr-2"></i>Seleccione filtros para generar el reporte.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2">
+                <span class="small text-muted font-weight-bold" id="txtTotalCajeros">Total: 0 cajeros evaluados</span>
+                <span class="small text-muted" id="txtUltimaConsultaCajeros"></span>
+            </div>
+        </div>
+    </div>
+</section>

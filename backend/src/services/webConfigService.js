@@ -9,6 +9,10 @@ class WebConfigService {
     return { logos, sliders };
   }
 
+  async obtenerLogoActivo() {
+    return await repository.getLogoActivo();
+  }
+
   async agregarLogo(file) {
     if (!file) throw new Error("No hay archivo cargado.");
     const url = `/uploads/web/${file.filename}`;

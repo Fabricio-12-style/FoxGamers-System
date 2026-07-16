@@ -47,9 +47,23 @@ class VentaService {
         "SELECT Metodo, MontoRecibido, Vuelto FROM VentaPago WHERE VentaID = @id",
       );
 
+    const cabeceraData = cab.recordset[0];
+    const detallesData = det.recordset;
+
+    if (cabeceraData) {
+      let totalDescuentos = 0;
+      if (detallesData && detallesData.length > 0) {
+        totalDescuentos = detallesData.reduce(
+          (acc, item) => acc + (parseFloat(item.Descuento) || 0),
+          0,
+        );
+      }
+      cabeceraData.Subtotal = parseFloat(cabeceraData.Total) + totalDescuentos;
+    }
+
     return {
-      cabecera: cab.recordset[0],
-      detalles: det.recordset,
+      cabecera: cabeceraData,
+      detalles: detallesData,
       pagos: pag.recordset,
     };
   }
