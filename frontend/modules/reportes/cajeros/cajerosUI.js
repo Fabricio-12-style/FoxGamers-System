@@ -11,6 +11,7 @@ const cboEstado = document.getElementById("cboEstadoCajeros");
 const cboCajero = document.getElementById("cboCajero");
 const frmFiltros = document.getElementById("frmFiltrosCajeros");
 const cuerpoTabla = document.getElementById("cuerpoTablaCajeros");
+const listaMobile = document.getElementById("listaMobileCajeros");
 const zonaKPI = document.getElementById("zonaKPICajeros");
 const btnExportarExcel = document.getElementById("btnExportarExcelCajeros");
 const btnExportarPDF = document.getElementById("btnExportarPDFCajeros");
@@ -106,10 +107,12 @@ const renderizarKPI = (cajeros) => {
 
 const renderizarTabla = (cajeros) => {
   cuerpoTabla.innerHTML = "";
+  listaMobile.innerHTML = "";
   dataActual = cajeros;
 
   if (!cajeros || cajeros.length === 0) {
     cuerpoTabla.innerHTML = `<tr><td colspan="5" class="text-muted py-4">Sin datos registrados con estos filtros.</td></tr>`;
+    listaMobile.innerHTML = `<div class="text-muted py-4 text-center">Sin datos registrados con estos filtros.</div>`;
     btnExportarExcel.disabled = true;
     btnExportarPDF.disabled = true;
     document.getElementById("txtTotalCajeros").textContent =
@@ -137,6 +140,20 @@ const renderizarTabla = (cajeros) => {
                 <td class="font-weight-bold text-success align-middle">S/ ${parseFloat(c.TotalVendido).toFixed(2)}</td>
                 <td class="font-weight-bold text-info align-middle">S/ ${parseFloat(c.TicketPromedio).toFixed(2)}</td>
             </tr>`;
+
+    listaMobile.innerHTML += `
+            <div class="card border-0 shadow-sm mb-2" style="border-radius: 10px;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="font-weight-bold text-dark">${medalla} · ${c.Nombre}</div>
+                        <span class="badge badge-info">${c.Transacciones} tx</span>
+                    </div>
+                    <div class="small text-muted">Monto generado</div>
+                    <div class="font-weight-bold text-success">S/ ${parseFloat(c.TotalVendido).toFixed(2)}</div>
+                    <div class="small text-muted mt-2">Ticket promedio</div>
+                    <div class="font-weight-bold text-info">S/ ${parseFloat(c.TicketPromedio).toFixed(2)}</div>
+                </div>
+            </div>`;
   });
 
   btnExportarExcel.disabled = false;

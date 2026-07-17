@@ -1,4 +1,3 @@
-// Archivo: frontend/modules/inicio/inicioUI.js
 import { inicioApi } from "./inicioApi.js";
 import { inicioState } from "./inicioState.js";
 
@@ -8,11 +7,10 @@ let chartBarras = null;
 
 const inicializarModulo = async () => {
   const usuarioInfo = localStorage.getItem("usuarioFoxGamers");
-  if (!usuarioInfo) return; // Si no hay sesión, aborta silenciosamente (el dashboard shell ya se encarga del login)
+  if (!usuarioInfo) return; 
 
   inicioState.init(usuarioInfo);
 
-  // Configuración global de Chart.js
   Chart.defaults.color = "#475569";
   Chart.defaults.font.family = "'Quicksand', sans-serif";
   Chart.defaults.plugins.tooltip.backgroundColor = "rgba(15, 23, 42, 0.9)";
@@ -49,14 +47,12 @@ const cargarDashboardReal = async () => {
   try {
     const result = await inicioApi.obtenerResumen();
 
-    // 🚀 ESCUDO ANTI-FANTASMAS SPA: Si el DOM ya no existe (el usuario se fue a otra vista), abortamos.
     const lblGananciasHoy = document.getElementById("kpiGananciasHoy");
     if (!lblGananciasHoy) return;
 
     if (result.success) {
       const { kpis, graficos, alertasStock, listaAlertas } = result.data;
 
-      // Inyección de KPIs
       lblGananciasHoy.textContent = `S/ ${kpis.hoy.toFixed(2)}`;
       document.getElementById("kpiGananciasMes").textContent =
         `S/ ${kpis.mes.toFixed(2)}`;

@@ -13,6 +13,7 @@ const cboRentabilidad = document.getElementById("cboRentabilidad");
 const txtBusqueda = document.getElementById("txtBusquedaUtil");
 const frmFiltros = document.getElementById("frmFiltrosUtilidades");
 const cuerpoTabla = document.getElementById("cuerpoTablaUtilidades");
+const listaMobile = document.getElementById("listaMobileUtilidades");
 const zonaKPIs = document.getElementById("zonaKPIsUtilidades");
 const btnExportarExcel = document.getElementById("btnExportarExcelUtil");
 const btnExportarPDF = document.getElementById("btnExportarPDFUtil");
@@ -127,10 +128,12 @@ const renderizarKPIs = (kpis) => {
 
 const renderizarTabla = (detalles) => {
   cuerpoTabla.innerHTML = "";
+  listaMobile.innerHTML = "";
   dataActual = detalles;
 
   if (!detalles || detalles.length === 0) {
     cuerpoTabla.innerHTML = `<tr><td colspan="7" class="text-muted py-4">No se encontraron datos para estos filtros.</td></tr>`;
+    listaMobile.innerHTML = `<div class="text-muted py-4 text-center">No se encontraron datos para estos filtros.</div>`;
     btnExportarExcel.disabled = true;
     btnExportarPDF.disabled = true;
     return;
@@ -162,6 +165,18 @@ const renderizarTabla = (detalles) => {
         </tr>`;
 
     cuerpoTabla.innerHTML += html;
+
+    listaMobile.innerHTML += `
+            <div class="card border-0 shadow-sm mb-2" style="border-radius: 10px;">
+                <div class="card-body p-3">
+                    <div class="font-weight-bold text-dark mb-2">${row.Concepto}</div>
+                    ${!esCategoria ? `<div class="small text-muted">Categoría</div><div class="font-weight-bold">${row.Categoria}</div>` : ""}
+                    <div class="small text-muted mt-2">Unds / Utilidad</div>
+                    <div class="font-weight-bold text-primary">${row.UnidadesVendidas} unds · S/ ${parseFloat(row.UtilidadNeta).toFixed(2)}</div>
+                    <div class="small text-muted mt-2">Margen</div>
+                    <div class="font-weight-bold">${margen.toFixed(1)}%</div>
+                </div>
+            </div>`;
   });
 
   document.getElementById("txtTotalUtil").textContent =

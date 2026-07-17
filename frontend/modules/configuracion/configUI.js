@@ -1,4 +1,3 @@
-// Archivo: frontend/modules/configuracion/configUI.js
 import { configApi } from "./configApi.js";
 import { configState } from "./configState.js";
 
@@ -59,19 +58,20 @@ const renderizarTablaSliders = () => {
 
   const sliders = configState.listaSlidersGlobal;
   let htmlTabla = `
-        <div class="table-responsive bg-white border shadow-sm" style="border-radius: 8px;">
-            <table class="table table-hover align-middle text-center mb-0">
-                <thead style="background-color: #f8fafc; color: var(--fox-text-gray); border-bottom: 2px solid #e2e8f0;">
-                    <tr>
-                        <th width="5%" class="py-3">ID</th>
-                        <th width="20%">Imagen</th>
-                        <th width="20%">Título</th>
-                        <th width="20%">Descripción</th>
-                        <th width="15%">Estado</th>
-                        <th width="20%">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>`;
+        <div class="bg-white border shadow-sm" style="border-radius: 12px; overflow: hidden;">
+            <div class="d-none d-md-block table-responsive">
+                <table class="table table-hover align-middle text-center mb-0">
+                    <thead style="background-color: #f8fafc; color: var(--fox-text-gray); border-bottom: 2px solid #e2e8f0;">
+                        <tr>
+                            <th width="5%" class="py-3">ID</th>
+                            <th width="20%">Imagen</th>
+                            <th width="20%">Título</th>
+                            <th width="20%">Descripción</th>
+                            <th width="15%">Estado</th>
+                            <th width="20%">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
 
   if (sliders.length === 0) {
     htmlTabla += `<tr><td colspan="6" class="py-5 text-muted font-weight-bold"><i class="fas fa-images fa-2x mb-2 d-block"></i> No hay sliders guardados.</td></tr>`;
@@ -106,11 +106,49 @@ const renderizarTablaSliders = () => {
     });
   }
   htmlTabla += `</tbody></table></div>`;
+
+  if (sliders.length > 0) {
+    htmlTabla += `
+        <div class="d-md-none p-2">
+            ${sliders
+              .map((slider) => {
+                const idDb = slider.SliderID || slider.id;
+                const esActivo = slider.Activo === 1 || slider.Activo === true;
+                const urlSegura = obtenerRutaSegura(slider.ImagenURL, idDb);
+                const badgeEstado = esActivo
+                  ? '<span class="badge" style="background-color: #10b981; color: white; padding: 5px 10px; font-size: 0.72rem;">Activo</span>'
+                  : '<span class="badge" style="background-color: #64748b; color: white; padding: 5px 10px; font-size: 0.72rem;">Inactivo</span>';
+                return `
+                <div class="card border-0 shadow-sm mb-2" style="border-radius: 10px;">
+                    <div class="p-2">
+                        <div class="border rounded shadow-sm mb-2" style="background: #ffffff; height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                            <img src="${urlSegura}" onerror="this.src='https://placehold.co/120x80/f8fafc/1e293b?text=Vacio'" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div class="mb-2">
+                            <div class="font-weight-bold" style="color: #334155; font-size: 0.95rem; line-height: 1.3; overflow-wrap: anywhere; word-break: break-word;">${slider.Titulo || "Promoción"}</div>
+                            <div class="text-muted mt-1" style="font-size: 0.8rem; line-height: 1.25; overflow-wrap: anywhere; word-break: break-word;">${slider.Descripcion || "-"}</div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap: 0.35rem;">
+                            ${badgeEstado}
+                            <div class="btn-group shadow-sm" style="border-radius: 6px; overflow: hidden;">
+                                <button class="btn btn-sm text-white" style="background-color: #eab308; width: 32px; height: 32px;" title="Editar" onclick="abrirModalSliderUI(${idDb})"><i class="fas fa-pencil-alt"></i></button>
+                                <button class="btn btn-sm text-white" style="background-color: #ef4444; width: 32px; height: 32px;" title="Eliminar" onclick="eliminarSliderUI(${idDb})"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-sm text-white" style="background-color: ${esActivo ? "#10b981" : "#64748b"}; width: 32px; height: 32px;" title="${esActivo ? "Desactivar" : "Activar"}" onclick="cambiarEstadoSliderUI(${idDb}, ${esActivo ? 0 : 1})"><i class="fas ${esActivo ? "fa-check" : "fa-ban"}"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+              })
+              .join("")}
+        </div>`;
+  }
+
+  htmlTabla += `</div>`;
   galeriaSliders.innerHTML = htmlTabla;
 };
 
 // ==========================================
-// 2. LÓGICA DE INICIALIZACIÓN (SIN DOMContentLoaded)
+// 2. LÓGICA DE INICIALIZACIÓN
 // ==========================================
 const cargarDatosPrincipales = async () => {
   try {
@@ -124,11 +162,9 @@ const cargarDatosPrincipales = async () => {
   }
 };
 
-// 🔥 Esta es la función que lo arranca todo de inmediato 🔥
 const inicializarModulo = () => {
   cargarDatosPrincipales();
 
-  // Eventos visuales de Pestañas
   $(
     '#configWebTabs a[data-toggle="tab"], #configWebTabs button[data-toggle="tab"]',
   ).on("shown.bs.tab", function (e) {
@@ -144,7 +180,6 @@ const inicializarModulo = () => {
     });
   });
 
-  // --- FORMULARIOS DE SUBIDA (LOGOS Y SLIDERS) ---
   const btnSubirLogo = document.getElementById("btnSubirLogo");
   const inputFileLogo = document.getElementById("inputFileLogo");
   let archivoLogoPendiente = null;
@@ -205,7 +240,6 @@ const inicializarModulo = () => {
     });
   }
 
-  // --- SLIDERS ---
   const inputFileSlider = document.getElementById("inputFileSlider");
   const formSlider = document.getElementById("formSlider");
   const btnGuardarSlider = document.getElementById("btnGuardarSlider");
@@ -281,7 +315,7 @@ const inicializarModulo = () => {
   }
 
   // ==========================================
-  // 3. EXPOSICIÓN DE FUNCIONES GLOBALES (Para el HTML)
+  // 3. EXPOSICIÓN DE FUNCIONES GLOBALES 
   // ==========================================
   window.establecerLogoPrincipalUI = async (id) => {
     try {
@@ -382,5 +416,4 @@ const inicializarModulo = () => {
   window.abrirModalSlider = window.abrirModalSliderUI;
 };
 
-// 🚀 ¡Llamada de inicialización directa al inyectar el script!
 inicializarModulo();

@@ -219,7 +219,6 @@ const exportarExcelCajeros = async (req, res) => {
     ]);
     aplicarEstilosEncabezadoTabla(headerRow);
 
-    // Validación: Solo iteramos si hay datos reales
     if (data && data.length > 0) {
       data.forEach((c) => {
         const dataRow = worksheet.addRow([

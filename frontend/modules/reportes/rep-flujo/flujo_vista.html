@@ -14,26 +14,29 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0 mb-4" style="border-radius: 8px;">
             <div class="card-body py-3">
-                <form id="frmFiltrosFlujo" class="row align-items-end">
-                    <div class="col-md-3">
+                <form id="frmFiltrosFlujo" class="row align-items-end report-filtros">
+                    <div class="col-12 col-md-3 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Día de Operación</label>
                         <input type="date" class="form-control" id="txtFechaFlujo" required>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Cajero / Vendedor</label>
                         <select class="form-control" id="cboCajeroFlujo">
                             <option value="TODOS" selected>Todos los cajeros</option>
                         </select>
                     </div>
-                    <div class="col-md-5 text-right mt-3 mt-md-0 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary font-weight-bold shadow-sm flex-fill mr-2">
+                    <div
+                        class="col-12 col-md-5 text-left text-md-right mt-3 mt-md-0 d-flex flex-column flex-md-row justify-content-md-end report-actions">
+                        <button type="submit"
+                            class="btn btn-primary font-weight-bold shadow-sm flex-fill mr-0 mr-md-2 mb-2 mb-md-0 w-100 w-md-auto">
                             <i class="fas fa-search mr-1"></i> Calcular Cierre
                         </button>
-                        <button type="button" class="btn btn-outline-danger font-weight-bold shadow-sm mr-2"
+                        <button type="button"
+                            class="btn btn-outline-danger font-weight-bold shadow-sm mr-0 mr-md-2 mb-2 mb-md-0 w-100 w-md-auto"
                             id="btnExportarPDFFlujo" disabled title="Exportar a PDF">
                             <i class="fas fa-file-pdf"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-success font-weight-bold shadow-sm"
+                        <button type="button" class="btn btn-outline-success font-weight-bold shadow-sm w-100 w-md-auto"
                             id="btnExportarExcelFlujo" disabled title="Exportar a Excel">
                             <i class="fas fa-file-excel"></i>
                         </button>
@@ -50,36 +53,41 @@
                     Movimientos por Cajero</h3>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive bg-white">
-                    <table class="table table-hover table-bordered table-sm text-center mb-0">
-                        <thead>
-                            <tr>
-                                <th style="width: 15%; background-color: #f8fafc; color: #0f172a;"
-                                    class="align-middle border-bottom-0">Cajero</th>
-                                <th style="width: 17%; background-color: #059669; color: white; border: none;"
-                                    class="align-middle">Efectivo Físico (S/)<br><small
-                                        style="color: #a7f3d0; font-weight: normal;">Dinero en Cajón</small></th>
-                                <th style="width: 17%; background-color: #7c3aed; color: white; border: none;"
-                                    class="align-middle">Yape / Plin (S/)<br><small
-                                        style="color: #ddd6fe; font-weight: normal;">Billeteras Digitales</small></th>
-                                <th style="width: 17%; background-color: #0284c7; color: white; border: none;"
-                                    class="align-middle">Tarjetas (S/)<br><small
-                                        style="color: #bae6fd; font-weight: normal;">Ventas POS</small></th>
-                                <th style="width: 17%; background-color: #d97706; color: white; border: none;"
-                                    class="align-middle">Transferencias (S/)<br><small
-                                        style="color: #fde68a; font-weight: normal;">Cuentas Bancarias</small></th>
-                                <th style="width: 17%; background-color: #0f172a; color: white; border: none;"
-                                    class="align-middle">Total Recaudado (S/)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cuerpoTablaFlujo">
-                            <tr>
-                                <td colspan="6" class="text-muted py-4"><i class="fas fa-info-circle mr-2"></i>Presione
-                                    "Calcular Cierre" para ver los datos.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="d-none d-md-block">
+                    <div class="table-responsive bg-white">
+                        <table class="table table-hover table-bordered table-sm text-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%; background-color: #f8fafc; color: #0f172a;"
+                                        class="align-middle border-bottom-0">Cajero</th>
+                                    <th style="width: 17%; background-color: #059669; color: white; border: none;"
+                                        class="align-middle">Efectivo Físico (S/)<br><small
+                                            style="color: #a7f3d0; font-weight: normal;">Dinero en Cajón</small></th>
+                                    <th style="width: 17%; background-color: #7c3aed; color: white; border: none;"
+                                        class="align-middle">Yape / Plin (S/)<br><small
+                                            style="color: #ddd6fe; font-weight: normal;">Billeteras Digitales</small>
+                                    </th>
+                                    <th style="width: 17%; background-color: #0284c7; color: white; border: none;"
+                                        class="align-middle">Tarjetas (S/)<br><small
+                                            style="color: #bae6fd; font-weight: normal;">Ventas POS</small></th>
+                                    <th style="width: 17%; background-color: #d97706; color: white; border: none;"
+                                        class="align-middle">Transferencias (S/)<br><small
+                                            style="color: #fde68a; font-weight: normal;">Cuentas Bancarias</small></th>
+                                    <th style="width: 17%; background-color: #0f172a; color: white; border: none;"
+                                        class="align-middle">Total Recaudado (S/)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoTablaFlujo">
+                                <tr>
+                                    <td colspan="6" class="text-muted py-4"><i
+                                            class="fas fa-info-circle mr-2"></i>Presione
+                                        "Calcular Cierre" para ver los datos.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+                <div class="d-md-none p-2" id="listaMobileFlujo"></div>
             </div>
         </div>
     </div>

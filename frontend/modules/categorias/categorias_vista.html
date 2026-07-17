@@ -5,9 +5,9 @@
 </script>
 
 <div class="content-header pt-4">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
+    <div class="container-fluid d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h1 class="m-0 dato-critico" style="font-size: 2.2rem;">Categorías</h1>
-        <button class="btn btn-fox shadow-sm px-4" id="btnCrearCategoriaModal">
+        <button class="btn btn-fox shadow-sm px-4 btn-crear-categoria-mobile" id="btnCrearCategoriaModal">
             <i class="fas fa-plus-circle mr-1"></i> Nueva Categoría
         </button>
     </div>
@@ -17,8 +17,8 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0">
             <div
-                class="card-header border-bottom-0 pt-3 pb-3 bg-light d-flex justify-content-between align-items-center">
-                <div class="input-group" style="max-width: 400px;">
+                class="card-header border-bottom-0 pt-3 pb-3 bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="input-group w-100" style="max-width: 420px;">
                     <input type="text" id="buscarCategoria" class="form-control"
                         placeholder="Buscar categoría por nombre en el hosting...">
                     <div class="input-group-append">
@@ -33,14 +33,15 @@
             </div>
 
             <div class="card-body p-0 table-responsive">
-                <table class="table table-striped text-center align-middle mb-0">
+                <table class="table table-striped text-center align-middle mb-0 w-100">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th class="text-left">Nombre de Familia</th>
-                            <th class="text-left">Descripción</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
+                            <th style="width: 48px; min-width: 48px;" class="d-table-cell d-md-none border-0"></th>
+                            <th class="d-none d-md-table-cell">ID</th>
+                            <th class="text-left border-0">Nombre de Familia</th>
+                            <th class="d-none d-md-table-cell">Descripción</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
+                            <th class="d-none d-md-table-cell">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaCategorias"></tbody>
@@ -62,7 +63,7 @@
             </div>
 
             <form id="formCategoria">
-                <div class="modal-body px-4 p-4 bg-white">
+                <div class="modal-body p-3 p-sm-4 bg-white">
                     <div class="form-group">
                         <label class="small font-weight-bold text-uppercase mb-1"
                             style="color: var(--fox-text-gray);">Nombre de la Familia *</label>
@@ -77,10 +78,12 @@
                     </div>
                 </div>
 
-                <div class="modal-footer px-4 border-top-0" style="background-color: var(--fox-surface);">
-                    <button type="button" class="btn btn-secondary font-weight-bold mr-2"
+                <div class="modal-footer px-3 px-sm-4 border-top-0 flex-column flex-sm-row"
+                    style="background-color: var(--fox-surface);">
+                    <button type="button"
+                        class="btn btn-secondary font-weight-bold mr-0 mr-sm-2 mb-2 mb-sm-0 w-100 w-sm-auto"
                         data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-fox px-4">
+                    <button type="submit" class="btn btn-fox px-4 w-100 w-sm-auto">
                         <i class="fas fa-save mr-2"></i> Guardar Familia
                     </button>
                 </div>

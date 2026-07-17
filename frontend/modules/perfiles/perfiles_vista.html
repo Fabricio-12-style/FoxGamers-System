@@ -5,9 +5,9 @@
 </script>
 
 <div class="content-header pt-4">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
+    <div class="container-fluid d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h1 class="m-0 dato-critico" style="font-size: 2.2rem;">Gestión de Perfiles</h1>
-        <button class="btn btn-fox shadow-sm px-4" onclick="abrirModalCrear()">
+        <button class="btn btn-fox shadow-sm px-4 btn-crear-perfil-mobile" onclick="abrirModalCrear()">
             <i class="fas fa-plus-circle mr-1"></i> Crear Nuevo Perfil
         </button>
     </div>
@@ -17,7 +17,7 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0">
             <div class="card-header border-bottom-0 pt-3 pb-3 bg-light">
-                <div class="input-group" style="max-width: 400px;">
+                <div class="input-group w-100" style="max-width: 420px;">
                     <input type="text" id="busquedaPerfil" class="form-control"
                         placeholder="Buscar perfil por nombre...">
                     <div class="input-group-append">
@@ -29,15 +29,16 @@
                 </div>
             </div>
             <div class="card-body p-0 table-responsive">
-                <table class="table table-striped text-center align-middle mb-0">
+                <table class="table table-striped text-center align-middle mb-0 w-100">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th class="text-left pl-4">Nombre del Perfil</th>
-                            <th class="text-left">Descripción</th>
-                            <th>Estado</th>
-                            <th>Fecha Creación</th>
-                            <th>Acciones</th>
+                            <th style="width: 48px; min-width: 48px;" class="d-table-cell d-md-none border-0"></th>
+                            <th class="d-none d-md-table-cell">ID</th>
+                            <th class="text-left border-0">Nombre del Perfil</th>
+                            <th class="d-none d-md-table-cell">Descripción</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
+                            <th class="d-none d-md-table-cell">Fecha Creación</th>
+                            <th class="d-none d-md-table-cell">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaPerfiles">
@@ -80,10 +81,13 @@
                             placeholder="Define las responsabilidades..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer px-4 border-top-0" style="background-color: var(--fox-surface);">
-                    <button type="button" class="btn btn-secondary font-weight-bold mr-2"
+                <div class="modal-footer px-3 px-sm-4 border-top-0 flex-column flex-sm-row"
+                    style="background-color: var(--fox-surface);">
+                    <button type="button"
+                        class="btn btn-secondary font-weight-bold mr-0 mr-sm-2 mb-2 mb-sm-0 w-100 w-sm-auto"
                         data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-fox px-4"><i class="fas fa-save mr-2"></i> Registrar
+                    <button type="submit" class="btn btn-fox px-4 w-100 w-sm-auto"><i class="fas fa-save mr-2"></i>
+                        Registrar
                         Perfil</button>
                 </div>
             </form>
@@ -121,10 +125,13 @@
                         <textarea id="editPerfDesc" class="form-control font-weight-bold" rows="3"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer px-4 border-top-0" style="background-color: var(--fox-surface);">
-                    <button type="button" class="btn btn-secondary font-weight-bold mr-2"
+                <div class="modal-footer px-3 px-sm-4 border-top-0 flex-column flex-sm-row"
+                    style="background-color: var(--fox-surface);">
+                    <button type="button"
+                        class="btn btn-secondary font-weight-bold mr-0 mr-sm-2 mb-2 mb-sm-0 w-100 w-sm-auto"
                         data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-fox px-4"><i class="fas fa-save mr-2"></i> Guardar
+                    <button type="submit" class="btn btn-fox px-4 w-100 w-sm-auto"><i class="fas fa-save mr-2"></i>
+                        Guardar
                         Cambios</button>
                 </div>
             </form>
@@ -156,10 +163,12 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer px-4 border-top-0" style="background-color: var(--fox-surface);">
-                <button type="button" class="btn btn-secondary font-weight-bold mr-2"
+            <div class="modal-footer px-3 px-sm-4 border-top-0 flex-column flex-sm-row"
+                style="background-color: var(--fox-surface);">
+                <button type="button"
+                    class="btn btn-secondary font-weight-bold mr-0 mr-sm-2 mb-2 mb-sm-0 w-100 w-sm-auto"
                     data-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formGestionPermisos" class="btn btn-fox px-4">
+                <button type="submit" form="formGestionPermisos" class="btn btn-fox px-4 w-100 w-sm-auto">
                     <i class="fas fa-check-circle mr-2"></i> Guardar Permisos
                 </button>
             </div>

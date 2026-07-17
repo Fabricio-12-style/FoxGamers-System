@@ -104,7 +104,7 @@
             {
               id: "rep_flujo",
               nombre: "Flujo de Caja",
-              icono: "far fa-circle", // Puedes usar "far fa-circle" si prefieres mantener los iconos de submenú circulares
+              icono: "far fa-circle", 
               vista: "../modules/reportes/rep-flujo/flujo_vista.html",
               js: "../modules/reportes/rep-flujo/flujoUI.js",
             },

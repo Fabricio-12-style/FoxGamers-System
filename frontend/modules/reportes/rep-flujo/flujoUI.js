@@ -9,6 +9,7 @@ const txtFecha = document.getElementById("txtFechaFlujo");
 const cboCajero = document.getElementById("cboCajeroFlujo");
 const frmFiltros = document.getElementById("frmFiltrosFlujo");
 const cuerpoTabla = document.getElementById("cuerpoTablaFlujo");
+const listaMobile = document.getElementById("listaMobileFlujo");
 const zonaKPIs = document.getElementById("zonaKPIsFlujo");
 const btnExportarExcel = document.getElementById("btnExportarExcelFlujo");
 const btnExportarPDF = document.getElementById("btnExportarPDFFlujo");
@@ -102,10 +103,12 @@ const renderizarKPIs = (kpis) => {
 
 const renderizarTabla = (detalles) => {
   cuerpoTabla.innerHTML = "";
+  listaMobile.innerHTML = "";
   dataActual = detalles;
 
   if (!detalles || detalles.length === 0) {
     cuerpoTabla.innerHTML = `<tr><td colspan="6" class="text-muted py-4">No hay movimientos registrados para esta fecha.</td></tr>`;
+    listaMobile.innerHTML = `<div class="text-muted py-4 text-center">No hay movimientos registrados para esta fecha.</div>`;
     btnExportarExcel.disabled = true;
     btnExportarPDF.disabled = true;
     return;
@@ -135,6 +138,22 @@ const renderizarTabla = (detalles) => {
                 S/ ${parseFloat(row.TotalGenerado).toFixed(2)}
             </td>
         </tr>`;
+
+    listaMobile.innerHTML += `
+            <div class="card border-0 shadow-sm mb-2" style="border-radius: 10px;">
+                <div class="card-body p-3">
+                    <div class="font-weight-bold text-dark mb-2">${row.Cajero}</div>
+                    <div class="small text-muted">Efectivo</div>
+                    <div class="font-weight-bold text-success">S/ ${parseFloat(row.TotalEfectivo).toFixed(2)} · ${row.TransaccionesEfectivo} tx</div>
+                    <div class="small text-muted mt-2">Yape/Plin</div>
+                    <div class="font-weight-bold" style="color: #6d28d9;">S/ ${parseFloat(row.TotalDigital).toFixed(2)} · ${row.TransaccionesDigital} tx</div>
+                    <div class="small text-muted mt-2">Tarjeta / Transferencia</div>
+                    <div class="font-weight-bold" style="color: #0369a1;">S/ ${parseFloat(row.TotalTarjeta).toFixed(2)} · ${row.TransaccionesTarjeta} tx</div>
+                    <div class="font-weight-bold" style="color: #d97706;">S/ ${parseFloat(row.TotalTransferencia).toFixed(2)} · ${row.TransaccionesTransferencia} tx</div>
+                    <div class="small text-muted mt-2">Total</div>
+                    <div class="font-weight-bold text-dark">S/ ${parseFloat(row.TotalGenerado).toFixed(2)}</div>
+                </div>
+            </div>`;
   });
 
   btnExportarExcel.disabled = false;

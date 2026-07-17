@@ -73,15 +73,34 @@ const actualizarVistaCarrito = () => {
 
     const precioHtml = item.descuento
       ? `<span style="text-decoration:line-through; font-size:11px;" class="text-muted">S/ ${item.precio.toFixed(2)}</span><br><span class="text-success font-weight-bold">S/ ${(item.precio - montoDesc / item.cantidad).toFixed(2)}</span>`
-      : `S/ ${item.precio.toFixed(2)}`;
+      : `<span class="font-weight-bold">S/ ${item.precio.toFixed(2)}</span>`;
 
     body.innerHTML += `
         <tr>
-            <td class="text-left py-2 font-weight-bold text-dark">${item.nombre}</td>
-            <td>${precioHtml}</td>
-            <td width="80"><input type="number" value="${item.cantidad}" min="1" max="${item.stockMaximo}" class="form-control form-control-sm text-center font-weight-bold" onchange="cambiarCantidad(${index}, this.value)"></td>
-            <td class="font-weight-bold text-dark">S/ ${subtotal.toFixed(2)}</td>
-            <td><button class="btn btn-sm btn-danger px-2 py-1" onclick="eliminarItem(${index})"><i class="fas fa-times"></i></button></td>
+            <!-- Columna principal adaptable -->
+            <td class="text-left py-2 align-middle">
+                <div class="font-weight-bold text-dark mb-1" style="font-size: 0.9rem;">${item.nombre}</div>
+                
+                <!-- Este bloque solo aparece en MÓVIL para agrupar los datos -->
+                <div class="d-flex d-md-none justify-content-between align-items-center mt-2 bg-light p-2 rounded border">
+                    <div style="font-size: 0.85rem;">${precioHtml}</div>
+                    <div style="width: 70px;">
+                        <input type="number" value="${item.cantidad}" min="1" max="${item.stockMaximo}" class="form-control form-control-sm text-center font-weight-bold px-1" onchange="cambiarCantidad(${index}, this.value)">
+                    </div>
+                    <div class="font-weight-bold text-primary" style="font-size: 0.9rem;">S/ ${subtotal.toFixed(2)}</div>
+                    <button class="btn btn-sm btn-danger px-2 py-1" onclick="eliminarItem(${index})"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+            
+            <!-- Columnas exclusivas de PC -->
+            <td class="d-none d-md-table-cell align-middle">${precioHtml}</td>
+            <td class="d-none d-md-table-cell align-middle" width="80">
+                <input type="number" value="${item.cantidad}" min="1" max="${item.stockMaximo}" class="form-control form-control-sm text-center font-weight-bold" onchange="cambiarCantidad(${index}, this.value)">
+            </td>
+            <td class="d-none d-md-table-cell font-weight-bold text-dark align-middle">S/ ${subtotal.toFixed(2)}</td>
+            <td class="d-none d-md-table-cell align-middle text-right">
+                <button class="btn btn-sm btn-danger px-2 py-1 shadow-sm" onclick="eliminarItem(${index})"><i class="fas fa-times"></i></button>
+            </td>
         </tr>`;
   });
   actualizarTotalesUI(totalNeto, totalDescuento);
@@ -475,6 +494,27 @@ const configurarEventosDOM = () => {
         validarCaja();
       }
     });
+
+  document
+    .getElementById("tablaHistorialVentas")
+    ?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-expandir");
+      if (btn) {
+        const filaPrincipal = btn.closest(".fila-principal");
+        const filaDetalle = filaPrincipal.nextElementSibling;
+
+        filaDetalle.classList.toggle("d-none");
+
+        const icono = btn.querySelector("i");
+        if (icono.classList.contains("fa-plus")) {
+          icono.classList.remove("fa-plus");
+          icono.classList.add("fa-minus");
+        } else {
+          icono.classList.remove("fa-minus");
+          icono.classList.add("fa-plus");
+        }
+      }
+    });
 };
 
 const cargarHistorialVentas = async (q = "") => {
@@ -485,7 +525,7 @@ const cargarHistorialVentas = async (q = "") => {
     tabla.innerHTML = "";
     if (ventas.length === 0)
       return (tabla.innerHTML =
-        '<tr><td colspan="9" class="py-4 text-muted">No hay registros.</td></tr>');
+        '<tr><td colspan="10" class="py-4 text-muted">No hay registros.</td></tr>');
 
     ventas.forEach((v) => {
       const badge =
@@ -495,31 +535,111 @@ const cargarHistorialVentas = async (q = "") => {
       const subtotalCalculado = (
         parseFloat(v.Total) + parseFloat(v.TotalDescuento)
       ).toFixed(2);
+      const fechaLimpia = v.FechaVenta.includes("T")
+        ? v.FechaVenta.replace("T", " ").substring(0, 16)
+        : v.FechaVenta;
 
       tabla.innerHTML += `
-            <tr>
-                <td class="font-weight-bold">${v.NumeroDoc}</td>
-                <td class="text-left text-dark">${v.ClienteNombre || "CLIENTE GENERAL"}</td>
-                <td>${v.FechaVenta}</td>
-                <td>${v.MetodoPago}</td>
-                <td>S/ ${subtotalCalculado}</td>
-                <td class="text-danger">S/ ${parseFloat(v.TotalDescuento).toFixed(2)}</td>
-                <td class="font-weight-bold text-success">S/ ${parseFloat(v.Total).toFixed(2)}</td>
-                <td>${badge}</td>
-                <td>
-                    <button class="btn btn-sm btn-fox-cyan" onclick="verDetalleVenta(${v.VentaID})"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-sm btn-info" onclick="enviarTicketEmail(${v.VentaID})"><i class="fas fa-envelope"></i></button>
-                    <button class="btn btn-sm btn-dark" onclick="imprimirTicketHistorial(${v.VentaID})"><i class="fas fa-print"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="anularVenta(${v.VentaID})" ${v.Estado === "ANULADA" ? "disabled" : ""}><i class="fas fa-times-circle"></i></button>
+            <tr class="fila-principal">
+                <!-- 1. Expansor Móvil -->
+                <td class="d-table-cell d-md-none align-middle text-center" style="width: 45px; padding: 12px 5px;">
+                    <button class="btn btn-sm btn-light btn-expandir m-0 shadow-sm" style="border-radius: 50%;">
+                        <i class="fas fa-plus text-primary" style="font-size: 1.1rem;"></i>
+                    </button>
+                </td>
+                
+                <!-- 2. N° Doc (Le quitamos el width: 100% para no romper la vista PC) -->
+                <td class="text-left align-middle" style="padding: 12px 10px;">
+                    <div class="font-weight-bold" style="font-size: 0.95rem; color: var(--fox-bg-dark);">${v.NumeroDoc}</div>
+                    
+                    <!-- Resumen móvil: Cliente y Estado Apilados -->
+                    <div class="d-block d-md-none mt-1 text-truncate" style="font-size: 0.75rem; color: var(--fox-text-gray); max-width: 150px;">
+                        <i class="fas fa-user mr-1"></i>${v.ClienteNombre || "GENERAL"}
+                    </div>
+                    <div class="d-block d-md-none mt-1">
+                        ${badge}
+                    </div>
+                </td>
+                
+                <!-- 3. Ocultos en celular (Solo PC) -->
+                <td class="text-left text-dark align-middle d-none d-md-table-cell">${v.ClienteNombre || "CLIENTE GENERAL"}</td>
+                <td class="align-middle d-none d-md-table-cell">${fechaLimpia}</td>
+                <td class="align-middle d-none d-md-table-cell">${v.MetodoPago}</td>
+                <td class="align-middle d-none d-md-table-cell">S/ ${subtotalCalculado}</td>
+                <td class="text-danger align-middle d-none d-md-table-cell">S/ ${parseFloat(v.TotalDescuento).toFixed(2)}</td>
+                
+                <!-- 4. Total (Alineado a la derecha) -->
+                <td class="font-weight-bold text-success align-middle text-right" style="font-size: 1.05rem; white-space: nowrap; padding-right: 15px;">
+                    S/ ${parseFloat(v.Total).toFixed(2)}
+                </td>
+                
+                <!-- 5. Estado (Oculto en celular) -->
+                <td class="align-middle d-none d-md-table-cell">${badge}</td>
+                
+                <!-- 6. Acciones (Solo PC) -->
+                <td class="align-middle d-none d-md-table-cell">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-fox-cyan shadow-sm" onclick="verDetalleVenta(${v.VentaID})" title="Ver Detalle"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-info shadow-sm" onclick="enviarTicketEmail(${v.VentaID})" title="Enviar Correo"><i class="fas fa-envelope"></i></button>
+                        <button class="btn btn-sm btn-dark shadow-sm" onclick="imprimirTicketHistorial(${v.VentaID})" title="Imprimir"><i class="fas fa-print"></i></button>
+                        <button class="btn btn-sm btn-danger shadow-sm" onclick="anularVenta(${v.VentaID})" ${v.Estado === "ANULADA" ? "disabled" : ""} title="Anular"><i class="fas fa-times-circle"></i></button>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- FILA OCULTA EXPANSIBLE (MÓVIL) -->
+            <tr class="fila-detalle d-none d-md-none shadow-inner">
+                <td colspan="10" class="p-3 text-left" style="background: #f8fafc; border-bottom: 3px solid var(--fox-cyan);">
+                    
+                    <!-- Info Fecha y Método -->
+                    <div class="d-flex justify-content-between mb-3 pb-2 border-bottom text-muted" style="font-size: 0.8rem;">
+                        <span><i class="far fa-calendar-alt mr-1"></i> ${fechaLimpia}</span>
+                        <span class="font-weight-bold text-dark"><i class="fas fa-wallet mr-1"></i> ${v.MetodoPago}</span>
+                    </div>
+
+                    <!-- Info Financiera Extra -->
+                    <div class="d-flex justify-content-between text-center mb-2" style="font-size: 0.85rem;">
+                        <div class="flex-fill" style="border-right: 1px solid #dee2e6;">
+                            <span class="d-block font-weight-bold text-muted small mb-1">Subtotal</span>
+                            <strong style="color: var(--fox-bg-dark);">S/ ${subtotalCalculado}</strong>
+                        </div>
+                        <div class="flex-fill">
+                            <span class="d-block font-weight-bold text-muted small mb-1">Descuento</span>
+                            <strong class="text-danger">S/ ${parseFloat(v.TotalDescuento).toFixed(2)}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Botones de Acción Móvil (Cuadrícula 2x2 para incluir el Correo sin apretar) -->
+                    <div class="row m-0 mt-3">
+                        <div class="col-6 p-1">
+                            <button onclick="verDetalleVenta(${v.VentaID})" class="btn btn-fox-cyan btn-block font-weight-bold text-truncate" style="border-radius: 6px; padding: 8px 2px; font-size: 0.8rem;">
+                                <i class="fas fa-eye mr-1"></i> Ver
+                            </button>
+                        </div>
+                        <div class="col-6 p-1">
+                            <button onclick="enviarTicketEmail(${v.VentaID})" class="btn btn-info btn-block font-weight-bold text-truncate" style="border-radius: 6px; padding: 8px 2px; font-size: 0.8rem;">
+                                <i class="fas fa-envelope mr-1"></i> Correo
+                            </button>
+                        </div>
+                        <div class="col-6 p-1">
+                            <button onclick="imprimirTicketHistorial(${v.VentaID})" class="btn btn-dark btn-block font-weight-bold text-truncate" style="border-radius: 6px; padding: 8px 2px; font-size: 0.8rem;">
+                                <i class="fas fa-print mr-1"></i> Print
+                            </button>
+                        </div>
+                        <div class="col-6 p-1">
+                            <button onclick="anularVenta(${v.VentaID})" class="btn btn-danger btn-block font-weight-bold text-truncate" style="border-radius: 6px; padding: 8px 2px; font-size: 0.8rem;" ${v.Estado === "ANULADA" ? "disabled" : ""}>
+                                <i class="fas fa-times-circle mr-1"></i> Anular
+                            </button>
+                        </div>
+                    </div>
                 </td>
             </tr>`;
     });
   } catch (e) {
     tabla.innerHTML =
-      '<tr><td colspan="9" class="text-danger">Error al cargar historial</td></tr>';
+      '<tr><td colspan="10" class="text-danger font-weight-bold">Error al cargar historial</td></tr>';
   }
 };
-
 
 window.agregarAlCarrito = (id) => {
   const p = posState.productosBase.find((x) => x.ProductoID === id);

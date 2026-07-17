@@ -14,29 +14,29 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0 mb-4" style="border-radius: 8px;">
             <div class="card-body py-3">
-                <form id="frmFiltrosUtilidades" class="row align-items-end">
-                    <div class="col-md-2">
+                <form id="frmFiltrosUtilidades" class="row align-items-end report-filtros">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Fecha Inicio</label>
                         <input type="date" class="form-control form-control-sm" id="txtFechaInicioUtil" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Fecha Fin</label>
                         <input type="date" class="form-control form-control-sm" id="txtFechaFinUtil" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Nivel de Análisis</label>
                         <select class="form-control form-control-sm" id="cboNivelAnalisis">
                             <option value="PRODUCTO" selected>Por Producto individual</option>
                             <option value="CATEGORIA">Agrupado por Categoría</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Categoría</label>
                         <select class="form-control form-control-sm" id="cboCategoriaUtil">
                             <option value="TODAS" selected>Todas</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Rentabilidad</label>
                         <select class="form-control form-control-sm" id="cboRentabilidad">
                             <option value="TODOS" selected>Todos los márgenes</option>
@@ -45,15 +45,18 @@
                             <option value="PERDIDA">En Pérdida (≤ 0%)</option>
                         </select>
                     </div>
-                    <div class="col-md-2 text-right mt-3 mt-md-0 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-primary btn-sm font-weight-bold shadow-sm flex-fill mr-1">
+                    <div class="col-12 col-md-2 text-left text-md-right mt-3 mt-md-0 d-flex flex-wrap report-actions">
+                        <button type="submit"
+                            class="btn btn-primary btn-sm font-weight-bold shadow-sm flex-fill mr-1 mb-2 mb-md-0 w-100 w-md-auto">
                             <i class="fas fa-search"></i> Buscar
                         </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm font-weight-bold shadow-sm mr-1"
+                        <button type="button"
+                            class="btn btn-outline-danger btn-sm font-weight-bold shadow-sm mr-1 mb-2 mb-md-0 w-100 w-md-auto"
                             id="btnExportarPDFUtil" disabled title="Exportar a PDF">
                             <i class="fas fa-file-pdf"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-success btn-sm font-weight-bold shadow-sm"
+                        <button type="button"
+                            class="btn btn-outline-success btn-sm font-weight-bold shadow-sm w-100 w-md-auto"
                             id="btnExportarExcelUtil" disabled title="Exportar a Excel">
                             <i class="fas fa-file-excel"></i>
                         </button>
@@ -77,29 +80,34 @@
                 </div>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive bg-white" style="max-height: 500px; overflow-y: auto;">
-                    <table class="table table-hover table-bordered table-sm text-center mb-0"
-                        style="font-size: 0.85rem;">
-                        <thead style="background-color: #1e293b; color: white; position: sticky; top: 0; z-index: 1;">
-                            <tr>
-                                <th style="width: 30%;" id="thConcepto">Concepto</th>
-                                <th style="width: 15%;" class="col-categoria">Categoría</th>
-                                <th style="width: 10%;">Unds</th>
-                                <th style="width: 12%;">Ingreso (S/)</th>
-                                <th style="width: 12%;">Costo (S/)</th>
-                                <th style="width: 12%;">Utilidad Neta (S/)</th>
-                                <th style="width: 9%;">Margen</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cuerpoTablaUtilidades">
-                            <tr>
-                                <td colspan="7" class="text-muted py-4"><i
-                                        class="fas fa-info-circle mr-2"></i>Seleccione filtros para generar el análisis
-                                    financiero.</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="d-none d-md-block">
+                    <div class="table-responsive bg-white" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-hover table-bordered table-sm text-center mb-0"
+                            style="font-size: 0.85rem;">
+                            <thead
+                                style="background-color: #1e293b; color: white; position: sticky; top: 0; z-index: 1;">
+                                <tr>
+                                    <th style="width: 30%;" id="thConcepto">Concepto</th>
+                                    <th style="width: 15%;" class="col-categoria">Categoría</th>
+                                    <th style="width: 10%;">Unds</th>
+                                    <th style="width: 12%;">Ingreso (S/)</th>
+                                    <th style="width: 12%;">Costo (S/)</th>
+                                    <th style="width: 12%;">Utilidad Neta (S/)</th>
+                                    <th style="width: 9%;">Margen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoTablaUtilidades">
+                                <tr>
+                                    <td colspan="7" class="text-muted py-4"><i
+                                            class="fas fa-info-circle mr-2"></i>Seleccione filtros para generar el
+                                        análisis
+                                        financiero.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+                <div class="d-md-none p-2" id="listaMobileUtilidades"></div>
             </div>
             <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2">
                 <span class="small text-muted font-weight-bold" id="txtTotalUtil">Total: 0 registros</span>

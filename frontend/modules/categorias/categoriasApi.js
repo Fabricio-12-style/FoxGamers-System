@@ -1,5 +1,3 @@
-// Archivo: frontend/modules/categorias/categoriasApi.js
-
 const BASE_URL = "http://localhost:3000";
 
 const getToken = () => localStorage.getItem("tokenFoxGamers") || "";

@@ -1,5 +1,3 @@
-// Archivo: frontend/modules/categorias/categoriasState.js
-
 export const categoriasState = {
   listaCategoriasGlobal: [],
   categoriaEditandoId: null,

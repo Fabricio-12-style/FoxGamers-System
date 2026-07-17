@@ -5,9 +5,9 @@
 </script>
 
 <div class="content-header pt-4">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
+    <div class="container-fluid d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h1 class="m-0 dato-critico" style="font-size: 2.2rem;">Gestión de Usuarios</h1>
-        <button class="btn btn-fox shadow-sm px-4" id="btnAbrirModalUsuario">
+        <button class="btn btn-fox shadow-sm px-4 btn-crear-usuario-mobile" id="btnAbrirModalUsuario">
             <i class="fas fa-plus-circle mr-1"></i> Crear Nuevo Usuario
         </button>
     </div>
@@ -17,7 +17,7 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0">
             <div class="card-header border-bottom-0 pt-3 pb-3 bg-light">
-                <div class="input-group" style="max-width: 400px;">
+                <div class="input-group w-100" style="max-width: 420px;">
                     <input type="text" id="busquedaUsuario" class="form-control"
                         placeholder="Buscar por nombre, usuario o perfil...">
                     <div class="input-group-append">
@@ -29,16 +29,17 @@
                 </div>
             </div>
             <div class="card-body p-0 table-responsive">
-                <table class="table table-striped text-center align-middle mb-0">
+                <table class="table table-striped text-center align-middle mb-0 w-100">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th class="text-left">Nombre Completo</th>
-                            <th>Usuario</th>
-                            <th>Correo</th>
-                            <th>Perfil / Rol</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
+                            <th style="width: 48px; min-width: 48px;" class="d-table-cell d-md-none border-0"></th>
+                            <th class="d-none d-md-table-cell">ID</th>
+                            <th class="text-left border-0">Nombre Completo</th>
+                            <th class="d-none d-md-table-cell">Usuario</th>
+                            <th class="d-none d-md-table-cell">Correo</th>
+                            <th class="d-none d-md-table-cell">Perfil / Rol</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
+                            <th class="d-none d-md-table-cell">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaUsuarios">
@@ -63,7 +64,7 @@
             </div>
 
             <form id="formUsuario" autocomplete="off">
-                <div class="modal-body p-4 bg-white">
+                <div class="modal-body p-3 p-sm-4 bg-white">
                     <div class="form-group mb-3">
                         <label class="small font-weight-bold text-uppercase mb-1"
                             style="color: var(--fox-text-gray);">Nombre Completo *</label>
@@ -72,13 +73,13 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-6 form-group mb-3">
+                        <div class="col-12 col-sm-6 form-group mb-3">
                             <label class="small font-weight-bold text-uppercase mb-1"
                                 style="color: var(--fox-text-gray);">Usuario (Login) *</label>
                             <input type="text" id="usuLogin" class="form-control dato-critico text-info" required
                                 placeholder="Ej: fbernuy" autocomplete="one-time-code">
                         </div>
-                        <div class="col-6 form-group mb-3">
+                        <div class="col-12 col-sm-6 form-group mb-3">
                             <label class="small font-weight-bold text-uppercase mb-1"
                                 style="color: var(--fox-text-gray);">Contraseña</label>
                             <input type="password" id="usuPwd" class="form-control font-weight-bold"
@@ -104,10 +105,12 @@
                     </div>
                 </div>
 
-                <div class="modal-footer px-4 border-top-0" style="background-color: var(--fox-surface);">
-                    <button type="button" class="btn btn-secondary font-weight-bold mr-2"
+                <div class="modal-footer px-3 px-sm-4 border-top-0 flex-column flex-sm-row"
+                    style="background-color: var(--fox-surface);">
+                    <button type="button"
+                        class="btn btn-secondary font-weight-bold mr-0 mr-sm-2 mb-2 mb-sm-0 w-100 w-sm-auto"
                         data-dismiss="modal">Cancelar</button>
-                    <button type="submit" id="btnGuardarUsuario" class="btn btn-fox px-4 shadow">
+                    <button type="submit" id="btnGuardarUsuario" class="btn btn-fox px-4 shadow w-100 w-sm-auto">
                         Guardar Usuario
                     </button>
                 </div>

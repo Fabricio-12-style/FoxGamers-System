@@ -8,9 +8,9 @@ class ProductoRepository {
 
     if (busqueda && busqueda.trim() !== "") {
       request.input("search", sql.VarChar, `%${busqueda.trim()}%`);
-      query = `SELECT p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo, p.StockActual, p.StockMinimo, p.PrecioCompra, p.PrecioVenta, p.Activo, p.ImagenURL, p.Descripcion, c.Nombre AS NombreCategoria, c.CategoriaID FROM Inventario p LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID WHERE p.ModeloBase LIKE @search OR p.Atributo LIKE @search OR p.Codigo LIKE @search ORDER BY p.ProductoID DESC`;
+      query = `SELECT p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo, p.StockActual, p.StockMinimo, p.PrecioCompra, p.PrecioVenta, p.Activo, p.ImagenURL, p.Descripcion, c.Nombre AS NombreCategoria, c.CategoriaID, CASE WHEN c.CategoriaID IS NULL OR c.Activo = 1 THEN 1 ELSE 0 END AS CategoriaActiva FROM Inventario p LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID WHERE p.ModeloBase LIKE @search OR p.Atributo LIKE @search OR p.Codigo LIKE @search ORDER BY p.ProductoID DESC`;
     } else {
-      query = `SELECT TOP 5 p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo, p.StockActual, p.StockMinimo, p.PrecioCompra, p.PrecioVenta, p.Activo, p.ImagenURL, p.Descripcion, c.Nombre AS NombreCategoria, c.CategoriaID FROM Inventario p LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID ORDER BY CASE WHEN p.StockActual <= p.StockMinimo THEN 0 ELSE 1 END ASC, p.ProductoID DESC`;
+      query = `SELECT TOP 5 p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo, p.StockActual, p.StockMinimo, p.PrecioCompra, p.PrecioVenta, p.Activo, p.ImagenURL, p.Descripcion, c.Nombre AS NombreCategoria, c.CategoriaID, CASE WHEN c.CategoriaID IS NULL OR c.Activo = 1 THEN 1 ELSE 0 END AS CategoriaActiva FROM Inventario p LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID ORDER BY CASE WHEN p.StockActual <= p.StockMinimo THEN 0 ELSE 1 END ASC, p.ProductoID DESC`;
     }
     const result = await request.query(query);
     return result.recordset;
@@ -67,10 +67,28 @@ class ProductoRepository {
 
   async cambiarEstado(id, estado) {
     const pool = await getConnection();
+    const productoActivo = estado === true || estado === 1 || estado === "1";
+
+    const categoriaRes = await pool
+      .request()
+      .input("id", sql.Int, id)
+      .query(
+        `SELECT CASE WHEN c.CategoriaID IS NULL OR c.Activo = 1 THEN 1 ELSE 0 END AS CategoriaActiva
+         FROM Inventario p
+         LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID
+         WHERE p.ProductoID = @id`,
+      );
+
+    if (productoActivo && categoriaRes.recordset[0]?.CategoriaActiva !== 1) {
+      throw new Error(
+        "No se puede activar el producto porque la categoría asociada está suspendida.",
+      );
+    }
+
     await pool
       .request()
       .input("id", sql.Int, id)
-      .input("estado", sql.Bit, estado)
+      .input("estado", sql.Bit, productoActivo)
       .query("UPDATE Inventario SET Activo = @estado WHERE ProductoID = @id");
   }
 
@@ -124,22 +142,25 @@ class ProductoRepository {
   async listarPOS() {
     const pool = await getConnection();
     return (
-      await pool
-        .request()
-        .query(
-          "SELECT ProductoID, Codigo, Nombre, ModeloBase, Atributo, StockActual, PrecioVenta, Activo, CategoriaID, ImagenURL FROM Inventario WHERE Activo = 1",
-        )
+      await pool.request().query(
+        `SELECT p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo, p.StockActual, p.PrecioVenta, p.Activo, p.CategoriaID, p.ImagenURL
+           FROM Inventario p
+           LEFT JOIN Categoria c ON p.CategoriaID = c.CategoriaID
+           WHERE p.Activo = 1 AND (c.CategoriaID IS NULL OR c.Activo = 1)`,
+      )
     ).recordset;
   }
 
   async listarWeb() {
     const pool = await getConnection();
     return (
-      await pool
-        .request()
-        .query(
-          "SELECT p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo, p.StockActual, p.PrecioVenta, p.Activo, p.ImagenURL, p.Descripcion, c.Nombre AS CategoriaNombre, p.CategoriaID FROM Inventario p INNER JOIN Categoria c ON p.CategoriaID = c.CategoriaID WHERE p.Activo = 1 ORDER BY p.ProductoID DESC",
-        )
+      await pool.request().query(
+        `SELECT p.ProductoID, p.Codigo, p.Nombre, p.ModeloBase, p.Atributo, p.StockActual, p.PrecioVenta, p.Activo, p.ImagenURL, p.Descripcion, c.Nombre AS CategoriaNombre, p.CategoriaID
+           FROM Inventario p
+           INNER JOIN Categoria c ON p.CategoriaID = c.CategoriaID
+           WHERE p.Activo = 1 AND c.Activo = 1
+           ORDER BY p.ProductoID DESC`,
+      )
     ).recordset;
   }
 

@@ -67,7 +67,7 @@ class UserService {
       throw new Error("El nombre de usuario ya pertenece a otra cuenta.");
 
     let perfilFinal = data.PerfilID;
-    if (parseInt(id) === 1) perfilFinal = 1; // Protegemos que el Root siempre sea Admin
+    if (parseInt(id) === 1) perfilFinal = 1; 
 
     let passwordHash = null;
     if (data.Password && data.Password.trim() !== "") {

@@ -55,11 +55,20 @@ class CategoriasRepository {
 
   async cambiarEstado(id, estado) {
     const pool = await getConnection();
+    const categoriaActiva = estado === true || estado === 1 || estado === "1";
+
     await pool
       .request()
       .input("ID", sql.Int, id)
-      .input("Estado", sql.Bit, estado)
+      .input("Estado", sql.Bit, categoriaActiva)
       .query("UPDATE Categoria SET Activo = @Estado WHERE CategoriaID = @ID");
+
+    if (!categoriaActiva) {
+      await pool
+        .request()
+        .input("ID", sql.Int, id)
+        .query("UPDATE Inventario SET Activo = 0 WHERE CategoriaID = @ID");
+    }
   }
 
   async eliminar(id) {

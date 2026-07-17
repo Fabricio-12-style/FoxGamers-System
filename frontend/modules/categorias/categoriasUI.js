@@ -7,7 +7,7 @@ const regexNombre = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\-&]+$/;
 let debounceTimeoutCategorias = null;
 
 // ==========================================
-// 1. FUNCIONES DE RENDERIZADO 
+// 1. FUNCIONES DE RENDERIZADO
 // ==========================================
 const renderizarTabla = () => {
   const tabla = document.getElementById("tablaCategorias");
@@ -18,7 +18,7 @@ const renderizarTabla = () => {
 
   if (datos.length === 0) {
     tabla.innerHTML =
-      '<tr><td colspan="5" class="text-center py-4 font-weight-bold" style="color: var(--fox-text-gray);">No hay familias registradas.</td></tr>';
+      '<tr><td colspan="6" class="text-center py-4 font-weight-bold" style="color: var(--fox-text-gray);">No hay familias registradas.</td></tr>';
     return;
   }
 
@@ -36,16 +36,44 @@ const renderizarTabla = () => {
       : "opacity: 0.5; filter: grayscale(1); background-color: #f1f5f9;";
 
     tabla.innerHTML += `
-        <tr style="${rowStyle}">
-            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${c.CategoriaID}</td>
-            <td class="text-left dato-critico" style="padding-left: 15px;">${c.Nombre}</td>
-            <td class="text-left font-weight-bold" style="color: var(--fox-text-gray);">${c.Descripcion || "-"}</td>
-            <td>${statusBadge}</td>
-            <td>
+        <tr style="${rowStyle}" class="fila-principal-categoria">
+            <td class="d-table-cell d-md-none align-middle text-center" style="width: 48px; padding: 12px 5px;">
+                <button class="btn btn-sm btn-light btn-expandir-categoria m-0 shadow-sm" style="border-radius: 50%;">
+                    <i class="fas fa-plus text-primary" style="font-size: 1rem;"></i>
+                </button>
+            </td>
+            <td class="font-weight-bold d-none d-md-table-cell" style="color: var(--fox-text-gray);">${c.CategoriaID}</td>
+            <td class="text-left dato-critico pl-3 pl-md-4 align-middle">${c.Nombre}</td>
+            <td class="text-left font-weight-bold d-none d-md-table-cell" style="color: var(--fox-text-gray);">${c.Descripcion || "-"}</td>
+            <td class="d-none d-md-table-cell">${statusBadge}</td>
+            <td class="d-none d-md-table-cell">
                 <div class="btn-group">
                     <button onclick="prepararEdicionCatUI(${c.CategoriaID})" class="btn btn-sm btn-fox mx-1" style="width: 34px; height: 34px;" title="Editar"><i class="fas fa-pencil-alt"></i></button>
                     ${btnToggle}
                     <button onclick="eliminarCategoriaFisicaUI(${c.CategoriaID})" class="btn btn-sm btn-fox-danger mx-1" style="width: 34px; height: 34px;" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        <tr class="fila-detalle-categoria d-none d-md-none shadow-inner">
+            <td colspan="6" class="p-3 text-left" style="background: #f8fafc; border-bottom: 3px solid var(--fox-cyan);">
+                <div class="mb-2" style="min-width: 0;">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Descripción</small>
+                    <div class="font-weight-bold text-muted" style="display: block; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal; line-height: 1.35;">${c.Descripcion || "-"}</div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Estado</small>
+                    <div>${statusBadge}</div>
+                </div>
+                <div class="d-flex justify-content-between w-100 flex-wrap" style="gap: 0.35rem;">
+                    <button onclick="prepararEdicionCatUI(${c.CategoriaID})" class="btn btn-fox flex-fill mr-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;">
+                        <i class="fas fa-pencil-alt mr-1"></i> Editar
+                    </button>
+                    <button onclick="toggleEstadoCatUI(${c.CategoriaID}, ${c.Activo ? 0 : 1})" class="btn ${c.Activo ? "btn-secondary" : "btn-fox-cyan"} flex-fill mx-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;">
+                        <i class="fas ${c.Activo ? "fa-eye-slash" : "fa-eye"} mr-1"></i> ${c.Activo ? "Suspender" : "Reactivar"}
+                    </button>
+                    <button onclick="eliminarCategoriaFisicaUI(${c.CategoriaID})" class="btn btn-fox-danger flex-fill ml-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;">
+                        <i class="fas fa-trash mr-1"></i> Borrar
+                    </button>
                 </div>
             </td>
         </tr>`;
@@ -98,6 +126,25 @@ const inicializarModulo = () => {
       }, 400);
     });
   }
+
+  document.getElementById("tablaCategorias")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-expandir-categoria");
+    if (btn) {
+      const filaPrincipal = btn.closest(".fila-principal-categoria");
+      const filaDetalle = filaPrincipal?.nextElementSibling;
+      if (filaDetalle) {
+        filaDetalle.classList.toggle("d-none");
+        const icono = btn.querySelector("i");
+        if (icono?.classList.contains("fa-plus")) {
+          icono.classList.remove("fa-plus");
+          icono.classList.add("fa-minus");
+        } else {
+          icono?.classList.remove("fa-minus");
+          icono?.classList.add("fa-plus");
+        }
+      }
+    }
+  });
 
   const formCat = document.getElementById("formCategoria");
   if (formCat) {
@@ -174,7 +221,7 @@ const inicializarModulo = () => {
   }
 
   // ==========================================
-  // 3. EXPOSICIÓN DE FUNCIONES GLOBALES 
+  // 3. EXPOSICIÓN DE FUNCIONES GLOBALES
   // ==========================================
   window.toggleEstadoCatUI = async (id, nuevoEstado) => {
     try {

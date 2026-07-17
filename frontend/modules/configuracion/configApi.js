@@ -8,13 +8,11 @@ const getAuthHeadersJson = () => ({
 });
 
 export const configApi = {
-    // --- LECTURA ---
     obtenerPublica: async () => {
         const res = await fetch(`${API_URL}/publica`);
         return await res.json();
     },
     
-    // --- LOGOS ---
     subirLogo: async (formData) => {
         const res = await fetch(`${API_URL}/logo`, { method: "POST", headers: getAuthHeaders(), body: formData });
         return await res.json();
@@ -28,7 +26,6 @@ export const configApi = {
         return await res.json();
     },
 
-    // --- SLIDERS ---
     crearSlider: async (formData) => {
         const res = await fetch(`${API_URL}/slider`, { method: "POST", headers: getAuthHeaders(), body: formData });
         return await res.json();

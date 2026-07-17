@@ -9,7 +9,6 @@ const getAuthHeadersJson = () => ({
 
 export const inventarioApi = {
   obtenerInventario: async (termino = "") => {
-    // Usamos cache-busting con timestamp igual que tu código original
     const urlBase =
       termino.trim() !== ""
         ? `${BASE_URL}/productos?q=${encodeURIComponent(termino)}`

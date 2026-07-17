@@ -12,6 +12,7 @@ const cboEstadoStock = document.getElementById("cboEstadoStock");
 const txtBusqueda = document.getElementById("txtBusquedaInv");
 const frmFiltros = document.getElementById("frmFiltrosInventario");
 const cuerpoTabla = document.getElementById("cuerpoTablaInventario");
+const listaMobile = document.getElementById("listaMobileInventario");
 const zonaKPIs = document.getElementById("zonaKPIsInventario");
 const btnExportarExcel = document.getElementById("btnExportarExcelInv");
 const btnExportarPDF = document.getElementById("btnExportarPDFInv");
@@ -108,10 +109,12 @@ const renderizarKPIs = (kpis) => {
 
 const renderizarTabla = (productos) => {
   cuerpoTabla.innerHTML = "";
+  listaMobile.innerHTML = "";
   dataActual = productos;
 
   if (!productos || productos.length === 0) {
     cuerpoTabla.innerHTML = `<tr><td colspan="6" class="text-muted py-4">No se encontraron productos.</td></tr>`;
+    listaMobile.innerHTML = `<div class="text-muted py-4 text-center">No se encontraron productos.</div>`;
     btnExportarExcel.disabled = true;
     btnExportarPDF.disabled = true;
     return;
@@ -132,6 +135,20 @@ const renderizarTabla = (productos) => {
                 <td class="align-middle"><span class="badge ${badgeClass} p-2">${p.EstadoStock}</span></td>
             </tr>
         `;
+
+    listaMobile.innerHTML += `
+            <div class="card border-0 shadow-sm mb-2" style="border-radius: 10px;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="font-weight-bold text-dark">${index + 1}. ${p.Producto}</div>
+                        <span class="badge ${badgeClass} p-2">${p.EstadoStock}</span>
+                    </div>
+                    <div class="small text-muted">Categoría</div>
+                    <div class="font-weight-bold">${p.Categoria}</div>
+                    <div class="small text-muted mt-2">Ventas / stock</div>
+                    <div class="font-weight-bold text-primary">${p.Ventas} unds · ${p.StockActual} stock</div>
+                </div>
+            </div>`;
   });
 
   document.getElementById("txtTotalInv").textContent =

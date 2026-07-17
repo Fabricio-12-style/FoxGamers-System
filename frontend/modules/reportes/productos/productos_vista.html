@@ -14,22 +14,22 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0 mb-4" style="border-radius: 8px;">
             <div class="card-body py-3">
-                <form id="frmFiltrosInventario" class="row align-items-end">
-                    <div class="col-md-2">
+                <form id="frmFiltrosInventario" class="row align-items-end report-filtros">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Fecha Inicio (Ventas)</label>
                         <input type="date" class="form-control form-control-sm" id="txtFechaInicioInv" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Fecha Fin (Ventas)</label>
                         <input type="date" class="form-control form-control-sm" id="txtFechaFinInv" required>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Categoría</label>
                         <select class="form-control form-control-sm" id="cboCategoriaInv">
                             <option value="TODAS" selected>Todas las Categorías</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2 mb-2 mb-md-0">
                         <label class="small font-weight-bold text-muted mb-1">Estado Stock</label>
                         <select class="form-control form-control-sm" id="cboEstadoStock">
                             <option value="TODOS" selected>Todos</option>
@@ -38,15 +38,18 @@
                             <option value="OK">Stock Saludable</option>
                         </select>
                     </div>
-                    <div class="col-md-4 text-right mt-3 mt-md-0">
-                        <button type="submit" class="btn btn-primary font-weight-bold shadow-sm px-3">
+                    <div class="col-12 col-md-4 text-left text-md-right mt-3 mt-md-0 report-actions">
+                        <button type="submit"
+                            class="btn btn-primary font-weight-bold shadow-sm px-3 mb-2 mb-md-0 w-100 w-md-auto">
                             <i class="fas fa-search mr-1"></i> Buscar
                         </button>
-                        <button type="button" class="btn btn-outline-danger font-weight-bold shadow-sm px-3 ml-2"
+                        <button type="button"
+                            class="btn btn-outline-danger font-weight-bold shadow-sm px-3 ml-0 ml-md-2 mb-2 mb-md-0 w-100 w-md-auto"
                             id="btnExportarPDFInv" disabled>
                             <i class="fas fa-file-pdf mr-1"></i> PDF
                         </button>
-                        <button type="button" class="btn btn-outline-success font-weight-bold shadow-sm px-3 ml-2"
+                        <button type="button"
+                            class="btn btn-outline-success font-weight-bold shadow-sm px-3 ml-0 ml-md-2 w-100 w-md-auto"
                             id="btnExportarExcelInv" disabled>
                             <i class="fas fa-file-excel mr-1"></i> Excel
                         </button>
@@ -70,28 +73,33 @@
                 </div>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive bg-white" style="max-height: 500px; overflow-y: auto;">
-                    <table class="table table-hover table-bordered table-sm text-center mb-0"
-                        style="font-size: 0.85rem;">
-                        <thead style="background-color: #1e293b; color: white; position: sticky; top: 0; z-index: 1;">
-                            <tr>
-                                <th style="width: 5%;">Pos.</th>
-                                <th style="width: 35%;">Producto</th>
-                                <th style="width: 15%;">Categoría</th>
-                                <th style="width: 15%;">Ventas (Unds)</th>
-                                <th style="width: 15%;">Stock Actual</th>
-                                <th style="width: 15%;">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cuerpoTablaInventario">
-                            <tr>
-                                <td colspan="6" class="text-muted py-4"><i
-                                        class="fas fa-info-circle mr-2"></i>Seleccione filtros para ver el inventario.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="d-none d-md-block">
+                    <div class="table-responsive bg-white" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-hover table-bordered table-sm text-center mb-0"
+                            style="font-size: 0.85rem;">
+                            <thead
+                                style="background-color: #1e293b; color: white; position: sticky; top: 0; z-index: 1;">
+                                <tr>
+                                    <th style="width: 5%;">Pos.</th>
+                                    <th style="width: 35%;">Producto</th>
+                                    <th style="width: 15%;">Categoría</th>
+                                    <th style="width: 15%;">Ventas (Unds)</th>
+                                    <th style="width: 15%;">Stock Actual</th>
+                                    <th style="width: 15%;">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoTablaInventario">
+                                <tr>
+                                    <td colspan="6" class="text-muted py-4"><i
+                                            class="fas fa-info-circle mr-2"></i>Seleccione filtros para ver el
+                                        inventario.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+                <div class="d-md-none p-2" id="listaMobileInventario"></div>
             </div>
             <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2">
                 <span class="small text-muted font-weight-bold" id="txtTotalInv">Total: 0 productos</span>

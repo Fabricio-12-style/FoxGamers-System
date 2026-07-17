@@ -27,18 +27,19 @@
             </div>
 
             <div class="card-body p-0 table-responsive">
-                <table class="table table-striped text-center align-middle mb-0">
-                    <thead>
+                <table class="table table-striped text-center align-middle mb-0 w-100">
+                    <thead style="background-color: #1e293b; color: white; position: sticky; top: 0; z-index: 1;">
                         <tr>
-                            <th>Imagen</th>
-                            <th class="text-left">Producto</th>
-                            <th class="text-left">Presentación</th>
-                            <th>Stock Actual</th>
-                            <th>Stock Mín.</th>
-                            <th>P. Compra</th>
-                            <th>P. Venta</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
+                            <th style="width: 50px; min-width: 50px;" class="d-table-cell d-md-none border-0"></th>
+                            <th class="d-none d-md-table-cell">Imagen</th>
+                            <th class="text-left border-0">Producto</th>
+                            <th class="text-left d-none d-md-table-cell">Presentación</th>
+                            <th class="d-none d-md-table-cell">Stock Actual</th>
+                            <th class="d-none d-md-table-cell">Stock Mín.</th>
+                            <th class="d-none d-md-table-cell">P. Compra</th>
+                            <th class="d-none d-md-table-cell">P. Venta</th>
+                            <th class="d-none d-md-table-cell">Estado</th>
+                            <th class="d-none d-md-table-cell">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaInventario"></tbody>
@@ -51,84 +52,84 @@
 <div class="modal fade" id="modalAjusteStock" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content shadow-lg border-0">
-            <div class="modal-header"
+            <div class="modal-header py-2"
                 style="background-color: var(--fox-surface); border-bottom: 3px solid var(--fox-cyan) !important;">
-                <h5 class="modal-title font-weight-bold m-0" style="color: var(--fox-text-light);">
+                <h5 class="modal-title font-weight-bold m-0" style="color: var(--fox-text-light); font-size: 1.1rem;">
                     <i class="fas fa-boxes mr-2" style="color: var(--fox-cyan);"></i> Movimiento de Stock
                 </h5>
-                <button type="button" class="close" data-dismiss="modal"
-                    style="color: var(--fox-text-light); opacity: 0.8;">&times;</button>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
             </div>
 
             <form id="formAjusteStock">
-                <div class="modal-body p-4 bg-white">
-                    <div class="text-center mb-4 p-3 rounded"
+                <div class="modal-body p-3 bg-white">
+                    <div class="text-center mb-2 p-2 rounded"
                         style="border: 2px dashed var(--fox-cyan); background-color: #f8fafc;">
                         <small class="text-uppercase font-weight-bold d-block mb-1"
-                            style="color: var(--fox-text-gray);">Producto a modificar:</small>
-                        <h6 id="lblProductoAjuste" class="dato-critico mb-2"
-                            style="color: var(--fox-cyan) !important; font-size: 1.1rem;">Cargando...</h6>
+                            style="color: var(--fox-text-gray); font-size: 0.7rem;">Producto a modificar:</small>
+                        <h6 id="lblProductoAjuste" class="dato-critico mb-1"
+                            style="color: var(--fox-cyan) !important; font-size: 1rem;">Cargando...</h6>
                         <div class="small font-weight-bold" style="color: var(--fox-text-gray);">
                             Stock Actual: <strong id="lblStockActualAjuste" class="dato-critico text-danger"
-                                style="font-size: 1.2rem;">0</strong>
+                                style="font-size: 1.1rem;">0</strong>
                         </div>
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-6 mb-3">
+                        <div class="col-sm-6 mb-2">
                             <label class="small font-weight-bold text-uppercase mb-1"
-                                style="color: var(--fox-text-gray);">Tipo Movimiento *</label>
-                            <select id="ajusteTipo" class="form-control" required>
+                                style="color: var(--fox-text-gray);">Tipo *</label>
+                            <select id="ajusteTipo" class="form-control form-control-sm" required>
                                 <option value="" disabled selected>-- Seleccione --</option>
                                 <option value="ENTRADA" class="text-success font-weight-bold">ENTRADA (+)</option>
                                 <option value="SALIDA" class="text-danger font-weight-bold">SALIDA (-)</option>
                             </select>
                         </div>
-                        <div class="col-sm-6 mb-3">
+                        <div class="col-sm-6 mb-2">
                             <label class="small font-weight-bold text-uppercase mb-1"
                                 style="color: var(--fox-text-gray);">Motivo *</label>
-                            <select id="ajusteMotivoSelect" class="form-control" required disabled>
+                            <select id="ajusteMotivoSelect" class="form-control form-control-sm" required disabled>
                                 <option value="" disabled selected>-- Elija un Tipo --</option>
                             </select>
                         </div>
                     </div>
 
-                    <div id="divAjusteProveedor" class="mb-3 d-none">
+                    <div id="divAjusteProveedor" class="mb-2 d-none">
                         <label class="small font-weight-bold text-uppercase mb-1"
                             style="color: var(--fox-text-gray);">Proveedor *</label>
-                        <select id="ajusteProveedorSelect" class="form-control">
+                        <select id="ajusteProveedorSelect" class="form-control form-control-sm">
                             <option value="" disabled selected>-- Seleccione Proveedor --</option>
                         </select>
                     </div>
 
                     <div class="row">
-                        <div class="col-sm-6 mb-3">
+                        <div class="col-6 mb-2">
                             <label class="small font-weight-bold text-uppercase mb-1"
-                                style="color: var(--fox-text-gray);">Cantidad *</label>
-                            <input type="number" id="ajusteCantidad" class="form-control text-center dato-critico"
-                                min="1" placeholder="Ej: 5" required>
+                                style="color: var(--fox-text-gray);">Cant. *</label>
+                            <input type="number" id="ajusteCantidad"
+                                class="form-control form-control-sm text-center dato-critico" min="1"
+                                placeholder="Ej: 5" required>
                         </div>
-                        <div class="col-sm-6 mb-3">
+                        <div class="col-6 mb-2">
                             <label class="small font-weight-bold text-uppercase mb-1"
-                                style="color: var(--fox-text-gray);">N° Documento</label>
-                            <input type="text" id="ajusteDocumento" class="form-control font-weight-bold"
-                                placeholder="Ej: F001-00456 (Opcional)">
+                                style="color: var(--fox-text-gray);">N° Doc</label>
+                            <input type="text" id="ajusteDocumento"
+                                class="form-control form-control-sm font-weight-bold" placeholder="(Opcional)">
                         </div>
                     </div>
 
-                    <div class="mb-2">
+                    <div class="mb-1">
                         <label class="small font-weight-bold text-uppercase mb-1"
-                            style="color: var(--fox-text-gray);">Observación / Detalle</label>
-                        <textarea id="ajusteObservacion" class="form-control font-weight-bold" rows="2"
+                            style="color: var(--fox-text-gray);">Observación</label>
+                        <textarea id="ajusteObservacion" class="form-control form-control-sm font-weight-bold" rows="1"
                             placeholder="Detalles..."></textarea>
                     </div>
                 </div>
 
-                <div class="modal-footer border-top-0" style="background-color: var(--fox-surface);">
-                    <button type="button" class="btn btn-secondary font-weight-bold px-4"
+                <div class="modal-footer py-2 border-top-0" style="background-color: var(--fox-surface);">
+                    <button type="button" class="btn btn-sm btn-secondary font-weight-bold px-3"
                         data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-fox px-4">
-                        <i class="fas fa-save mr-2"></i> Registrar Movimiento
+                    <button type="submit" class="btn btn-sm btn-fox px-3">
+                        <i class="fas fa-save mr-1"></i> Guardar
                     </button>
                 </div>
             </form>
@@ -136,32 +137,32 @@
     </div>
 </div>
 
+<!-- MODAL KARDEX (Optimizado para Móvil) -->
 <div class="modal fade" id="modalKardex" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg border-0">
-            <div class="modal-header"
+            <div class="modal-header py-2"
                 style="background-color: var(--fox-surface); border-bottom: 3px solid var(--fox-cyan) !important;">
-                <h5 class="modal-title font-weight-bold m-0" style="color: var(--fox-text-light);">Historial de
-                    Movimientos</h5>
-                <button type="button" class="close" data-dismiss="modal"
-                    style="color: var(--fox-text-light); opacity: 0.8;">&times;</button>
+                <h5 class="modal-title font-weight-bold m-0" style="color: var(--fox-text-light); font-size: 1.1rem;">
+                    Historial de Movimientos</h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
             </div>
 
             <div class="modal-body p-0 bg-white">
-                <div class="p-3 text-center" style="background-color: var(--fox-bg-dark);">
-                    <h6 id="lblKardexProducto" class="font-weight-bold m-0"
-                        style="color: var(--fox-cyan); font-size: 1.1rem; letter-spacing: 0.5px;"></h6>
+                <div class="p-2 text-center" style="background-color: var(--fox-bg-dark);">
+                    <h6 id="lblKardexProducto" class="font-weight-bold m-0 text-truncate"
+                        style="color: var(--fox-cyan); font-size: 1rem; letter-spacing: 0.5px;"></h6>
                 </div>
 
                 <div class="table-responsive" style="max-height: 400px;">
-                    <table class="table table-striped text-center align-middle mb-0">
+                    <table class="table table-striped text-center align-middle mb-0" style="table-layout: auto;">
                         <thead style="position: sticky; top: 0; z-index: 1;">
                             <tr>
-                                <th>Fecha</th>
-                                <th>Usuario</th>
+                                <th class="text-left">Fecha / Detalle</th>
+                                <th class="d-none d-md-table-cell">Usuario</th>
                                 <th>Tipo</th>
                                 <th>Cant.</th>
-                                <th class="text-left">Motivo</th>
+                                <th class="text-left d-none d-md-table-cell">Motivo</th>
                             </tr>
                         </thead>
                         <tbody id="tablaKardex"></tbody>

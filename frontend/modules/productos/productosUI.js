@@ -53,13 +53,17 @@ const renderizarTabla = (datos) => {
 
   if (datos.length === 0) {
     tabla.innerHTML =
-      '<tr><td colspan="6" class="text-center py-4 font-weight-bold text-muted">No hay productos en el catálogo.</td></tr>';
+      '<tr><td colspan="7" class="text-center py-4 font-weight-bold text-muted">No hay productos en el catálogo.</td></tr>';
     return;
   }
 
   const esAdmin = productosState.isAdmin();
 
   datos.forEach((p) => {
+    const categoriaActiva =
+      p.CategoriaActiva === true ||
+      p.CategoriaActiva === 1 ||
+      p.CategoriaActiva === undefined;
     const iconVisibilidad = p.Activo
       ? '<i class="fas fa-eye-slash"></i>'
       : '<i class="fas fa-eye"></i>';
@@ -75,20 +79,94 @@ const renderizarTabla = (datos) => {
       ? `<button onclick="prepararEdicionProdUI(${p.ProductoID})" class="btn btn-sm btn-fox mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Editar" ${!p.Activo ? "disabled" : ""}><i class="fas fa-pencil-alt"></i></button>`
       : `<button class="btn btn-sm btn-light mx-1" style="border-radius: 4px; width: 34px; height: 34px; color:#cbd5e1" disabled><i class="fas fa-pencil-alt"></i></button>`;
     const btnVisibilidad = esAdmin
-      ? `<button onclick="toggleEstadoProductoUI(${p.ProductoID}, ${p.Activo ? 0 : 1})" class="btn btn-sm ${btnClass} mx-1" style="border-radius: 4px; width: 34px; height: 34px;">${iconVisibilidad}</button>`
+      ? `<button onclick="toggleEstadoProductoUI(${p.ProductoID}, ${p.Activo ? 0 : 1})" class="btn btn-sm ${btnClass} mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="${categoriaActiva ? (p.Activo ? "Suspender" : "Reactivar") : "Requiere activar la categoría"}" ${!categoriaActiva ? "disabled" : ""}>${iconVisibilidad}</button>`
       : `<button class="btn btn-sm btn-light mx-1" style="border-radius: 4px; width: 34px; height: 34px; color:#cbd5e1" disabled>${iconVisibilidad}</button>`;
     const btnEliminar = esAdmin
       ? `<button onclick="eliminarProductoUI(${p.ProductoID})" class="btn btn-sm btn-fox-danger mx-1" style="border-radius: 4px; width: 34px; height: 34px;" title="Eliminar" ${!p.Activo ? "disabled" : ""}><i class="fas fa-trash"></i></button>`
       : `<button class="btn btn-sm btn-light mx-1" style="border-radius: 4px; width: 34px; height: 34px; color:#cbd5e1" disabled><i class="fas fa-trash"></i></button>`;
 
+    const btnEditarMobile = esAdmin
+      ? `<button onclick="prepararEdicionProdUI(${p.ProductoID})" class="btn btn-fox flex-fill mr-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${!p.Activo ? "disabled" : ""}><i class="fas fa-pencil-alt mr-1"></i> Editar</button>`
+      : "";
+    const btnVisibilidadMobile = esAdmin
+      ? `<button onclick="toggleEstadoProductoUI(${p.ProductoID}, ${p.Activo ? 0 : 1})" class="btn ${btnClass} flex-fill mx-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${!categoriaActiva ? "disabled" : ""}>${iconVisibilidad} ${p.Activo ? "Suspender" : "Reactivar"}</button>`
+      : "";
+    const btnEliminarMobile = esAdmin
+      ? `<button onclick="eliminarProductoUI(${p.ProductoID})" class="btn btn-fox-danger flex-fill ml-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${!p.Activo ? "disabled" : ""}><i class="fas fa-trash mr-1"></i> Borrar</button>`
+      : "";
+
     tabla.innerHTML += `
-        <tr style="${rowStyle}">
-            <td class="font-weight-bold text-muted">${p.ProductoID}</td>
-            <td><img src="${urlImagen}" onerror="this.src='${placeholderIcon}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; background-color: #fff;"></td>
-            <td class="text-left dato-critico">${p.Nombre}</td>
-            <td><span class="badge badge-dark">${p.Codigo}</span></td>
-            <td class="dato-critico">S/ ${p.PrecioVenta.toFixed(2)}</td>
-            <td><div class="btn-group">${btnEditar}${btnVisibilidad}${btnEliminar}</div></td>
+        <tr style="${rowStyle}" class="fila-principal-producto">
+            <!-- 1. Botón Expansor (Móvil) -->
+            <td class="d-table-cell d-md-none align-middle text-center" style="width: 50px; padding: 12px 5px;">
+                <button class="btn btn-sm btn-light btn-expandir-producto m-0 shadow-sm" style="border-radius: 50%; width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-plus text-primary" style="font-size: 0.9rem;"></i>
+                </button>
+            </td>
+            
+            <!-- 2. ID (PC) -->
+            <td class="font-weight-bold text-muted d-none d-md-table-cell align-middle">${p.ProductoID}</td>
+            
+            <!-- 3. Imagen (PC) -->
+            <td class="d-none d-md-table-cell align-middle">
+                <img src="${urlImagen}" onerror="this.src='${placeholderIcon}'" style="height: 40px; width: 40px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; background-color: #fff;">
+            </td>
+            
+            <!-- 4. Nombre (Ambos) -->
+            <td class="text-left align-middle" style="padding: 12px 15px;">
+                <div class="dato-critico text-wrap" style="font-size: 1rem; line-height: 1.2;">${p.Nombre}</div>
+                <!-- Badge de precio para móvil -->
+                <div class="d-block d-md-none mt-2">
+                    <span class="badge badge-dark px-2 py-1" style="font-size: 0.75rem;">S/ ${p.PrecioVenta.toFixed(2)}</span>
+                </div>
+            </td>
+            
+            <!-- 5. Código/SKU (PC) -->
+            <td class="d-none d-md-table-cell align-middle"><span class="badge badge-dark">${p.Codigo}</span></td>
+            
+            <!-- 6. Precio Venta (PC) -->
+            <td class="dato-critico d-none d-md-table-cell align-middle">S/ ${p.PrecioVenta.toFixed(2)}</td>
+            
+            <!-- 7. Acciones (PC) -->
+            <td class="d-none d-md-table-cell align-middle">
+                <div class="btn-group">${btnEditar}${btnVisibilidad}${btnEliminar}</div>
+            </td>
+        </tr>
+
+        <!-- FILA OCULTA EXPANSIBLE (TARJETA MÓVIL) -->
+        <tr class="fila-detalle-producto d-none d-md-none shadow-inner">
+            <td colspan="7" class="p-3 text-left" style="background: #f8fafc; border-bottom: 3px solid var(--fox-orange);">
+                
+                <!-- Info Visual y Presentación -->
+                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                    <img src="${urlImagen}" onerror="this.src='${placeholderIcon}'" style="height: 55px; width: 55px; object-fit: contain; border-radius: 6px; background: #fff; padding: 3px; border: 1px solid #dee2e6; margin-right: 15px; flex-shrink: 0;">
+                    <div style="min-width: 0;">
+                        <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">CÓDIGO SKU</small>
+                        <span class="d-block font-weight-bold text-truncate" style="font-size: 0.95rem; color: var(--fox-text-black);">${p.Codigo}</span>
+                    </div>
+                </div>
+
+                <!-- Cuadrícula de Datos Numéricos -->
+                <div class="d-flex justify-content-between text-center mb-3" style="font-size: 0.85rem;">
+                    <div class="flex-fill" style="border-right: 1px solid #dee2e6; padding: 0 5px;">
+                        <span class="d-block font-weight-bold text-muted small mb-1">Costo</span>
+                        <strong style="font-size: 1rem;">S/${parseFloat(p.PrecioCompra || 0).toFixed(2)}</strong>
+                    </div>
+                    <div class="flex-fill" style="border-right: 1px solid #dee2e6; padding: 0 5px;">
+                        <span class="d-block font-weight-bold text-muted small mb-1">Venta</span>
+                        <strong class="text-primary" style="font-size: 1rem;">S/${p.PrecioVenta.toFixed(2)}</strong>
+                    </div>
+                    <div class="flex-fill" style="padding: 0 5px;">
+                        <span class="d-block font-weight-bold text-muted small mb-1">Stk. Mín.</span>
+                        <strong style="font-size: 1rem;">${p.StockMinimo}</strong>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción Móvil -->
+                <div class="d-flex justify-content-between w-100 flex-wrap" style="gap: 0.35rem;">
+                    ${btnEditarMobile}${btnVisibilidadMobile}${btnEliminarMobile}
+                </div>
+            </td>
         </tr>`;
   });
 };
@@ -129,12 +207,10 @@ const inicializarModulo = async () => {
   await cargarCategoriasSelect();
   listarProductos();
 
-  // Motor Smart Naming
   ["prodCategoria", "prodModelo", "prodAtributo"].forEach((id) => {
     document.getElementById(id)?.addEventListener("input", construirNombreUI);
   });
 
-  // Preview Imagen
   document
     .getElementById("prodImagen")
     ?.addEventListener("change", function (e) {
@@ -158,13 +234,30 @@ const inicializarModulo = async () => {
       } else productosState.setArchivoImagen(null);
     });
 
-  // Buscador
   document.getElementById("buscarProducto")?.addEventListener("input", (e) => {
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => listarProductos(e.target.value), 400);
   });
 
-  // Abrir Modal Crear
+  document.getElementById("tablaProductos")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-expandir-producto");
+    if (btn) {
+      const filaPrincipal = btn.closest(".fila-principal-producto");
+      const filaDetalle = filaPrincipal?.nextElementSibling;
+      if (filaDetalle) {
+        filaDetalle.classList.toggle("d-none");
+        const icono = btn.querySelector("i");
+        if (icono?.classList.contains("fa-plus")) {
+          icono.classList.remove("fa-plus");
+          icono.classList.add("fa-minus");
+        } else {
+          icono?.classList.remove("fa-minus");
+          icono?.classList.add("fa-plus");
+        }
+      }
+    }
+  });
+
   btnNuevo?.addEventListener("click", () => {
     if (!productosState.isAdmin()) return;
     productosState.setEditandoId(null);
@@ -179,7 +272,6 @@ const inicializarModulo = async () => {
     $("#modalProducto").modal("show");
   });
 
-  // Guardar / Editar
   document
     .getElementById("formProducto")
     ?.addEventListener("submit", async (e) => {

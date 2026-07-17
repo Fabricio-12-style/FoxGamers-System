@@ -16,7 +16,7 @@ const modulosSistema = [
 ];
 
 // ==========================================
-// 1. RENDERIZADO DE TABLA 
+// 1. RENDERIZADO DE TABLA
 // ==========================================
 const renderizarTabla = (lista) => {
   const tabla = document.getElementById("tablaPerfiles");
@@ -25,7 +25,7 @@ const renderizarTabla = (lista) => {
 
   if (lista.length === 0) {
     tabla.innerHTML =
-      '<tr><td colspan="6" class="text-muted font-weight-bold py-4">No se encontraron perfiles.</td></tr>';
+      '<tr><td colspan="7" class="text-muted font-weight-bold py-4">No se encontraron perfiles.</td></tr>';
     return;
   }
 
@@ -47,18 +47,51 @@ const renderizarTabla = (lista) => {
       : `<button onclick="bloquearPerfilUI(${p.PerfilID}, ${isActivo ? 0 : 1})" class="btn btn-sm ${btnBloquearClass} mx-1 shadow-sm" style="width: 32px; height: 32px;" title="${isActivo ? "Desactivar" : "Activar"}"><i class="fas ${iconBloquear}"></i></button>`;
 
     tabla.innerHTML += `
-        <tr style="${rowStyle}">
-            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${p.PerfilID}</td>
-            <td class="text-left dato-critico pl-4">${p.Nombre}</td>
-            <td class="text-left font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.85rem;">${p.Descripcion || "-"}</td>
-            <td>${badgeEstado}</td>
-            <td class="font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.85rem;">${new Date(p.FechaCreacion).toLocaleString("es-PE")}</td>
-            <td>
+        <tr style="${rowStyle}" class="fila-principal-perfil">
+            <td class="d-table-cell d-md-none align-middle text-center" style="width: 48px; padding: 12px 5px;">
+                <button class="btn btn-sm btn-light btn-expandir-perfil m-0 shadow-sm" style="border-radius: 50%;">
+                    <i class="fas fa-plus text-primary" style="font-size: 1rem;"></i>
+                </button>
+            </td>
+            <td class="font-weight-bold d-none d-md-table-cell" style="color: var(--fox-text-gray);">${p.PerfilID}</td>
+            <td class="text-left dato-critico pl-3 pl-md-4 align-middle">
+                <div class="font-weight-bold">${p.Nombre}</div>
+                <div class="d-block d-md-none mt-1">
+                    <span class="badge ${isActivo ? "badge-success" : "badge-secondary"} px-2 py-1" style="font-size: 0.72rem;">${isActivo ? "Activo" : "Inactivo"}</span>
+                </div>
+            </td>
+            <td class="text-left font-weight-bold d-none d-md-table-cell" style="color: var(--fox-text-gray); font-size: 0.85rem;">${p.Descripcion || "-"}</td>
+            <td class="d-none d-md-table-cell">${badgeEstado}</td>
+            <td class="font-weight-bold d-none d-md-table-cell" style="color: var(--fox-text-gray); font-size: 0.85rem;">${new Date(p.FechaCreacion).toLocaleString("es-PE")}</td>
+            <td class="d-none d-md-table-cell">
                 <div class="btn-group">
                     <button onclick="verPermisosUI(${p.PerfilID})" class="btn btn-sm btn-fox-cyan mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Permisos"><i class="fas fa-key"></i></button>
                     <button onclick="editarPerfilUI(${p.PerfilID})" class="btn btn-sm btn-fox mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Editar" ${esAdmin ? "disabled" : ""}><i class="fas fa-pencil-alt"></i></button>
                     ${btnBloquear}
                     <button onclick="eliminarPerfilUI(${p.PerfilID})" class="btn btn-sm btn-fox-danger mx-1 shadow-sm" style="width: 32px; height: 32px;" title="Eliminar" ${esAdmin ? "disabled" : ""}><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        <tr class="fila-detalle-perfil d-none d-md-none shadow-inner">
+            <td colspan="7" class="p-3 text-left" style="background: #f8fafc; border-bottom: 3px solid var(--fox-cyan);">
+                <div class="mb-2" style="min-width: 0;">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Descripción</small>
+                    <div class="font-weight-bold text-muted" style="display: block; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal; line-height: 1.35;">${p.Descripcion || "-"}</div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Fecha Creación</small>
+                    <div class="font-weight-bold text-muted">${new Date(p.FechaCreacion).toLocaleString("es-PE")}</div>
+                </div>
+                <div class="d-flex justify-content-between w-100 flex-wrap" style="gap: 0.35rem;">
+                    <button onclick="verPermisosUI(${p.PerfilID})" class="btn btn-fox-cyan flex-fill mr-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;">
+                        <i class="fas fa-key mr-1"></i> Permisos
+                    </button>
+                    <button onclick="editarPerfilUI(${p.PerfilID})" class="btn btn-fox flex-fill mx-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${esAdmin ? "disabled" : ""}>
+                        <i class="fas fa-pencil-alt mr-1"></i> Editar
+                    </button>
+                    <button onclick="eliminarPerfilUI(${p.PerfilID})" class="btn btn-fox-danger flex-fill ml-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${esAdmin ? "disabled" : ""}>
+                        <i class="fas fa-trash mr-1"></i> Borrar
+                    </button>
                 </div>
             </td>
         </tr>`;
@@ -93,7 +126,6 @@ const inicializarModulo = () => {
 
   listarPerfiles();
 
-  // Buscador
   const buscador = document.getElementById("busquedaPerfil");
   if (buscador) {
     buscador.addEventListener("input", (e) => {
@@ -109,7 +141,25 @@ const inicializarModulo = () => {
     });
   }
 
-  // Formularios (Crear, Editar, Permisos)
+  document.getElementById("tablaPerfiles")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-expandir-perfil");
+    if (btn) {
+      const filaPrincipal = btn.closest(".fila-principal-perfil");
+      const filaDetalle = filaPrincipal?.nextElementSibling;
+      if (filaDetalle) {
+        filaDetalle.classList.toggle("d-none");
+        const icono = btn.querySelector("i");
+        if (icono?.classList.contains("fa-plus")) {
+          icono.classList.remove("fa-plus");
+          icono.classList.add("fa-minus");
+        } else {
+          icono?.classList.remove("fa-minus");
+          icono?.classList.add("fa-plus");
+        }
+      }
+    }
+  });
+
   document
     .getElementById("formCrearPerfil")
     ?.addEventListener("submit", async (e) => {
@@ -213,7 +263,7 @@ const inicializarModulo = () => {
     });
 
   // ==========================================
-  // 3. FUNCIONES GLOBALES 
+  // 3. FUNCIONES GLOBALES
   // ==========================================
   window.abrirModalCrear = () => {
     document.getElementById("formCrearPerfil").reset();

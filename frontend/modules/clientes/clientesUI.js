@@ -1,4 +1,3 @@
-// Archivo: frontend/modules/clientes/clientesUI.js
 import { clientesApi } from "./clientesApi.js";
 import { clientesState } from "./clientesState.js";
 
@@ -35,20 +34,61 @@ const renderizarTabla = () => {
       : "opacity: 0.5; filter: grayscale(1); background-color: #f1f5f9;";
 
     tabla.innerHTML += `
-        <tr style="${rowStyle}">
-            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${c.ClienteID}</td>
-            <td class="dato-critico text-info">${c.Documento}<br><small class="text-muted font-weight-bold" style="font-size: 0.7rem;">${c.TipoDocumento}</small></td>
-            <td class="text-left dato-critico">${c.NombreRazonSocial}</td>
-            <td class="font-weight-bold" style="color: var(--fox-text-gray);">${c.Telefono || "-"}</td>
-            <td style="color: var(--fox-text-gray);">${c.Correo || "-"}</td>
-            <td style="color: var(--fox-text-gray); font-size: 0.85rem;">${c.Direccion || "-"}</td>
-            <td>${statusBadge}</td>
-            <td class="small font-weight-bold" style="color: var(--fox-text-gray);">${c.FechaCreacion || "---"}</td>
-            <td style="min-width: 150px;">
+        <tr style="${rowStyle}" class="fila-principal-cliente">
+            <td class="d-table-cell d-md-none align-middle text-center" style="width: 40px; max-width: 40px; padding: 10px 4px;">
+                <button class="btn btn-sm btn-light btn-expandir-cliente m-0 shadow-sm" style="border-radius: 50%; width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <i class="fas fa-plus text-primary" style="font-size: 0.9rem;"></i>
+                </button>
+            </td>
+            <td class="font-weight-bold d-none d-md-table-cell" style="color: var(--fox-text-gray);">${c.ClienteID}</td>
+            <td class="dato-critico text-info d-none d-md-table-cell">${c.Documento}<br><small class="text-muted font-weight-bold" style="font-size: 0.7rem;">${c.TipoDocumento}</small></td>
+            <td class="text-left dato-critico pl-2 pl-md-4 align-middle" style="min-width: 0; width: 100%; max-width: 0; padding-right: 0.35rem;">
+                <div class="font-weight-bold" style="display: block; width: 100%; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal; line-height: 1.3;">${c.NombreRazonSocial}</div>
+                <div class="d-block d-md-none mt-1">
+                    <span class="badge ${c.Activo ? "badge-success" : "badge-secondary"} px-2 py-1" style="font-size: 0.72rem;">${c.Activo ? "Activo" : "Suspendido"}</span>
+                </div>
+            </td>
+            <td class="font-weight-bold d-none d-md-table-cell" style="color: var(--fox-text-gray);">${c.Telefono || "-"}</td>
+            <td class="d-none d-md-table-cell" style="color: var(--fox-text-gray);">${c.Correo || "-"}</td>
+            <td class="d-none d-md-table-cell" style="color: var(--fox-text-gray); font-size: 0.85rem;">${c.Direccion || "-"}</td>
+            <td class="d-none d-md-table-cell">${statusBadge}</td>
+            <td class="small font-weight-bold d-none d-md-table-cell" style="color: var(--fox-text-gray);">${c.FechaCreacion || "---"}</td>
+            <td class="d-none d-md-table-cell" style="min-width: 150px;">
                 <div class="btn-group">
                     <button onclick="prepararEdicionCliUI(${c.ClienteID})" class="btn btn-sm btn-fox mx-1" style="width: 34px; height: 34px;" title="Editar" ${!c.Activo ? "disabled" : ""}><i class="fas fa-pencil-alt"></i></button>
                     ${btnToggle}
                     <button onclick="eliminarClienteFisicoUI(${c.ClienteID})" class="btn btn-sm btn-fox-danger mx-1" style="width: 34px; height: 34px;" title="Eliminar Permanentemente" ${!c.Activo ? "disabled" : ""}><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        <tr class="fila-detalle-cliente d-none d-md-none shadow-inner">
+            <td colspan="9" class="p-3 text-left" style="background: #f8fafc; border-bottom: 3px solid var(--fox-cyan);">
+                <div class="mb-2">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Documento</small>
+                    <div class="font-weight-bold text-info">${c.Documento} · ${c.TipoDocumento}</div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Teléfono</small>
+                    <div class="font-weight-bold text-muted">${c.Telefono || "-"}</div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Correo</small>
+                    <div class="font-weight-bold text-muted">${c.Correo || "-"}</div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Dirección</small>
+                    <div class="font-weight-bold text-muted">${c.Direccion || "-"}</div>
+                </div>
+                <div class="d-flex justify-content-between w-100 flex-wrap" style="gap: 0.35rem;">
+                    <button onclick="prepararEdicionCliUI(${c.ClienteID})" class="btn btn-fox flex-fill mr-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${!c.Activo ? "disabled" : ""}>
+                        <i class="fas fa-pencil-alt mr-1"></i> Editar
+                    </button>
+                    <button onclick="toggleEstadoUI(${c.ClienteID}, ${c.Activo ? 0 : 1})" class="btn ${c.Activo ? "btn-secondary" : "btn-fox-cyan"} flex-fill mx-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;">
+                        <i class="fas ${c.Activo ? "fa-user-slash" : "fa-user-check"} mr-1"></i> ${c.Activo ? "Suspender" : "Reactivar"}
+                    </button>
+                    <button onclick="eliminarClienteFisicoUI(${c.ClienteID})" class="btn btn-fox-danger flex-fill ml-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${!c.Activo ? "disabled" : ""}>
+                        <i class="fas fa-trash mr-1"></i> Borrar
+                    </button>
                 </div>
             </td>
         </tr>`;
@@ -86,7 +126,25 @@ const listarClientes = async (terminoBusqueda = "") => {
 const inicializarModulo = () => {
   listarClientes();
 
-  // Buscador Local
+  document.getElementById("tablaClientes")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-expandir-cliente");
+    if (btn) {
+      const filaPrincipal = btn.closest(".fila-principal-cliente");
+      const filaDetalle = filaPrincipal?.nextElementSibling;
+      if (filaDetalle) {
+        filaDetalle.classList.toggle("d-none");
+        const icono = btn.querySelector("i");
+        if (icono?.classList.contains("fa-plus")) {
+          icono.classList.remove("fa-plus");
+          icono.classList.add("fa-minus");
+        } else {
+          icono?.classList.remove("fa-minus");
+          icono?.classList.add("fa-plus");
+        }
+      }
+    }
+  });
+
   const inputBuscar = document.getElementById("buscarCliente");
   if (inputBuscar) {
     inputBuscar.addEventListener("input", (e) => {
@@ -96,7 +154,6 @@ const inicializarModulo = () => {
     });
   }
 
-  // Consulta Automática Documento (API)
   const btnConsultarDoc = document.getElementById("btnConsultarDoc");
   if (btnConsultarDoc) {
     btnConsultarDoc.addEventListener("click", async () => {
@@ -139,7 +196,6 @@ const inicializarModulo = () => {
     });
   }
 
-  // Submit Formulario
   const formCliente = document.getElementById("formCliente");
   if (formCliente) {
     formCliente.addEventListener("submit", async (e) => {

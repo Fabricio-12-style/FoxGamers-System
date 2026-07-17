@@ -88,7 +88,7 @@ const login = async (req, res) => {
       );
 
     // =======================================================
-    // NUEVO: GENERACIÓN DEL TOKEN DE SEGURIDAD (JWT)
+    // GENERACIÓN DEL TOKEN DE SEGURIDAD 
     // =======================================================
     const token = jwt.sign(
       {

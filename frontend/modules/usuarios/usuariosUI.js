@@ -55,18 +55,56 @@ const renderizarTablaUsuarios = (lista) => {
     const iconToggle = isActivo ? "fa-user-slash" : "fa-user-check";
 
     tabla.innerHTML += `
-        <tr style="${rowStyle}">
-            <td class="font-weight-bold text-muted">${u.UsuarioID}</td>
-            <td class="text-left dato-critico pl-4">${u.Nombre} ${esAdminRaiz ? '<i class="fas fa-crown text-warning ml-2" title="Cuenta Raíz"></i>' : ""}</td>
-            <td class="dato-critico text-info">${u.Usuario}</td>
-            <td class="font-weight-bold text-muted">${u.Correo || "---"}</td>
-            <td class="dato-critico text-muted">${u.Perfil}</td>
-            <td><span class="badge ${isActivo ? "badge-success" : "badge-secondary"}">${isActivo ? "Activo" : "Inactivo"}</span></td>
-            <td>
+        <tr style="${rowStyle}" class="fila-principal-usuario">
+            <td class="d-table-cell d-md-none align-middle text-center" style="width: 48px; padding: 12px 5px;">
+                <button class="btn btn-sm btn-light btn-expandir-usuario m-0 shadow-sm" style="border-radius: 50%;">
+                    <i class="fas fa-plus text-primary" style="font-size: 1rem;"></i>
+                </button>
+            </td>
+            <td class="font-weight-bold text-muted d-none d-md-table-cell">${u.UsuarioID}</td>
+            <td class="text-left dato-critico pl-3 pl-md-4 align-middle">
+                <div class="font-weight-bold">${u.Nombre}</div>
+                <div class="d-block d-md-none mt-1">
+                    <span class="badge ${isActivo ? "badge-success" : "badge-secondary"} px-2 py-1" style="font-size: 0.72rem;">${isActivo ? "Activo" : "Inactivo"}</span>
+                </div>
+                ${esAdminRaiz ? '<i class="fas fa-crown text-warning ml-2" title="Cuenta Raíz"></i>' : ""}
+            </td>
+            <td class="dato-critico text-info d-none d-md-table-cell">${u.Usuario}</td>
+            <td class="font-weight-bold text-muted d-none d-md-table-cell">${u.Correo || "---"}</td>
+            <td class="dato-critico text-muted d-none d-md-table-cell">${u.Perfil}</td>
+            <td class="d-none d-md-table-cell"><span class="badge ${isActivo ? "badge-success" : "badge-secondary"}">${isActivo ? "Activo" : "Inactivo"}</span></td>
+            <td class="d-none d-md-table-cell">
                 <div class="btn-group">
                     <button onclick="editarUsuarioUI(${u.UsuarioID})" class="btn btn-sm btn-fox mx-1 shadow-sm" style="border-radius: 4px; width: 34px; height: 34px;" title="Editar" ${bloquearEdicion ? "disabled" : ""}><i class="fas fa-pencil-alt"></i></button>
                     <button onclick="cambiarEstadoUsuarioUI(${u.UsuarioID}, ${isActivo ? 0 : 1})" class="btn btn-sm ${btnToggleClass} mx-1 shadow-sm" style="border-radius: 4px; width: 34px; height: 34px;" title="${isActivo ? "Bloquear" : "Activar"}" ${bloquearEstado ? "disabled" : ""}><i class="fas ${iconToggle}"></i></button>
                     <button onclick="eliminarUsuarioUI(${u.UsuarioID})" class="btn btn-sm btn-fox-danger mx-1 shadow-sm" style="border-radius: 4px; width: 34px; height: 34px;" title="Eliminar" ${bloquearBorrado ? "disabled" : ""}><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        <tr class="fila-detalle-usuario d-none d-md-none shadow-inner">
+            <td colspan="7" class="p-3 text-left" style="background: #f8fafc; border-bottom: 3px solid var(--fox-cyan);">
+                <div class="mb-2">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Usuario</small>
+                    <div class="font-weight-bold text-info">${u.Usuario}</div>
+                </div>
+                <div class="mb-2">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Correo</small>
+                    <div class="font-weight-bold text-muted">${u.Correo || "---"}</div>
+                </div>
+                <div class="mb-3">
+                    <small class="text-uppercase font-weight-bold" style="color: var(--fox-text-gray); font-size: 0.65rem;">Perfil / Rol</small>
+                    <div class="font-weight-bold text-muted">${u.Perfil}</div>
+                </div>
+                <div class="d-flex justify-content-between w-100">
+                    <button onclick="editarUsuarioUI(${u.UsuarioID})" class="btn btn-fox flex-fill mr-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${bloquearEdicion ? "disabled" : ""}>
+                        <i class="fas fa-pencil-alt mr-1"></i> Editar
+                    </button>
+                    <button onclick="cambiarEstadoUsuarioUI(${u.UsuarioID}, ${isActivo ? 0 : 1})" class="btn ${btnToggleClass} flex-fill mx-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${bloquearEstado ? "disabled" : ""}>
+                        <i class="fas ${iconToggle} mr-1"></i> ${isActivo ? "Bloquear" : "Activar"}
+                    </button>
+                    <button onclick="eliminarUsuarioUI(${u.UsuarioID})" class="btn btn-fox-danger flex-fill ml-1 font-weight-bold text-truncate" style="border-radius: 6px; padding: 10px 0; font-size: 0.82rem;" ${bloquearBorrado ? "disabled" : ""}>
+                        <i class="fas fa-trash mr-1"></i> Borrar
+                    </button>
                 </div>
             </td>
         </tr>`;
@@ -111,6 +149,25 @@ const inicializarModulo = () => {
     });
   }
 
+  document.getElementById("tablaUsuarios")?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".btn-expandir-usuario");
+    if (btn) {
+      const filaPrincipal = btn.closest(".fila-principal-usuario");
+      const filaDetalle = filaPrincipal?.nextElementSibling;
+      if (filaDetalle) {
+        filaDetalle.classList.toggle("d-none");
+        const icono = btn.querySelector("i");
+        if (icono?.classList.contains("fa-plus")) {
+          icono.classList.remove("fa-plus");
+          icono.classList.add("fa-minus");
+        } else {
+          icono?.classList.remove("fa-minus");
+          icono?.classList.add("fa-plus");
+        }
+      }
+    }
+  });
+
   const inputUsuarioLogin = document.getElementById("usuLogin");
   if (inputUsuarioLogin) {
     inputUsuarioLogin.addEventListener("input", function () {
@@ -140,7 +197,7 @@ const inicializarModulo = () => {
         Usuario: document.getElementById("usuLogin").value.trim(),
         Password: document.getElementById("usuPwd").value,
         Correo: document.getElementById("usuCorreo").value.trim(),
-        PerfilID: document.getElementById("usuRol").value, 
+        PerfilID: document.getElementById("usuRol").value,
       };
 
       if (
@@ -227,7 +284,7 @@ const inicializarModulo = () => {
     document.getElementById("usuPwd").value = "";
     document.getElementById("pwdHelp").textContent =
       "Déjalo en blanco si no deseas cambiar la contraseña.";
-    document.getElementById("usuRol").value = user.PerfilID; 
+    document.getElementById("usuRol").value = user.PerfilID;
 
     document.getElementById("btnGuardarUsuario").innerHTML =
       '<i class="fas fa-save mr-2"></i> Actualizar Cambios';
@@ -280,7 +337,7 @@ const inicializarModulo = () => {
         if (res.success) {
           Swal.fire("Eliminado", res.mensaje, "success");
           listarUsuarios();
-        } else Swal.fire("Atención", res.mensaje, "warning"); 
+        } else Swal.fire("Atención", res.mensaje, "warning");
       } catch (e) {
         Swal.fire("Error", "Error de servidor.", "error");
       }

@@ -12,6 +12,7 @@ const cboMetodoPago = document.getElementById("cboMetodoPago");
 const txtBusquedaRapida = document.getElementById("txtBusquedaRapida");
 const frmFiltros = document.getElementById("frmFiltrosVentas");
 const cuerpoTabla = document.getElementById("cuerpoTablaVentas");
+const listaMobile = document.getElementById("listaMobileVentas");
 const zonaKPIs = document.getElementById("zonaKPIsVentas");
 const btnExportarExcel = document.getElementById("btnExportarExcel");
 const btnExportarPDF = document.getElementById("btnExportarPDF");
@@ -91,10 +92,12 @@ const renderizarKPIs = (resumen) => {
 
 const renderizarTabla = (ventas) => {
   cuerpoTabla.innerHTML = "";
+  listaMobile.innerHTML = "";
   dataActual = ventas;
 
   if (!ventas || ventas.length === 0) {
     cuerpoTabla.innerHTML = `<tr><td colspan="7" class="text-muted py-4">No hay ventas que coincidan con los filtros.</td></tr>`;
+    listaMobile.innerHTML = `<div class="text-muted py-4 text-center">No hay ventas que coincidan con los filtros.</div>`;
     document.getElementById("txtTotalRegistros").textContent =
       "Total: 0 ventas";
     btnExportarExcel.disabled = true;
@@ -133,6 +136,22 @@ const renderizarTabla = (ventas) => {
     }
 
     cuerpoTabla.innerHTML += htmlPrincipal + htmlDetalle;
+
+    listaMobile.innerHTML += `
+            <div class="card border-0 shadow-sm mb-2" style="border-radius: 10px;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="font-weight-bold text-dark">N-${v.VentaID}</div>
+                        <span class="badge ${badgeEstado}">${v.Estado}</span>
+                    </div>
+                    <div class="small text-muted">Cliente</div>
+                    <div class="font-weight-bold">${v.Cliente}</div>
+                    <div class="small text-muted mt-2">Método(s)</div>
+                    <div class="font-weight-bold">${v.MetodoResumen}</div>
+                    <div class="small text-muted mt-2">Total</div>
+                    <div class="font-weight-bold text-success">S/ ${parseFloat(v.Total).toFixed(2)}</div>
+                </div>
+            </div>`;
   });
 
   document.getElementById("txtTotalRegistros").textContent =

@@ -5,10 +5,10 @@
 </script>
 
 <div class="content-header pt-4">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
+    <div class="container-fluid d-flex justify-content-between align-items-center flex-wrap" style="gap: 0.5rem;">
         <h1 class="m-0 dato-critico" style="font-size: 2.2rem;">Productos</h1>
         <button class="btn btn-fox shadow-sm px-4" id="btnNuevoProducto">
-            <i class="fas fa-plus-circle mr-1"></i> Registrar Producto
+            <i class="fas fa-plus-circle mr-1"></i> <span class="d-none d-sm-inline">Registrar Producto</span><span class="d-inline d-sm-none">Nuevo</span>
         </button>
     </div>
 </div>
@@ -17,8 +17,9 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0">
             <div
-                class="card-header border-bottom-0 pt-3 pb-3 bg-light d-flex justify-content-between align-items-center">
-                <div class="input-group" style="max-width: 400px;">
+                class="card-header border-bottom-0 pt-3 pb-3 bg-light d-flex justify-content-between align-items-center flex-wrap"
+                style="gap: 0.5rem;">
+                <div class="input-group" style="max-width: 400px; min-width: 180px; flex: 1 1 auto;">
                     <input type="text" id="buscarProducto" class="form-control"
                         placeholder="Buscar por modelo, código o variante...">
                     <div class="input-group-append">
@@ -33,15 +34,16 @@
             </div>
 
             <div class="card-body p-0 table-responsive">
-                <table class="table table-striped text-center align-middle mb-0">
-                    <thead>
+                <table class="table table-striped text-center align-middle mb-0 w-100">
+                    <thead style="background-color: #1e293b; color: white; position: sticky; top: 0; z-index: 1;">
                         <tr>
-                            <th>ID</th>
-                            <th>Imagen</th>
-                            <th class="text-left">Nombre Completo</th>
-                            <th>Código/SKU</th>
-                            <th>P. Venta</th>
-                            <th>Acciones</th>
+                            <th style="width: 50px; min-width: 50px;" class="d-table-cell d-md-none border-0"></th>
+                            <th class="d-none d-md-table-cell">ID</th>
+                            <th class="d-none d-md-table-cell">Imagen</th>
+                            <th class="text-left border-0">Nombre Completo</th>
+                            <th class="d-none d-md-table-cell">Código/SKU</th>
+                            <th class="d-none d-md-table-cell">P. Venta</th>
+                            <th class="d-none d-md-table-cell">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tablaProductos"></tbody>

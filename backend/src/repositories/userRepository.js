@@ -3,7 +3,6 @@ const { getConnection, sql } = require("../config/db");
 class UserRepository {
   async listar() {
     const pool = await getConnection();
-    // Usamos un JOIN para traer el nombre del perfil dinámicamente
     const result = await pool.request().query(`
             SELECT U.UsuarioID, U.NombreCompleto AS Nombre, U.NombreUsuario AS Usuario, U.Correo, 
                    P.Nombre AS Perfil, U.PerfilID, U.Activo 
