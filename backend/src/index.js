@@ -20,7 +20,8 @@ const empresaRoutes = require("./routes/empresaRoutes");
 const reporteRoutes = require("./routes/reporteRoutes");
 
 // Middlewares
-const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173"].filter(Boolean);
+const frontendUrl = process.env.FRONTEND_URL?.replace(/\/$/, "");
+const allowedOrigins = [frontendUrl, "http://localhost:5173"].filter(Boolean);
 
 app.use(
   cors({
@@ -31,6 +32,7 @@ app.use(
 
       return callback(new Error("Origen no permitido por CORS"));
     },
+    credentials: true,
   }),
 );
 app.use(express.json({ limit: "50mb" }));
