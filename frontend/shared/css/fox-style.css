@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap');
+
 :root {
     --fox-bg-dark: #0f172a;
     --fox-surface: #1e293b;
@@ -219,8 +221,6 @@ body {
 #zonaTicket {
     display: none;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap');
 
 @media print {
     @page {

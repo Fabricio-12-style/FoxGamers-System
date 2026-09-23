@@ -37,7 +37,7 @@ const inicializarConfiguracion = async () => {
       datosEmpresa = await resEmpresa.json();
       try {
         logoEmpresaBase64 = await convertirImagenABase64(
-          "/shared/img/Fox-limpio.png",
+          "/img/foxGamers.jpeg",
         );
       } catch (e) {}
     }

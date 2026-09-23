@@ -287,7 +287,7 @@
     productosFiltrados.forEach((p) => {
       const imagenSrc = p.ImagenURL
         ? getUrl(p.ImagenURL)
-        : "../shared/img/producto-placeholder.png";
+        : "/img/foxGamers.jpeg";
       const tieneStock = p.StockActual > 0;
       const esStockCritico = tieneStock && p.StockActual <= 3;
 

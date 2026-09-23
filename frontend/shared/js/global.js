@@ -18,7 +18,7 @@ window.cargarLogoGlobal = async () => {
       logosEnPantalla.forEach((img) => {
         img.src = urlConCacheBuster;
         img.onerror = () => {
-          img.src = "../shared/img/foxGamers.jpeg";
+          img.src = "/img/foxGamers.jpeg";
         };
       });
     }

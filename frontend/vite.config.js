@@ -4,6 +4,10 @@ import { defineConfig } from "vite";
 
 function findHtmlFiles(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.isDirectory() && ["dist", "node_modules", "public"].includes(entry.name)) {
+      return [];
+    }
+
     const entryPath = join(directory, entry.name);
 
     if (entry.isDirectory()) {
