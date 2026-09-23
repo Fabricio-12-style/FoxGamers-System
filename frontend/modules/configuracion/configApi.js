@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api/config-web";
+const API_URL = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/config-web`;
 
 const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
 const getAuthHeaders = () => ({ "Authorization": `Bearer ${getToken()}` });

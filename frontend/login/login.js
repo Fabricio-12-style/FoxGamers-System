@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const togglePassword = document.getElementById("togglePassword");
 const passwordInput = document.getElementById("password");
 
@@ -32,7 +34,7 @@ if (btnIngresar) {
     const password = passwordInput.value;
 
     try {
-      const respuesta = await fetch("http://localhost:3000/api/auth/login", {
+      const respuesta = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

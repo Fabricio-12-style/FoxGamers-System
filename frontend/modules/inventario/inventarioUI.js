@@ -2,7 +2,8 @@ import { inventarioApi } from "./inventarioApi.js";
 import { inventarioState } from "./inventarioState.js";
 
 const placeholderImg = "https://placehold.co/50x50/f8fafc/1e293b?text=Fox";
-const BASE_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE_URL = API_URL;
 let debounceTimeout = null;
 
 const motivosFijos = {

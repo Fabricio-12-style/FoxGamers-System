@@ -1,5 +1,6 @@
-const BASE_URL = "http://localhost:3000/api/usuarios";
-const PERFILES_URL = "http://localhost:3000/api/perfiles";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE_URL = `${API_URL}/api/usuarios`;
+const PERFILES_URL = `${API_URL}/api/perfiles`;
 
 const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
 const getAuthHeaders = () => ({ Authorization: `Bearer ${getToken()}` });

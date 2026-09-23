@@ -1,7 +1,7 @@
 (function () {
-  const BASE_URL = "http://localhost:3000";
-  const API_URL = `${BASE_URL}/api/productos/publicos`;
-  const API_CONFIG_URL = `${BASE_URL}/api/config-web/publica`;
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+  const API_PRODUCTS_URL = `${API_URL}/api/productos/publicos`;
+  const API_CONFIG_URL = `${API_URL}/api/config-web/publica`;
   const WHATSAPP_NUMERO = "51961460326";
 
   let cacheProductos = [];
@@ -11,7 +11,7 @@
   let ocultarAgotados = false;
 
   const getUrl = (path) =>
-    !path ? null : path.startsWith("http") ? path : `${BASE_URL}${path}`;
+    !path ? null : path.startsWith("http") ? path : `${API_URL}${path}`;
 
   document.addEventListener("DOMContentLoaded", () => {
     configurarModoOscuro();
@@ -60,7 +60,7 @@
 
   async function cargarDatosEmpresaWeb() {
     try {
-      const res = await fetch(`${BASE_URL}/api/empresa/publica`);
+      const res = await fetch(`${API_URL}/api/empresa/publica`);
       const resJson = await res.json();
 
       if (resJson.success && resJson.data) {
@@ -156,8 +156,8 @@
         `;
 
       const [resProductos, resDescuentos] = await Promise.all([
-        fetch(API_URL),
-        fetch(`${BASE_URL}/api/descuentos/vigentes`),
+        fetch(API_PRODUCTS_URL),
+        fetch(`${API_URL}/api/descuentos/vigentes`),
       ]);
 
       const dataProductos = await resProductos.json();

@@ -1,3 +1,5 @@
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 (() => {
   const menuAgrupado = [
     {
@@ -178,16 +180,15 @@
 
     (async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/config-web/publica");
+        const res = await fetch(`${API_URL}/api/config-web/publica`);
         const datos = await res.json();
         const logoActivo = datos?.logos?.find(
           (l) => l.Activo == 1 || l.Activo === true,
         );
         if (logoActivo) {
-          const BASE_URL = "http://localhost:3000";
           const urlFavicon = logoActivo.ImagenURL.startsWith("http")
             ? logoActivo.ImagenURL
-            : `${BASE_URL}${logoActivo.ImagenURL}`;
+            : `${API_URL}${logoActivo.ImagenURL}`;
           const sysFavicon = document.getElementById("sysFavicon");
           if (sysFavicon) sysFavicon.href = urlFavicon;
         }

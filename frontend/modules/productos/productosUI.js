@@ -4,7 +4,8 @@ import { productosState } from "./productosState.js";
 const placeholderImg =
   "https://placehold.co/400x400/f8fafc/1e293b?text=Subir+Imagen";
 const placeholderIcon = "https://placehold.co/50x50/f8fafc/1e293b?text=Img";
-const BASE_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE_URL = API_URL;
 let debounceTimeout = null;
 
 // ==========================================

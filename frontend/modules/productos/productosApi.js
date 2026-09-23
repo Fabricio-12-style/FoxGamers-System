@@ -1,5 +1,6 @@
-const BASE_URL = "http://localhost:3000/api/productos";
-const CAT_URL = "http://localhost:3000/api/categorias";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE_URL = `${API_URL}/api/productos`;
+const CAT_URL = `${API_URL}/api/categorias`;
 
 const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
 const getAuthHeaders = () => ({ Authorization: `Bearer ${getToken()}` });

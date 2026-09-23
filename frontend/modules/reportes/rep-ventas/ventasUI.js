@@ -5,6 +5,8 @@ import {
   convertirImagenABase64,
 } from "../../../shared/utils/pdfHelper.js";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const txtFechaInicio = document.getElementById("txtFechaInicio");
 const txtFechaFin = document.getElementById("txtFechaFin");
 const cboEstado = document.getElementById("cboEstado");
@@ -28,7 +30,7 @@ const inicializarConfiguracion = async () => {
   txtFechaFin.value = hoy.toISOString().split("T")[0];
 
   try {
-    const res = await fetch("http://localhost:3000/api/empresa", {
+    const res = await fetch(`${API_URL}/api/empresa`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("tokenFoxGamers")}`,
       },
@@ -299,7 +301,7 @@ btnExportarExcel.addEventListener("click", async () => {
   if (!validarFechas()) return;
 
   try {
-    let url = `http://localhost:3000/api/reportes/exportar-excel?fechaInicio=${txtFechaInicio.value}&fechaFin=${txtFechaFin.value}`;
+    let url = `${API_URL}/api/reportes/exportar-excel?fechaInicio=${txtFechaInicio.value}&fechaFin=${txtFechaFin.value}`;
     if (cboEstado.value) url += `&estado=${cboEstado.value}`;
     if (cboMetodoPago.value) url += `&metodoPago=${cboMetodoPago.value}`;
     if (txtBusquedaRapida.value)

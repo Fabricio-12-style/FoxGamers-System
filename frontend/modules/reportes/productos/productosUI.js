@@ -5,6 +5,8 @@ import {
   convertirImagenABase64,
 } from "../../../shared/utils/pdfHelper.js";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const txtFechaInicio = document.getElementById("txtFechaInicioInv");
 const txtFechaFin = document.getElementById("txtFechaFinInv");
 const cboCategoria = document.getElementById("cboCategoriaInv");
@@ -28,7 +30,7 @@ const inicializarConfiguracion = async () => {
   txtFechaFin.value = hoy.toISOString().split("T")[0];
 
   try {
-    const resEmpresa = await fetch("http://localhost:3000/api/empresa", {
+    const resEmpresa = await fetch(`${API_URL}/api/empresa`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("tokenFoxGamers")}`,
       },
@@ -42,7 +44,7 @@ const inicializarConfiguracion = async () => {
       } catch (e) {}
     }
 
-    const resCat = await fetch("http://localhost:3000/api/categorias", {
+    const resCat = await fetch(`${API_URL}/api/categorias`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("tokenFoxGamers")}`,
       },
@@ -268,7 +270,7 @@ btnExportarExcel.addEventListener("click", async () => {
   btnExportarExcel.disabled = true;
 
   try {
-    let url = `http://localhost:3000/api/reportes/exportar-inventario-excel?fechaInicio=${txtFechaInicio.value}&fechaFin=${txtFechaFin.value}`;
+    let url = `${API_URL}/api/reportes/exportar-inventario-excel?fechaInicio=${txtFechaInicio.value}&fechaFin=${txtFechaFin.value}`;
     if (cboCategoria.value) url += `&categoriaId=${cboCategoria.value}`;
     if (cboEstadoStock.value) url += `&estadoStock=${cboEstadoStock.value}`;
     if (txtBusqueda.value)

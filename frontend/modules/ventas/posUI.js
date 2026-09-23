@@ -3,7 +3,8 @@ import { posState } from "./posState.js";
 
 let debounceHistorial = null;
 let totalActualVenta = 0;
-const BASE_URL = "http://localhost:3000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE_URL = API_URL;
 
 const inicializarModulo = async () => {
   const usuarioInfo = localStorage.getItem("usuarioFoxGamers");

@@ -1,6 +1,8 @@
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 window.cargarLogoGlobal = async () => {
   try {
-    const res = await fetch("http://localhost:3000/api/config-web/publica");
+    const res = await fetch(`${API_URL}/api/config-web/publica`);
     const config = await res.json();
 
     const logoActivo = config.logos
@@ -10,7 +12,7 @@ window.cargarLogoGlobal = async () => {
     if (logoActivo && logoActivo.ImagenURL) {
       let urlLogoFinal = logoActivo.ImagenURL.startsWith("http")
         ? logoActivo.ImagenURL
-        : `http://localhost:3000${logoActivo.ImagenURL}`;
+        : `${API_URL}${logoActivo.ImagenURL}`;
 
       const urlConCacheBuster = `${urlLogoFinal}?t=${new Date().getTime()}`;
 

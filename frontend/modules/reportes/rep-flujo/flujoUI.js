@@ -5,6 +5,8 @@ import {
   convertirImagenABase64,
 } from "../../../shared/utils/pdfHelper.js";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const txtFecha = document.getElementById("txtFechaFlujo");
 const cboCajero = document.getElementById("cboCajeroFlujo");
 const frmFiltros = document.getElementById("frmFiltrosFlujo");
@@ -23,7 +25,7 @@ const inicializarConfiguracion = async () => {
   txtFecha.value = new Date().toISOString().split("T")[0];
 
   try {
-    const resEmpresa = await fetch("http://localhost:3000/api/empresa", {
+    const resEmpresa = await fetch(`${API_URL}/api/empresa`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("tokenFoxGamers")}`,
       },
@@ -37,7 +39,7 @@ const inicializarConfiguracion = async () => {
       } catch (e) {}
     }
 
-    const resUsuarios = await fetch("http://localhost:3000/api/usuarios", {
+    const resUsuarios = await fetch(`${API_URL}/api/usuarios`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("tokenFoxGamers")}`,
       },
@@ -259,7 +261,7 @@ btnExportarExcel.addEventListener("click", async () => {
   btnExportarExcel.disabled = true;
 
   try {
-    let url = `http://localhost:3000/api/reportes/exportar-flujo-excel?fecha=${txtFecha.value}`;
+    let url = `${API_URL}/api/reportes/exportar-flujo-excel?fecha=${txtFecha.value}`;
     if (cboCajero.value) url += `&usuarioId=${cboCajero.value}`;
 
     const res = await fetch(url, {

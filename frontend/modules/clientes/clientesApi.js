@@ -1,4 +1,5 @@
-const BASE_URL = "http://localhost:3000/api/clientes";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE_URL = `${API_URL}/api/clientes`;
 
 const getToken = () => localStorage.getItem("tokenFoxGamers") || "";
 const getAuthHeaders = () => ({ Authorization: `Bearer ${getToken()}` });
