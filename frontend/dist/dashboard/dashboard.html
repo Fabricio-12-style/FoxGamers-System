@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FOX GAMERS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <link rel="icon" type="image/png" id="sysFavicon" href="../../shared/img/logo-placeholder.png">
+  <link rel="stylesheet" crossorigin href="/assets/fox-style-CbT17R4f.css">
+</head>
+
+<body class="sidebar-mini sidebar-no-expand" style="background-color: #f1f5f9;">
+    <div class="wrapper">
+
+        <nav class="main-header navbar navbar-expand border-bottom-0" style="background-color: var(--fox-surface);">
+            <ul class="navbar-nav align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button" data-expand-sidebar-hover="false"
+                        style="color: var(--fox-text-light);">
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <span class="nav-link font-weight-bold"
+                        style="color: var(--fox-text-light); letter-spacing: 0.5px;">FOX GAMERS E-Commerce</span>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav ml-auto align-items-center">
+                <li class="nav-item mr-3">
+                    <a href="../web/index.html" target="_blank"
+                        class="btn btn-outline-info font-weight-bold shadow-sm px-3 py-1"
+                        style="border-radius: 20px; border-color: var(--fox-cyan); color: var(--fox-cyan);">
+                        <i class="fas fa-globe mr-1"></i> Ver Web
+                    </a>
+                </li>
+                <li class="nav-item mr-3">
+                    <button class="btn btn-fox-danger shadow-sm font-weight-bold px-3 py-1" id="btnCerrarSesion"
+                        style="border-radius: 20px;">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Cerrar Sesión
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <aside class="main-sidebar elevation-4" style="background-color: var(--fox-bg-dark);">
+            <a href="#" onclick="cargarModulo('../modules/inicio/inicio_vista.html', '../modules/inicio/inicioUI.js')"
+                class="brand-link text-center" style="border-bottom: 1px solid #1e293b !important;">
+                <img src="/assets/foxGamers-B_Gwt6te.jpeg" alt="Fox Gamers" class="logo-global-fox"
+                    style="max-height: 50px;">
+                <span class="brand-text font-weight-bold text-white ml-2">FOX GAMERS</span>
+            </a>
+
+            <div class="sidebar">
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex align-items-center"
+                    style="border-bottom: 1px solid #1e293b !important;">
+                    <div class="info w-100 text-center">
+                        <span class="d-block text-white font-weight-bold" id="welcomeMessage">Cargando...</span>
+                        <small class="font-weight-bold" id="userRole"
+                            style="color: var(--fox-cyan); text-transform: uppercase; letter-spacing: 1px;">...</small>
+                    </div>
+                </div>
+
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                        id="menuDinamico">
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <div class="content-wrapper" id="app-content" style="background-color: #f1f5f9;">
+        </div>
+
+        <footer class="main-footer text-center border-top-0"
+            style="background-color: var(--fox-surface); color: var(--fox-text-gray);">
+            <strong style="color: var(--fox-text-light);">Copyright &copy; 2026 <span
+                    style="color: var(--fox-orange);">FOX GAMERS</span>.</strong> Todos los derechos reservados.
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="../shared/js/global.js"></script>
+    <script src="./dashboard.js"></script>
+</body>
+
+</html>

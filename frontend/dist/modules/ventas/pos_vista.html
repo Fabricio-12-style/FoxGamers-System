@@ -1,0 +1,632 @@
+<script>
+    if (!document.getElementById("app-content")) {
+        window.location.replace("../../index.html");
+    }
+</script>
+
+<div class="content-header pt-4">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="m-0 dato-critico" style="font-size: 2.2rem;">Historial de Ventas</h1>
+            <small class="font-weight-bold" style="color: var(--fox-text-gray);">Control de tickets y
+                transacciones</small>
+        </div>
+        <button class="btn btn-fox shadow-sm px-4 py-2" id="btnAbrirPOS" data-toggle="modal" data-target="#modalPOS">
+            <i class="fas fa-cash-register mr-2"></i> NUEVA VENTA (POS)
+        </button>
+    </div>
+</div>
+
+<section class="content mt-3">
+    <div class="container-fluid">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body p-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <label class="small font-weight-bold text-uppercase text-secondary mb-2">🔎 Buscador Global de
+                            Transacciones</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white text-muted" style="border-right: none;"><i
+                                        class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" id="inputBuscarHistorial" class="form-control"
+                                placeholder="Escribe el N° de Documento o Nombre del cliente..."
+                                style="border-left: none; box-shadow: none;">
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-right mt-3 mt-md-0">
+                        <span class="badge badge-secondary p-2" style="font-size: 0.85rem;" id="lblModoCarga">Mostrando
+                            últimos 5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover table-striped text-center align-middle mb-0 w-100">
+                    <thead style="background-color: #1e293b; color: white; position: sticky; top: 0; z-index: 1;">
+                        <tr>
+                            <!-- Expansor (Solo móvil) -->
+                            <th style="width: 45px; min-width: 45px;" class="d-table-cell d-md-none border-0"></th>
+
+                            <th class="text-left border-0">N° Doc</th>
+
+                            <!-- Ocultos en móvil -->
+                            <th class="text-left d-none d-md-table-cell">Cliente</th>
+                            <th class="d-none d-md-table-cell">Fecha</th>
+                            <th class="d-none d-md-table-cell">F. Pago</th>
+                            <th class="d-none d-md-table-cell">Subtotal</th>
+                            <th class="d-none d-md-table-cell">Descuento</th>
+
+                            <!-- Alineamos el total a la derecha para que se pegue al borde -->
+                            <th class="text-right border-0">Total</th>
+
+                            <!-- ESTADO: Lo ocultamos en la cabecera del móvil -->
+                            <th class="d-none d-md-table-cell border-0">Estado</th>
+
+                            <th class="d-none d-md-table-cell">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaHistorialVentas">
+                        <!-- ... -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="modalPOS" tabindex="-1" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content shadow-lg" style="border: none; border-radius: 16px; overflow: hidden;">
+            <div class="modal-header d-flex justify-content-between align-items-center"
+                style="background-color: var(--fox-bg-dark); border-bottom: 2px solid var(--fox-cyan);">
+                <h4 class="modal-title font-weight-bold text-white m-0">
+                    <i class="fas fa-cash-register mr-2" style="color: var(--fox-cyan);"></i> Caja Rápida
+                </h4>
+                <div class="text-right">
+                    <span class="badge badge-dark border border-secondary px-3 py-2 mr-3" style="font-size: 0.9rem;">
+                        <i class="fas fa-user-tag mr-2" style="color: var(--fox-cyan);"></i> <span
+                            id="posVendedorActivo">Cargando...</span>
+                    </span>
+                    <button type="button" class="close text-white text-shadow" data-dismiss="modal"
+                        style="opacity: 1;">&times;</button>
+                </div>
+            </div>
+
+            <div class="modal-body p-4" style="background-color: #f8fafc;">
+                <div class="row">
+                    <div class="col-lg-7 d-flex flex-column mb-3 mb-lg-0">
+                        <div class="card border-0 shadow-sm mb-3" style="border-radius: 12px;">
+                            <div class="card-body p-3">
+                                <label class="small font-weight-bold text-uppercase mb-2"
+                                    style="color: var(--fox-text-gray);"><i class="fas fa-user-circle mr-1"></i>
+                                    Identificación del Cliente</label>
+                                <div class="d-flex align-items-center mb-2" id="zonaBusquedaCliente">
+                                    <div class="input-group mr-2">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-white border-right-0"
+                                                style="color: var(--fox-cyan);"><i class="fas fa-search"></i></span>
+                                        </div>
+                                        <input type="text" id="posBuscarCliente"
+                                            class="form-control border-left-0 font-weight-bold"
+                                            placeholder="DNI, RUC o Nombre (Enter para buscar)" autocomplete="off"
+                                            style="box-shadow: none;">
+                                    </div>
+                                    <button class="btn btn-dark text-nowrap font-weight-bold" id="btnClienteGeneral"
+                                        style="border-radius: 8px;"><i class="fas fa-users mr-1"></i> Público</button>
+                                </div>
+
+                                <div id="posClienteSeleccionado" class="p-2 rounded d-none"
+                                    style="background-color: #e0f2fe; border: 1px dashed #0284c7;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge badge-info mb-1">Cliente Vinculado</span>
+                                            <h6 class="m-0 font-weight-bold" style="color: #0c4a6e;"
+                                                id="lblNombreCliente">Cargando...</h6>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-danger border-0" id="btnQuitarCliente"><i
+                                                class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+
+                                <div id="panelNuevoCliente" class="p-3 mt-2 rounded d-none"
+                                    style="background-color: #fffbeb; border: 1px solid #fde047;">
+                                    <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-user-plus mr-2"
+                                            style="color: #ca8a04;"></i>Registrar Nuevo Cliente</h6>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-2">
+                                            <input type="text" id="nuevoCliDoc"
+                                                class="form-control form-control-sm font-weight-bold text-center"
+                                                placeholder="DNI / RUC" readonly>
+                                        </div>
+                                        <div class="col-md-8 mb-2">
+                                            <input type="text" id="nuevoCliNombre" class="form-control form-control-sm"
+                                                placeholder="Nombre completo o Razón Social">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm flex-grow-1"
+                            style="border-radius: 12px; min-height: 380px;">
+                            <div class="card-body p-3 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="input-group w-75">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-white border-right-0"><i
+                                                    class="fas fa-barcode"></i></span>
+                                        </div>
+                                        <input type="text" id="posBuscarProducto" class="form-control border-left-0"
+                                            placeholder="Buscar producto..." autocomplete="off">
+                                    </div>
+                                    <button id="btnAbrirCatalogo" class="btn btn-fox-success shadow-sm font-weight-bold"
+                                        style="border-radius: 8px;"><i class="fas fa-th-large mr-1"></i>
+                                        Catálogo</button>
+                                </div>
+
+                                <div class="table-responsive flex-grow-1 border rounded"
+                                    style="max-height: 280px; overflow-y: auto;">
+                                    <table class="table table-sm text-center align-middle mb-0 table-hover w-100">
+                                        <thead class="bg-light" style="position: sticky; top: 0; z-index: 1;">
+                                            <tr>
+                                                <th class="text-left py-2 border-0">Producto</th>
+                                                <th width="15%" class="d-none d-md-table-cell">Precio</th>
+                                                <th width="15%" class="d-none d-md-table-cell">Cant.</th>
+                                                <th width="15%" class="d-none d-md-table-cell">Subtotal</th>
+                                                <th width="5%" class="d-none d-md-table-cell"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="posTablaCarrito">
+                                            <tr>
+                                                <td colspan="5" class="py-5 italic"
+                                                    style="color: var(--fox-text-gray);">Escanea o busca productos para
+                                                    iniciar la venta.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 d-flex flex-column">
+                        <div class="card border-0 shadow-sm flex-grow-1" style="border-radius: 12px;">
+                            <div class="card-header bg-white border-bottom p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label class="small font-weight-bold text-uppercase m-0"
+                                        style="color: var(--fox-text-gray);">Comprobante</label>
+                                    <span class="badge"
+                                        style="background-color: var(--fox-surface); color: var(--fox-cyan); font-size: 1rem; border: 1px solid var(--fox-cyan);"
+                                        id="posCorrelativoVisual">N-AUTO</span>
+                                </div>
+                            </div>
+
+                            <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                <div class="mb-4 bg-light p-3 rounded border">
+                                    <div class="d-flex justify-content-between mb-2 font-weight-bold"
+                                        style="color: var(--fox-text-gray);">
+                                        <span>Subtotal:</span><span id="posSubtotal" class="dato-critico text-dark">S/
+                                            0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2 pb-2 font-weight-bold border-bottom"
+                                        style="color: var(--fox-green);" id="filaDescuento" style="display:none;">
+                                        <span><i class="fas fa-tag mr-1"></i> Descuento:</span>
+                                        <span id="posDescuento">-S/ 0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2 align-items-center">
+                                        <span class="h4 font-weight-bold dato-critico m-0 text-dark">TOTAL</span>
+                                        <span id="posTotal" class="h2 dato-critico m-0"
+                                            style="color: var(--fox-orange);">S/ 0.00</span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <label class="small font-weight-bold text-uppercase m-0"
+                                            style="color: var(--fox-text-gray);">Método de Pago</label>
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="chkPagoDividido">
+                                            <label
+                                                class="custom-control-label font-weight-bold text-info cursor-pointer"
+                                                for="chkPagoDividido">Pago Dividido</label>
+                                        </div>
+                                    </div>
+
+                                    <div id="panelPagoSimple">
+                                        <select id="posMetodoPago"
+                                            class="form-control form-control-lg font-weight-bold mb-3 shadow-sm"
+                                            style="border-radius: 8px;">
+                                            <option value="EFECTIVO">💵 Efectivo</option>
+                                            <option value="YAPE/PLIN">📱 Yape / Plin</option>
+                                            <option value="TARJETA">💳 Tarjeta (POS)</option>
+                                            <option value="TRANSFERENCIA">🏦 Transferencia Bancaria</option>
+                                        </select>
+
+                                        <div id="panelEfectivoSimple" class="p-3 rounded"
+                                            style="background-color: #f1f5f9; border: 1px dashed #cbd5e1;">
+                                            <label class="small font-weight-bold text-secondary">Efectivo Recibido
+                                                (S/)</label>
+                                            <input type="number" id="posEfectivoRecibido"
+                                                class="form-control form-control-lg text-right font-weight-bold text-success"
+                                                placeholder="0.00" min="0" step="0.10" style="font-size: 1.5rem;">
+                                            <div class="d-flex justify-content-between mt-3 align-items-center">
+                                                <span class="font-weight-bold text-secondary">Vuelto:</span>
+                                                <span id="posVuelto" class="h4 m-0 font-weight-bold text-success">S/
+                                                    0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="panelPagoMixto" class="d-none p-3 rounded"
+                                        style="background-color: #f8fafc; border: 1px solid #cbd5e1;">
+                                        <div class="d-flex mb-2">
+                                            <select id="mixMetodoSelect"
+                                                class="form-control form-control-sm mr-2 font-weight-bold">
+                                                <option value="YAPE/PLIN">📱 Yape / Plin</option>
+                                                <option value="EFECTIVO">💵 Efectivo</option>
+                                                <option value="TARJETA">💳 Tarjeta</option>
+                                                <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                                            </select>
+                                            <input type="number" id="mixMontoInput"
+                                                class="form-control form-control-sm text-right font-weight-bold"
+                                                placeholder="Monto (S/)" step="0.10">
+                                            <button class="btn btn-sm btn-dark ml-2 font-weight-bold"
+                                                id="btnAgregarPagoMix"><i class="fas fa-plus"></i></button>
+                                        </div>
+                                        <ul class="list-group list-group-flush mb-3 mt-3" id="listaPagosMixtos"
+                                            style="font-size: 0.9rem;"></ul>
+                                        <div class="d-flex justify-content-between align-items-center border-top pt-2">
+                                            <span class="font-weight-bold text-secondary small">Total Ingresado: <span
+                                                    id="lblTotalIngresadoMix" class="text-dark">S/ 0.00</span></span>
+                                            <span class="font-weight-bold text-secondary small">Falta: <span
+                                                    id="lblFaltaMix" class="text-danger">S/ 0.00</span></span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mt-2 d-none"
+                                            id="zonaVueltoMix">
+                                            <span class="font-weight-bold text-success">Vuelto a entregar:</span>
+                                            <span class="h5 m-0 font-weight-bold text-success" id="lblVueltoMix">S/
+                                                0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button id="btnProcesarVenta"
+                                    class="btn btn-fox btn-block shadow-lg d-flex align-items-center justify-content-center"
+                                    style="height: 65px; border-radius: 12px; font-size: 1.3rem; letter-spacing: 1px;"
+                                    disabled>
+                                    <i class="fas fa-check-circle mr-3 fa-lg"></i> CONFIRMAR VENTA
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalBuscarCliente" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header">
+                <h5 class="modal-title font-weight-bold m-0"><i class="fas fa-search mr-2"></i> Seleccionar Cliente</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm m-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="pl-3">Doc</th>
+                                <th>Nombre</th>
+                                <th class="text-center pr-3">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaResultadosClientes"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalDetalleVenta" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px;">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title font-weight-bold m-0" style="color: var(--fox-bg-dark);">
+                    <i class="fas fa-list-alt mr-2 text-primary"></i> Detalle de Venta <span id="detNumDoc"
+                        class="ml-2 text-secondary"></span>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body p-4 bg-white">
+                <div class="row mb-3">
+                    <div class="col-sm-6 mb-2 mb-sm-0">
+                        <div class="p-3 border rounded shadow-sm h-100" style="background-color: #f8fafc;">
+                            <small class="text-muted d-block text-uppercase font-weight-bold mb-1">Cliente</small>
+                            <span id="detCliente" class="font-weight-bold"
+                                style="font-size: 1.1rem; color: var(--fox-bg-dark);"></span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="p-3 border rounded shadow-sm h-100" style="background-color: #f8fafc;">
+                            <small class="text-muted d-block text-uppercase font-weight-bold mb-1">Vendedor</small>
+                            <span id="detVendedor" class="font-weight-bold"
+                                style="font-size: 1.1rem; color: var(--fox-bg-dark);"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-sm-4 mb-2 mb-sm-0">
+                        <div class="p-2 border rounded text-center shadow-sm">
+                            <small class="text-muted d-block text-uppercase font-weight-bold">Fecha</small>
+                            <span id="detFecha" class="font-weight-bold text-dark"></span>
+                        </div>
+                    </div>
+                    <div class="col-sm-4 mb-2 mb-sm-0">
+                        <div class="p-2 border rounded text-center shadow-sm">
+                            <small class="text-muted d-block text-uppercase font-weight-bold">Forma de Pago</small>
+                            <span id="detMetodo" class="font-weight-bold text-dark"></span>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="p-2 border rounded text-center shadow-sm">
+                            <small class="text-muted d-block text-uppercase font-weight-bold">Comprobante</small>
+                            <span id="detComprobante" class="font-weight-bold text-dark"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive border rounded shadow-sm mb-4">
+                    <table class="table table-striped table-hover text-center align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="text-left py-3">Producto</th>
+                                <th>Cant.</th>
+                                <th>Precio Unit.</th>
+                                <th>Descuento</th>
+                                <th class="text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detTablaItems"></tbody>
+                    </table>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div id="panelDetallePagos" class="p-3 border rounded bg-light h-100">
+                            <h6 class="font-weight-bold text-secondary mb-2"><i class="fas fa-wallet mr-1"></i> Desglose
+                                de Pagos</h6>
+                            <table class="table table-sm table-borderless m-0">
+                                <tbody id="detTablaPagos"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between mb-2 text-secondary">
+                            <span class="font-weight-bold">Subtotal:</span> <span id="detSubtotal"
+                                class="font-weight-bold"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-secondary border-bottom pb-2"
+                            id="filaDetDescuento">
+                            <span class="font-weight-bold">Descuento:</span> <span id="detDescTotal"
+                                class="font-weight-bold text-danger"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 align-items-center">
+                            <span class="h4 font-weight-bold m-0" style="color: var(--fox-bg-dark);">TOTAL:</span>
+                            <span class="h4 font-weight-bold m-0" style="color: var(--fox-green);" id="detTotal"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalVistaPreviaA4" tabindex="-1" style="z-index: 1070;">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 10px; overflow: hidden;">
+            <div
+                class="modal-header bg-white border-bottom d-flex justify-content-between align-items-center py-2 px-4">
+                <h5 class="modal-title font-weight-bold m-0" style="color: #334155;"><i
+                        class="fas fa-file-invoice mr-2 text-secondary"></i> Nota de Venta</h5>
+                <div>
+                    <button type="button" class="btn btn-success btn-sm font-weight-bold shadow-sm mr-1"
+                        id="btnImprimirA4Final" style="background-color: #10b981; border-color: #10b981;"><i
+                            class="fas fa-print mr-1"></i> Imprimir</button>
+                    <button type="button" class="btn btn-secondary btn-sm font-weight-bold shadow-sm"
+                        data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+
+            <!-- Ajustamos el padding para móvil -->
+            <div class="modal-body p-2 p-md-4"
+                style="background-color: #e2e8f0; display: flex; justify-content: center;">
+                <div id="contenedorPapelA4" class="w-100 bg-white p-3 p-md-5 shadow-sm" style="max-width: 800px;">
+
+                    <!-- CABECERA: Se apila en móvil, lado a lado en PC -->
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center align-items-md-start mb-4"
+                        style="border-bottom: 3px solid #0A192F; padding-bottom: 20px;">
+                        <div class="d-flex align-items-center gap-3 mb-3 mb-md-0 text-center text-md-left">
+                            <img id="visorLogo" alt="Logo"
+                                style="height: 70px; width: 70px; object-fit: contain; margin-right: 15px;">
+                            <div>
+                                <h1
+                                    style="margin: 0; font-size: 24px; font-weight: 900; color: #0A192F; letter-spacing: -0.5px; text-transform: uppercase;">
+                                    FOX GAMERS</h1>
+                                <p style="margin: 5px 0; font-size: 11px; font-weight: 600; color: #475569;">Av.
+                                    Principal 123, Chiclayo - Perú</p>
+                                <p style="margin: 0; font-size: 11px; color: #475569;">Tel: +51 961 460 326 | Web:
+                                    foxgamers.pe</p>
+                            </div>
+                        </div>
+                        <div class="text-center text-md-right" style="min-width: 200px; width: 100%; max-width: 250px;">
+                            <div style="background-color: #0A192F; padding: 10px; border-radius: 8px 8px 0 0;">
+                                <h3
+                                    style="margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 1px; color: #A3E635;">
+                                    NOTA DE VENTA</h3>
+                            </div>
+                            <div
+                                style="border: 2px solid #0A192F; border-top: none; padding: 10px; border-radius: 0 0 8px 8px; background-color: #F8FAFC;">
+                                <h2 id="visorNumero"
+                                    style="margin: 0; font-size: 18px; font-weight: 900; color: #0A192F;"></h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DATOS CLIENTE Y EMISIÓN: Se apila en móvil -->
+                    <div class="d-flex flex-column flex-md-row mb-4 gap-3">
+                        <div class="flex-fill p-3 mb-3 mb-md-0 rounded"
+                            style="background-color: #F8FAFC; border-left: 5px solid #A3E635;">
+                            <p
+                                style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">
+                                Datos del Cliente</p>
+                            <p id="visorCliente"
+                                style="margin: 0 0 6px 0; font-size: 14px; font-weight: 700; color: #0A192F; text-transform: uppercase;">
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #334155;"><strong>Doc:</strong> <span
+                                    id="visorDocCliente"></span></p>
+                        </div>
+                        <div class="flex-fill p-3 rounded"
+                            style="background-color: #F8FAFC; border-left: 5px solid #EAB308;">
+                            <p
+                                style="margin: 0 0 8px 0; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748B;">
+                                Detalles de Emisión</p>
+                            <p style="margin: 0 0 4px 0; font-size: 12px; color: #334155;"><strong>Fecha:</strong> <span
+                                    id="visorFecha"></span></p>
+                            <p style="margin: 0 0 4px 0; font-size: 12px; color: #334155;"><strong>Pago:</strong> <span
+                                    id="visorMetodo"></span></p>
+                            <p style="margin: 0; font-size: 12px; color: #334155;"><strong>Cajero:</strong> <span
+                                    id="visorVendedor"></span></p>
+                        </div>
+                    </div>
+
+                    <!-- TABLA ITEMS: Le agregamos table-responsive para móvil -->
+                    <div class="table-responsive mb-4 border rounded">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 500px; font-size: 12px;">
+                            <thead>
+                                <tr
+                                    style="background-color: #0A192F; color: white; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">
+                                    <th style="padding: 10px; text-align: center; width: 10%;">Cant</th>
+                                    <th style="padding: 10px; text-align: center; width: 10%;">Und</th>
+                                    <th style="padding: 10px; text-align: left; width: 45%;">Descripción</th>
+                                    <th style="padding: 10px; text-align: center; width: 15%;">P. Unit.</th>
+                                    <th style="padding: 10px; text-align: right; width: 20%;">Importe</th>
+                                </tr>
+                            </thead>
+                            <tbody id="visorTablaItems"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- TOTALES Y PAGOS: Se apilan en móvil -->
+                    <div
+                        class="d-flex flex-column flex-md-row justify-content-between align-items-stretch align-items-md-end mb-4">
+                        <div id="a4PagosDesgloseContainer" class="w-100 mb-4 mb-md-0 p-3 rounded"
+                            style="max-width: 100%; width: 100%; @media (min-width: 768px){ width: 45%; } border: 1px dashed #cbd5e1; background-color: #f8fafc; font-size: 12px;">
+                            <p
+                                style="margin: 0 0 8px 0; font-weight: 700; color: #0A192F; font-size: 11px; text-transform: uppercase;">
+                                <i class="fas fa-wallet text-secondary"></i> Desglose de Medios de Pago:
+                            </p>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tbody id="visorTablaPagos"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="w-100" style="max-width: 100%; @media (min-width: 768px){ max-width: 300px; }">
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 6px 12px; font-size: 13px; color: #475569;">
+                                <span>Subtotal:</span> <span id="visorSubtotal"
+                                    style="color: #0A192F; font-weight: 600;"></span>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; padding: 6px 12px; font-size: 13px; color: #EF4444; border-bottom: 2px solid #E2E8F0; margin-bottom: 10px;">
+                                <span>Descuento:</span> <span id="visorDescuento" style="font-weight: 600;"></span>
+                            </div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background-color: #0A192F; color: white; border-radius: 8px;">
+                                <span style="font-size: 15px; font-weight: 700; letter-spacing: 1px;">TOTAL</span>
+                                <span id="visorTotal" style="font-size: 20px; font-weight: 900; color: #A3E635;"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; border-top: 1px solid #E2E8F0; padding-top: 20px;">
+                        <p style="margin: 0; font-size: 13px; font-weight: 700; color: #0A192F; letter-spacing: 0.5px;">
+                            ¡GRACIAS POR SU PREFERENCIA!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCatalogo" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h4 class="modal-title font-weight-bold"><i class="fas fa-th mr-2 text-success"></i> Catálogo de
+                    Productos</h4>
+                <div class="d-flex align-items-center">
+                    <div class="badge badge-info mr-3"><i class="fas fa-shopping-cart mr-1"></i> <span
+                            id="catTotalItems">0</span> items</div>
+                    <button type="button" class="btn btn-dark font-weight-bold" data-dismiss="modal"><i
+                            class="fas fa-arrow-left mr-2"></i> Volver</button>
+                </div>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="row" id="gridCatalogoProductos"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="zonaTicket"
+    style="font-family: 'Courier New', Courier, monospace; width: 100%; max-width: 300px; padding: 10px; color: black; background: white; margin: 0 auto; display: none;">
+    <div style="text-align: center; margin-bottom: 10px;">
+        <img id="tkLogo" alt="Logo"
+            style="max-width: 120px; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+        <h3 style="margin: 0; font-weight: bold; font-size: 18px; letter-spacing: 1px;">FOX GAMERS</h3>
+        <p style="margin: 0; font-size: 12px;">Chiclayo, Perú</p>
+    </div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="font-size: 12px; line-height: 1.5;">
+        <div><strong>NOTA DE VENTA:</strong> <span id="tkNumero"></span></div>
+        <div><strong>Fecha:</strong> <span id="tkFecha"></span></div>
+        <div><strong>Vendedor:</strong> <span id="tkVendedor"></span></div>
+        <div><strong>Cliente:</strong> <span id="tkCliente"></span></div>
+        <div><strong>F. Pago:</strong> <span id="tkMetodo"></span></div>
+    </div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="display: flex; font-weight: bold; font-size: 12px; margin-bottom: 5px;">
+        <div style="width: 15%;">Cnt</div>
+        <div style="width: 55%;">Descripción</div>
+        <div style="width: 30%; text-align: right;">Precio</div>
+    </div>
+    <div id="tkItems" style="font-size: 12px; min-height: 40px;"></div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="font-size: 12px; line-height: 1.5;">
+        <div style="display: flex; justify-content: space-between;"><span>Subtotal:</span><span>S/ <span
+                    id="tkSubtotal"></span></span></div>
+        <div style="display: flex; justify-content: space-between;"><span>Descuento:</span><span>-S/ <span
+                    id="tkDescuento">0.00</span></span></div>
+    </div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 5px 0;">
+        <span style="font-weight: bold; font-size: 16px;">TOTAL:</span><span>S/ <span id="tkTotal"></span></span>
+    </div>
+    <div style="border-top: 1px dashed black; margin: 5px 0;"></div>
+    <div style="text-align: center; font-size: 12px; margin-top: 10px;">
+        <p style="margin: 0;">¡Gracias por su compra!</p>
+        <p style="margin: 10px 0 0 0; font-size: 10px;" id="tkFechaPie"></p>
+    </div>
+</div>
